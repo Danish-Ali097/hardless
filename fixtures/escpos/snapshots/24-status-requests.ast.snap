@@ -1,0 +1,22 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "status",
+    "kind": "printer"
+  },
+  {
+    "type": "status",
+    "kind": "offline-cause"
+  },
+  {
+    "type": "status",
+    "kind": "error-cause"
+  },
+  {
+    "type": "status",
+    "kind": "paper-sensor"
+  }
+]

@@ -1,0 +1,36 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "bold",
+    "on": true
+  },
+  {
+    "type": "text",
+    "text": "Bold"
+  },
+  {
+    "type": "bold",
+    "on": false
+  },
+  {
+    "type": "text",
+    "text": " plain"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "bold",
+    "on": true
+  },
+  {
+    "type": "text",
+    "text": "odd n"
+  },
+  {
+    "type": "line-feed"
+  }
+]

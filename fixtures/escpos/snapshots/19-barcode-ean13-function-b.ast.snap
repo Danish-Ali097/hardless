@@ -1,0 +1,11 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "barcode",
+    "symbology": "ean13",
+    "data": "4006381333931"
+  }
+]

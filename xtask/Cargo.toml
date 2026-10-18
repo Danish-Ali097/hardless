@@ -9,6 +9,7 @@ publish = false
 
 [dependencies]
 hardless-core = { workspace = true, features = ["ts"] }
+hardless-escpos = { workspace = true, features = ["ts"] }
 ts-rs = { version = "12", default-features = false }
 
 [lints]

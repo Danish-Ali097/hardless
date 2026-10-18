@@ -1,0 +1,19 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "unknown",
+    "bytesHex": "1b3318",
+    "command": "ESC 3",
+    "warning": "ESC 3 is not emulated"
+  },
+  {
+    "type": "text",
+    "text": "spaced"
+  },
+  {
+    "type": "line-feed"
+  }
+]

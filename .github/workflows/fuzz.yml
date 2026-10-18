@@ -1,0 +1,30 @@
+name: Fuzz
+
+# PRD section 15: a cargo-fuzz target per parser, run nightly.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  escpos:
+    name: hardless-escpos parser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup toolchain install nightly --profile minimal
+      - run: cargo +nightly install cargo-fuzz --locked
+      - name: Seed the corpus with the golden fixtures
+        run: mkdir -p crates/hardless-escpos/fuzz/corpus/parse && cp fixtures/escpos/*.bin crates/hardless-escpos/fuzz/corpus/parse/
+      - name: Fuzz for 10 minutes
+        working-directory: crates/hardless-escpos
+        run: cargo +nightly fuzz run parse -- -max_total_time=600
+      - name: Upload crashing inputs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: escpos-fuzz-artifacts
+          path: crates/hardless-escpos/fuzz/artifacts

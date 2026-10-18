@@ -1,0 +1,12 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "pulse",
+    "pin": 5,
+    "onMs": 100,
+    "offMs": 100
+  }
+]

@@ -203,6 +203,13 @@ dependencies = [
 [[package]]
 name = "hardless-escpos"
 version = "0.0.0"
+dependencies = [
+ "insta",
+ "proptest",
+ "serde",
+ "serde_json",
+ "ts-rs",
+]
 
 [[package]]
 name = "hardless-http-dialects"
@@ -747,6 +754,7 @@ name = "xtask"
 version = "0.0.0"
 dependencies = [
  "hardless-core",
+ "hardless-escpos",
  "ts-rs",
 ]
 

@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use hardless_core as core;
+use hardless_escpos as escpos;
 use ts_rs::{Config, TS};
 
 fn main() -> ExitCode {
@@ -68,6 +69,7 @@ fn export_all(dir: &Path) -> Result<(), String> {
         core::LogEntry,
         core::Direction,
         core::PeripheralSignal,
+        escpos::Node,
     );
     Ok(())
 }

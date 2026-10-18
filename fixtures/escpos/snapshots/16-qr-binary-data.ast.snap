@@ -1,0 +1,14 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "qr-store",
+    "text": "\u0000�\u0010\u0004\u0001",
+    "dataHex": "00ff100401"
+  },
+  {
+    "type": "qr-print"
+  }
+]

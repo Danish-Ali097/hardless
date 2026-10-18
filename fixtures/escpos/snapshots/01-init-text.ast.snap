@@ -1,0 +1,16 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "init"
+  },
+  {
+    "type": "text",
+    "text": "Hello, receipt"
+  },
+  {
+    "type": "line-feed"
+  }
+]

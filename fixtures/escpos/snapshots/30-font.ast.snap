@@ -1,0 +1,25 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "font",
+    "font": "b"
+  },
+  {
+    "type": "text",
+    "text": "font B"
+  },
+  {
+    "type": "font",
+    "font": "a"
+  },
+  {
+    "type": "text",
+    "text": " font A"
+  },
+  {
+    "type": "line-feed"
+  }
+]

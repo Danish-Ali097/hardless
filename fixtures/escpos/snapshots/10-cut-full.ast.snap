@@ -1,0 +1,17 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "text",
+    "text": "bye"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "cut",
+    "partial": false
+  }
+]

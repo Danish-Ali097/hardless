@@ -1,0 +1,33 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "underline",
+    "dots": 1
+  },
+  {
+    "type": "text",
+    "text": "thin"
+  },
+  {
+    "type": "underline",
+    "dots": 2
+  },
+  {
+    "type": "text",
+    "text": " thick"
+  },
+  {
+    "type": "underline",
+    "dots": 0
+  },
+  {
+    "type": "text",
+    "text": " off"
+  },
+  {
+    "type": "line-feed"
+  }
+]

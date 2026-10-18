@@ -2,6 +2,7 @@
 resolver = "2"
 members = ["crates/*", "xtask"]
 default-members = ["crates/*"]
+exclude = ["crates/hardless-escpos/fuzz"]
 
 [workspace.package]
 version = "0.0.0"

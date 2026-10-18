@@ -1,0 +1,25 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "code-page",
+    "table": 19,
+    "name": "CP858"
+  },
+  {
+    "type": "text",
+    "text": "€"
+  },
+  {
+    "type": "init"
+  },
+  {
+    "type": "text",
+    "text": "╒"
+  },
+  {
+    "type": "line-feed"
+  }
+]

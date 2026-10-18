@@ -1,0 +1,12 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "unknown",
+    "bytesHex": "1d763000ffffffff",
+    "command": "GS v 0",
+    "warning": "GS v 0 data is too large to keep; it was skipped"
+  }
+]

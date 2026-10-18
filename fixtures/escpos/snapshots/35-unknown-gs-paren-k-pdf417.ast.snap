@@ -1,0 +1,19 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "unknown",
+    "bytesHex": "1d286b0600305030706466",
+    "command": "GS ( k PDF417",
+    "warning": "PDF417 symbols are not emulated"
+  },
+  {
+    "type": "text",
+    "text": "after"
+  },
+  {
+    "type": "line-feed"
+  }
+]

@@ -1,0 +1,14 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "raster-image",
+    "widthBytes": 2,
+    "height": 8,
+    "doubleWidth": false,
+    "doubleHeight": false,
+    "dataHex": "f00ff00ff00ff00ff00ff00ff00ff00f"
+  }
+]

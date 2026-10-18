@@ -1,0 +1,17 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "code-page",
+    "table": 17
+  },
+  {
+    "type": "text",
+    "text": "Çü"
+  },
+  {
+    "type": "line-feed"
+  }
+]

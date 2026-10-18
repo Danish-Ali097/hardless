@@ -1,0 +1,16 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "barcode",
+    "symbology": "code39",
+    "data": "HARDLESS"
+  },
+  {
+    "type": "barcode",
+    "symbology": "code39",
+    "data": "M1-2"
+  }
+]

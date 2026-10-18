@@ -1,0 +1,18 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "text",
+    "text": "ok"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "unknown",
+    "bytesHex": "1d286b040031",
+    "warning": "incomplete command at end of data"
+  }
+]

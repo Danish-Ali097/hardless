@@ -1,0 +1,152 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "init"
+  },
+  {
+    "type": "align",
+    "align": "center"
+  },
+  {
+    "type": "size",
+    "width": 2,
+    "height": 2
+  },
+  {
+    "type": "bold",
+    "on": true
+  },
+  {
+    "type": "text",
+    "text": "HARDLESS CAFE"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "size",
+    "width": 1,
+    "height": 1
+  },
+  {
+    "type": "bold",
+    "on": false
+  },
+  {
+    "type": "text",
+    "text": "1 Test Street"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "align",
+    "align": "left"
+  },
+  {
+    "type": "text",
+    "text": "2 x Flat white          900"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "text",
+    "text": "1 x Croissant           350"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "text",
+    "text": "--------------------------------"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "bold",
+    "on": true
+  },
+  {
+    "type": "text",
+    "text": "Total:                 1,250"
+  },
+  {
+    "type": "bold",
+    "on": false
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "align",
+    "align": "center"
+  },
+  {
+    "type": "barcode-height",
+    "dots": 60
+  },
+  {
+    "type": "hri-position",
+    "position": "below"
+  },
+  {
+    "type": "barcode",
+    "symbology": "code128",
+    "data": "{C\f\"8NZ\n"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "qr-model",
+    "model": 2
+  },
+  {
+    "type": "qr-module-size",
+    "dots": 4
+  },
+  {
+    "type": "qr-store",
+    "text": "receipt:1250",
+    "dataHex": "726563656970743a31323530"
+  },
+  {
+    "type": "qr-print"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "text",
+    "text": "Thank you!"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "feed",
+    "lines": 3
+  },
+  {
+    "type": "pulse",
+    "pin": 2,
+    "onMs": 50,
+    "offMs": 500
+  },
+  {
+    "type": "cut",
+    "partial": true,
+    "feed": 0
+  }
+]

@@ -1,0 +1,26 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "barcode-height",
+    "dots": 80
+  },
+  {
+    "type": "barcode-width",
+    "dots": 2
+  },
+  {
+    "type": "hri-position",
+    "position": "below"
+  },
+  {
+    "type": "barcode",
+    "symbology": "code128",
+    "data": "{BABC-123"
+  },
+  {
+    "type": "line-feed"
+  }
+]

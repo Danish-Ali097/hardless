@@ -1,0 +1,35 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "text",
+    "text": "a"
+  },
+  {
+    "type": "carriage-return"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "text",
+    "text": "b"
+  },
+  {
+    "type": "tab"
+  },
+  {
+    "type": "text",
+    "text": "c"
+  },
+  {
+    "type": "unknown",
+    "bytesHex": "07",
+    "warning": "control byte 0x07 is not emulated"
+  },
+  {
+    "type": "line-feed"
+  }
+]

@@ -1,0 +1,50 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "align",
+    "align": "left"
+  },
+  {
+    "type": "text",
+    "text": "left"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "align",
+    "align": "center"
+  },
+  {
+    "type": "text",
+    "text": "center"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "align",
+    "align": "right"
+  },
+  {
+    "type": "text",
+    "text": "right"
+  },
+  {
+    "type": "line-feed"
+  },
+  {
+    "type": "align",
+    "align": "center"
+  },
+  {
+    "type": "text",
+    "text": "ascii center"
+  },
+  {
+    "type": "line-feed"
+  }
+]

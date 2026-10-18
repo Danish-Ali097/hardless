@@ -1,0 +1,33 @@
+---
+source: crates/hardless-escpos/tests/golden.rs
+expression: parse(data)
+---
+[
+  {
+    "type": "align",
+    "align": "center"
+  },
+  {
+    "type": "qr-model",
+    "model": 2
+  },
+  {
+    "type": "qr-module-size",
+    "dots": 6
+  },
+  {
+    "type": "qr-error-correction",
+    "level": "M"
+  },
+  {
+    "type": "qr-store",
+    "text": "https://example.com/r/1250",
+    "dataHex": "68747470733a2f2f6578616d706c652e636f6d2f722f31323530"
+  },
+  {
+    "type": "qr-print"
+  },
+  {
+    "type": "line-feed"
+  }
+]
