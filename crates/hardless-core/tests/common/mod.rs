@@ -60,7 +60,6 @@ pub struct SampleDevice {
     jobs: u64,
     paper_out: bool,
     connected: bool,
-    pending_connection_change: bool,
     pending_eot: bool,
 }
 
@@ -74,7 +73,6 @@ impl SampleDevice {
             jobs: 0,
             paper_out: false,
             connected: true,
-            pending_connection_change: false,
             pending_eot: false,
         }
     }
@@ -151,14 +149,6 @@ impl Device for SampleDevice {
 
     fn on_tick(&mut self, now: Millis) -> Vec<DeviceEvent> {
         let mut out = Vec::new();
-        if self.pending_connection_change {
-            self.pending_connection_change = false;
-            out.push(if self.connected {
-                DeviceEvent::Connected
-            } else {
-                DeviceEvent::Disconnected
-            });
-        }
         if let Some(deadline) = self.deadline {
             if deadline <= now {
                 self.deadline = None;
@@ -178,24 +168,39 @@ impl Device for SampleDevice {
     }
 
     fn next_deadline(&self) -> Option<Millis> {
-        if self.pending_connection_change {
-            // Due immediately: the registry runs it on the next tick.
-            return Some(Millis::ZERO);
-        }
         self.deadline
     }
 
-    fn set_fault(&mut self, fault: FaultId, active: bool, _opts: FaultOptions) {
+    fn set_fault(
+        &mut self,
+        fault: FaultId,
+        active: bool,
+        _opts: FaultOptions,
+        _now: Millis,
+    ) -> Vec<DeviceEvent> {
         if fault == FaultId::PAPER_OUT {
             self.paper_out = active;
+            vec![DeviceEvent::StateChanged]
         } else if fault == FaultId::OFFLINE && self.connected == active {
             self.connected = !active;
-            self.pending_connection_change = true;
+            vec![if active {
+                DeviceEvent::Disconnected
+            } else {
+                DeviceEvent::Connected
+            }]
+        } else {
+            Vec::new()
         }
     }
 
-    fn reset(&mut self) {
+    fn reset(&mut self, _now: Millis) -> Vec<DeviceEvent> {
+        let was_connected = self.connected;
         *self = Self::new(self.id.clone(), self.idle_ms);
+        if was_connected {
+            vec![DeviceEvent::StateChanged]
+        } else {
+            vec![DeviceEvent::Connected]
+        }
     }
 }
 

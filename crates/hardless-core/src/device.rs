@@ -52,13 +52,20 @@ pub trait Device: Send {
     /// current time means "as soon as possible".
     fn next_deadline(&self) -> Option<Millis>;
 
-    /// Turns a fault on or off. A device that needs to emit events because of a fault (for
-    /// example a disconnect) returns a due deadline from [`Device::next_deadline`]; the
-    /// registry runs that tick straight away.
-    fn set_fault(&mut self, fault: FaultId, active: bool, opts: FaultOptions);
+    /// Turns a fault on or off at `now`, returning what that caused, e.g.
+    /// [`DeviceEvent::Disconnected`] for `offline`. Turning on a fault that is already on
+    /// replaces its options.
+    fn set_fault(
+        &mut self,
+        fault: FaultId,
+        active: bool,
+        opts: FaultOptions,
+        now: Millis,
+    ) -> Vec<DeviceEvent>;
 
-    /// Back to the freshly created state: clears buffers, jobs and faults.
-    fn reset(&mut self);
+    /// Back to the freshly created state at `now`: clears buffers, jobs and faults. Returns
+    /// what that caused, e.g. [`DeviceEvent::Connected`] if the device was offline.
+    fn reset(&mut self, now: Millis) -> Vec<DeviceEvent>;
 }
 
 /// Something a device did, returned from every [`Device`] call.

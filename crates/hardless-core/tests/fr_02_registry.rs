@@ -215,17 +215,33 @@ fn fr_02_faults_are_tracked_per_device_and_reported_in_list() {
 }
 
 #[test]
-fn fr_02_set_fault_runs_the_due_tick_so_disconnects_are_immediate() {
+fn fr_02_set_fault_returns_the_device_events_so_disconnects_are_immediate() {
     let (_, mut registry) = registry();
     registry.create(KIND, Some(id("p1")), json!({})).unwrap();
     let events = registry
         .set_fault(&id("p1"), FaultId::OFFLINE, true, FaultOptions::new())
         .unwrap();
     assert!(matches!(events[..], [DeviceEvent::Disconnected]));
+    assert_eq!(
+        registry.summary(&id("p1")).unwrap().state["connected"],
+        false
+    );
     let events = registry
         .set_fault(&id("p1"), FaultId::OFFLINE, false, FaultOptions::new())
         .unwrap();
     assert!(matches!(events[..], [DeviceEvent::Connected]));
+}
+
+#[test]
+fn fr_02_reset_returns_the_device_events() {
+    let (_, mut registry) = registry();
+    registry.create(KIND, Some(id("p1")), json!({})).unwrap();
+    registry
+        .set_fault(&id("p1"), FaultId::OFFLINE, true, FaultOptions::new())
+        .unwrap();
+    let events = registry.reset(&id("p1")).unwrap();
+    assert!(matches!(events[..], [DeviceEvent::Connected]));
+    assert!(registry.summary(&id("p1")).unwrap().faults.is_empty());
 }
 
 #[test]

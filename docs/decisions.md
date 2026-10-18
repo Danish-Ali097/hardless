@@ -33,11 +33,13 @@ decision from the maintainer.
 - **Bus events are exactly the four in FR-02.** Device -> host bytes and connection changes
   are returned to the caller from every registry method instead of adding bus event types.
   Connection changes also publish `device:state`.
-- **`set_fault` and `reset` cannot emit events** in the FR-01 `Device` trait (no `now`, no
-  return value). A device that needs to (e.g. `offline` disconnects) returns a due
-  `next_deadline()`, and the registry runs that tick immediately and returns the events.
-  **Open:** should `Device::set_fault` take `now` and return `Vec<DeviceEvent>` instead? It is
-  simpler for device authors but changes the FR-01 signature.
+- **FR-01 changed (maintainer decision, M0): `set_fault` and `reset` take `now` and return
+  `Vec<DeviceEvent>`**, like every other `Device` method. The original signatures gave a
+  device no way to report what a fault caused (e.g. `offline` must disconnect immediately),
+  which forced a hidden workaround: set a deadline of "now" and wait for the registry to tick.
+  Device authors who forgot it would get faults that silently did nothing. The PRD's FR-01
+  code block was updated. The registry still publishes `device:state` after every fault
+  toggle and reset, because the active faults are part of the device summary.
 - **Faults are open strings.** `FaultId` is a validated kebab-case string so plugins can add
   faults (goal 5); the section 10 IDs are constants and `catalogue()`. The registry does not
   check that a fault applies to a device kind, because `DevicePlugin` has no way to declare

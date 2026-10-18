@@ -188,8 +188,9 @@ pub trait Device: Send {
     fn on_control(&mut self, cmd: ControlCommand, now: Millis) -> Vec<DeviceEvent>; // scan, tap, close drawer
     fn on_tick(&mut self, now: Millis) -> Vec<DeviceEvent>; // pulses, idle job close
     fn next_deadline(&self) -> Option<Millis>;
-    fn set_fault(&mut self, fault: FaultId, active: bool, opts: FaultOptions);
-    fn reset(&mut self);
+    fn set_fault(&mut self, fault: FaultId, active: bool, opts: FaultOptions, now: Millis)
+        -> Vec<DeviceEvent>; // e.g. offline -> Disconnected
+    fn reset(&mut self, now: Millis) -> Vec<DeviceEvent>;
 }
 
 pub enum DeviceEvent {

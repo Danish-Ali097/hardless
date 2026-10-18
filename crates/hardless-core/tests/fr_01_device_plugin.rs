@@ -86,15 +86,30 @@ fn fr_01_split_command_across_chunks_is_handled_by_the_device() {
 #[test]
 fn fr_01_set_fault_changes_device_behaviour_and_reset_clears_it() {
     let mut device = SampleDevice::new(id("p1"), 300);
-    device.set_fault(FaultId::PAPER_OUT, true, FaultOptions::new());
+    let events = device.set_fault(FaultId::PAPER_OUT, true, FaultOptions::new(), Millis(0));
+    assert!(matches!(events[..], [DeviceEvent::StateChanged]));
     let events = device.on_host_bytes(b"\x10\x04\x01", Millis(0));
     assert!(events
         .iter()
         .any(|e| matches!(e, DeviceEvent::ToHost(b) if b.as_ref() == [STATUS_PAPER_OUT])));
     assert_eq!(device.state()["paperOut"], true);
 
-    device.reset();
+    device.reset(Millis(1));
     assert_eq!(device.state()["paperOut"], false);
+}
+
+#[test]
+fn fr_01_set_fault_and_reset_report_their_events_directly() {
+    let mut device = SampleDevice::new(id("p1"), 300);
+    let events = device.set_fault(FaultId::OFFLINE, true, FaultOptions::new(), Millis(5));
+    assert!(matches!(events[..], [DeviceEvent::Disconnected]));
+    assert_eq!(
+        device.next_deadline(),
+        None,
+        "no alarm needed to report the disconnect"
+    );
+    let events = device.reset(Millis(6));
+    assert!(matches!(events[..], [DeviceEvent::Connected]));
 }
 
 #[test]

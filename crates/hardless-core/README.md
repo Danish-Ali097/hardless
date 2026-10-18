@@ -35,8 +35,9 @@ impl Device for Echo {
     fn on_control(&mut self, _cmd: ControlCommand, _now: Millis) -> Vec<DeviceEvent> { vec![] }
     fn on_tick(&mut self, _now: Millis) -> Vec<DeviceEvent> { vec![] }
     fn next_deadline(&self) -> Option<Millis> { None }
-    fn set_fault(&mut self, _fault: FaultId, _active: bool, _opts: FaultOptions) {}
-    fn reset(&mut self) {}
+    fn set_fault(&mut self, _fault: FaultId, _active: bool, _opts: FaultOptions, _now: Millis)
+        -> Vec<DeviceEvent> { vec![] }
+    fn reset(&mut self, _now: Millis) -> Vec<DeviceEvent> { vec![] }
 }
 
 struct EchoPlugin;

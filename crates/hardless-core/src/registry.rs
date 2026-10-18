@@ -404,10 +404,8 @@ impl Registry {
         Ok(events)
     }
 
-    /// Turns a fault on or off and emits `device:state`.
-    ///
-    /// If the device becomes due because of the fault (e.g. `offline` disconnects it), its
-    /// tick runs straight away and the resulting events are returned.
+    /// Turns a fault on or off, returns the device's events (e.g. `Disconnected` for
+    /// `offline`) and emits `device:state`, since the active faults are part of the summary.
     pub fn set_fault(
         &mut self,
         id: &DeviceId,
@@ -422,8 +420,9 @@ impl Registry {
         } else {
             slot.faults.remove(&fault);
         }
-        slot.device
-            .set_fault(fault.clone(), active, options.clone());
+        let events = slot
+            .device
+            .set_fault(fault.clone(), active, options.clone(), now);
         self.record(
             id,
             now,
@@ -433,38 +432,32 @@ impl Registry {
                 options,
             },
         );
-        self.after_out_of_band_change(id, now)
+        self.absorb_with_state(id, now, events)
     }
 
-    /// Resets a device: clears its state, jobs and faults (its event log is kept).
-    /// Emits `device:state`.
+    /// Resets a device: clears its state, jobs and faults (its event log is kept), returns
+    /// the device's events and emits `device:state`.
     pub fn reset(&mut self, id: &DeviceId) -> Result<Vec<DeviceEvent>, RegistryError> {
         let now = self.now();
         let slot = self.slot_mut(id)?;
-        slot.device.reset();
         slot.faults.clear();
         slot.jobs.clear();
+        let events = slot.device.reset(now);
         self.record(id, now, EventKind::Reset);
-        self.after_out_of_band_change(id, now)
+        self.absorb_with_state(id, now, events)
     }
 
-    /// `set_fault` and `reset` take no `now` and return no events in the device interface, so
-    /// run any tick they made due, then publish the state.
-    fn after_out_of_band_change(
+    /// Absorbs `events` and publishes `device:state` even if the device reported no state
+    /// change, because a fault toggle or reset changes the summary regardless.
+    fn absorb_with_state(
         &mut self,
         id: &DeviceId,
         now: Millis,
+        events: Vec<DeviceEvent>,
     ) -> Result<Vec<DeviceEvent>, RegistryError> {
-        let slot = self.slot_mut(id)?;
-        let events = if slot.device.next_deadline().is_some_and(|d| d <= now) {
-            slot.device.on_tick(now)
-        } else {
-            Vec::new()
-        };
         if events.iter().any(is_state_change) {
             self.absorb(id, now, &events);
         } else {
-            // The fault or reset itself may have changed the state: publish it either way.
             let mut absorbed = events.clone();
             absorbed.push(DeviceEvent::StateChanged);
             self.absorb(id, now, &absorbed);
