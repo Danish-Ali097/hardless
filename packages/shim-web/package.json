@@ -1,0 +1,32 @@
+{
+  "name": "@hardless/shim-web",
+  "version": "0.0.0",
+  "description": "Browser API shims (Web Serial, WebUSB, Web NFC, keyboard wedge) backed by Hardless emulated devices.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Danish-Ali097/hardless.git",
+    "directory": "packages/shim-web"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}
