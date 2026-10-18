@@ -1,0 +1,7 @@
+# Pinned development toolchain. MSRV (stable minus 2) is `rust-version` in Cargo.toml
+# and is checked separately in CI. Bump both together.
+[toolchain]
+channel = "1.99"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

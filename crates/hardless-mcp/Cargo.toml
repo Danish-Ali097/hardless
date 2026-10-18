@@ -1,0 +1,17 @@
+[package]
+name = "hardless-mcp"
+description = "MCP server for Hardless so AI coding agents can drive emulated POS devices."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "README.md"
+
+[dependencies]
+
+
+[lints]
+workspace = true

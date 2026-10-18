@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = ["crates/*", "xtask"]
+default-members = ["crates/*"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.97"
+license = "Apache-2.0"
+repository = "https://github.com/Danish-Ali097/hardless"
+homepage = "https://github.com/Danish-Ali097/hardless"
+authors = ["Hardless contributors"]
+
+[workspace.dependencies]
+hardless-core = { path = "crates/hardless-core", version = "0.0.0" }
+hardless-escpos = { path = "crates/hardless-escpos", version = "0.0.0" }
+hardless-render = { path = "crates/hardless-render", version = "0.0.0" }
+hardless-devices = { path = "crates/hardless-devices", version = "0.0.0" }
+hardless-http-dialects = { path = "crates/hardless-http-dialects", version = "0.0.0" }
+hardless-server = { path = "crates/hardless-server", version = "0.0.0" }
+hardless-mcp = { path = "crates/hardless-mcp", version = "0.0.0" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

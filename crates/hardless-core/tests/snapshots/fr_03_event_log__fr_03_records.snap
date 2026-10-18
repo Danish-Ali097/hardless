@@ -1,0 +1,33 @@
+---
+source: crates/hardless-core/tests/fr_03_event_log.rs
+expression: log
+---
+[
+  {
+    "seq": 1,
+    "at": 0,
+    "deviceId": "p1",
+    "type": "created",
+    "kind": "sample-printer"
+  },
+  {
+    "seq": 2,
+    "at": 3,
+    "deviceId": "p1",
+    "type": "bytes-in",
+    "dataHex": "1b40"
+  },
+  {
+    "seq": 3,
+    "at": 3,
+    "deviceId": "p1",
+    "type": "state-changed",
+    "state": {
+      "buffered": 2,
+      "connected": true,
+      "id": "p1",
+      "jobs": 0,
+      "paperOut": false
+    }
+  }
+]

@@ -1,0 +1,18 @@
+# release-plz: versions, changelogs and crates.io releases for the Rust crates.
+# Release notes come from Conventional Commits. See https://release-plz.dev/docs/config
+[workspace]
+changelog_update = true
+git_release_enable = true
+# Nothing is published until the v0.1.0 release (PRD section 13); flip with the release PR.
+publish = false
+semver_check = true
+pr_labels = ["release"]
+
+[[package]]
+name = "xtask"
+release = false
+changelog_update = false
+
+[[package]]
+name = "hardless-wasm"
+publish = false

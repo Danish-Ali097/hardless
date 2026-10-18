@@ -1,0 +1,32 @@
+[package]
+name = "hardless-core"
+description = "Sans-IO core of Hardless: device plugin interface, registry, event log, faults and clock."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "README.md"
+keywords = ["pos", "emulator", "escpos", "testing", "hardware"]
+categories = ["emulators", "development-tools::testing"]
+
+[features]
+default = []
+# Derive TypeScript bindings with ts-rs. Used by `cargo xtask gen-types`.
+ts = ["dep:ts-rs"]
+
+[dependencies]
+bytes = { version = "1.12.1", features = ["serde"] }
+schemars = "1.2.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+ts-rs = { version = "12.0.1", features = ["serde-json-impl", "no-serde-warnings"], optional = true }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+insta = { version = "1.49.0", features = ["json"] }
+proptest = "1.12.0"

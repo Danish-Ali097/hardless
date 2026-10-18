@@ -1,0 +1,54 @@
+---
+source: crates/hardless-core/tests/fr_02_registry.rs
+expression: bus
+---
+[
+  {
+    "type": "device:added",
+    "deviceId": "p1",
+    "kind": "sample-printer",
+    "at": 0
+  },
+  {
+    "type": "device:state",
+    "deviceId": "p1",
+    "state": {
+      "buffered": 13,
+      "connected": true,
+      "id": "p1",
+      "jobs": 0,
+      "paperOut": false
+    },
+    "at": 0
+  },
+  {
+    "type": "device:output",
+    "deviceId": "p1",
+    "job": {
+      "id": 1,
+      "at": 300,
+      "ast": {
+        "byteCount": 13
+      },
+      "text": "Total: 1,250\n",
+      "bytesHex": "546f74616c3a20312c3235300a"
+    }
+  },
+  {
+    "type": "device:state",
+    "deviceId": "p1",
+    "state": {
+      "buffered": 0,
+      "connected": true,
+      "id": "p1",
+      "jobs": 1,
+      "paperOut": false
+    },
+    "at": 300
+  },
+  {
+    "type": "device:removed",
+    "deviceId": "p1",
+    "at": 300
+  }
+]

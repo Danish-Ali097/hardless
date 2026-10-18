@@ -1,0 +1,21 @@
+[package]
+name = "hardless-cli"
+description = "The hardless binary: start the server, scan, tap, toggle faults, read receipts, run the MCP server."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "README.md"
+
+[[bin]]
+name = "hardless"
+path = "src/main.rs"
+
+[dependencies]
+hardless-server.workspace = true
+
+[lints]
+workspace = true
