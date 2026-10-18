@@ -61,15 +61,39 @@ decision from the maintainer.
 
 ### Licences (NFR-14)
 
-- `cargo-deny` enforces the NFR-14 allow list for Rust. Unpublished workspace crates are
-  exempt (`licenses.private.ignore`).
-- npm: `scripts/check-npm-licenses.mjs` uses `pnpm licenses list --prod` instead of the
-  `license-checker` package named in NFR-14 (`license-checker` is unmaintained, and pnpm has
-  the feature built in). It checks **production** dependencies only.
-- **Open:** dev-only build tools use licences outside the NFR-14 list:
-  `lightningcss` (MPL-2.0, required by Vite 8 and Tailwind 4) and `minimatch`
-  (BlueOak-1.0.0, required by ESLint). Neither ships in any package or the dashboard bundle.
-  Either NFR-14 applies to shipped dependencies only, or Vite/Tailwind need replacing.
+**Decided (maintainer, M0):** NFR-14 applies its strict list to what ships; build tools get a
+slightly wider list; strong copyleft is banned everywhere. NFR-14 in the PRD was reworded to
+say so. Why:
+
+- `lightningcss` (MPL-2.0) is required by Vite 8 and Tailwind 4 (both PRD section 6). MPL-2.0
+  is file-level weak copyleft: it only obliges sharing changes to its own files when they are
+  distributed. It runs at build time and none of its code is in any output.
+- `minimatch` (BlueOak-1.0.0) is required by ESLint. BlueOak-1.0.0 is an OSI-approved
+  permissive licence (MIT-like, with a patent grant), so it joins the shipped list.
+- The alternative, older Vite/Tailwind/ESLint versions, would trade a non-risk for an
+  outdated toolchain.
+
+How it is enforced:
+
+- **One policy file**, `license-policy.json`: `shipped`, `buildToolsAlsoAllow` (only
+  `MPL-2.0`) and `neverAllow` (GPL family, AGPL, SSPL, BUSL, non-commercial CC). Any licence
+  not listed fails, so each new licence needs a decision here.
+- **Rust**: `cargo-deny` applies the shipped list to every dependency, dev ones included
+  (stricter than needed). Unpublished workspace crates are exempt (`licenses.private.ignore`).
+- **npm declared dependencies**: `scripts/check-npm-licenses.mjs` (`pnpm run
+check:licenses`) checks runtime `dependencies` against `shipped` and everything else against
+  `shipped` + `buildToolsAlsoAllow`. It uses `pnpm licenses list` instead of the unmaintained
+  `license-checker` package.
+- **What is actually bundled**: Vite bundles whatever is imported, whichever dependency list
+  it is in. The dashboard build (`packages/dashboard/build/licenses.ts`) checks every bundled
+  package against `shipped` and fails the build otherwise.
+- **Notices**: MIT, BSD, ISC and Apache-2.0 require their notices to accompany distributed
+  copies. The dashboard build writes `THIRD_PARTY_LICENSES.txt` (full licence texts) and
+  `third-party-licenses.json` into `dist/`. Today that is React, react-dom, scheduler,
+  Tailwind's generated base CSS, and small Vite and rolldown runtime helpers, all MIT.
+- **Follow-up for v0.1.0**: the `hardless` binary must also ship notices for its Rust
+  dependencies (e.g. generated with `cargo-about` in the release workflow), and npm packages
+  that bundle code must include theirs.
 
 ### Not in M0
 

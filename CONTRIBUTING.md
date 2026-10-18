@@ -37,8 +37,10 @@ pnpm install && pnpm -r test
 - **Never copy code from vendor SDKs.** Implement protocols from public command references and
   cite the reference in a comment.
 - **No vendor trademarks** in package names, device kinds or UI labels.
-- **Dependencies** must be MIT, Apache-2.0, BSD, ISC, Zlib or Unicode-3.0 licensed
-  (`cargo deny check`, `pnpm run check:licenses`). Justify any new dependency in the PR.
+- **Licences (NFR-14).** Dependencies that ship must be MIT, Apache-2.0, BSD, ISC, Zlib,
+  Unicode-3.0 or BlueOak-1.0.0. Build-only tools may also be MPL-2.0. GPL-family licences are
+  never allowed. The policy is `license-policy.json`; check with `cargo deny check` and
+  `pnpm run check:licenses`. Justify any new dependency in the PR.
 - Public APIs, message formats, endpoint paths and fault IDs come from the PRD. Changing one
   needs a maintainer's agreement first.
 

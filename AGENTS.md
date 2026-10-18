@@ -53,7 +53,7 @@ pnpm format:check    # Prettier; `pnpm format` to fix
 pnpm typecheck       # tsc --noEmit in every package
 pnpm -r test         # Vitest in every package
 pnpm build           # every package; the dashboard builds to packages/dashboard/dist
-pnpm run check:licenses      # NFR-14 licence check of production npm dependencies
+pnpm run check:licenses      # NFR-14: shipped vs build-tool licences (license-policy.json)
 ```
 
 One package: `pnpm --filter @hardless/dashboard test`.
@@ -112,5 +112,7 @@ docs/PRD.md                    the spec
 - Do not change a public API, message format, endpoint path or fault ID from the PRD without
   asking first. If a browser spec contradicts the PRD, follow the spec and flag it.
 - Never copy code from vendor SDKs; cite the public command reference in a comment.
+- Licences follow `license-policy.json` (NFR-14). The dashboard build fails if it bundles a
+  package whose licence may not ship, and writes `THIRD_PARTY_LICENSES.txt` into `dist/`.
 - New dependencies outside PRD section 6 need a justification (maintenance, licence) in the PR
   and in `docs/decisions.md`.

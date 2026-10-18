@@ -509,7 +509,7 @@ Without a global install, use `"command": "npx"` with `"args": ["-y", "hardless"
 
 **Licensing and legal**
 
-- **NFR-14** Apache-2.0 for all crates and packages. Dependencies must be MIT, Apache-2.0, BSD, ISC, Zlib or Unicode-3.0; CI enforces this with `cargo-deny` (Rust) and `license-checker` (npm), and `cargo-deny` also blocks crates with security advisories.
+- **NFR-14** Apache-2.0 for all crates and packages. Shipped dependencies (anything compiled into a crate or binary, an npm package's runtime `dependencies`, and anything bundled into the dashboard) must be MIT, Apache-2.0, BSD, ISC, Zlib, Unicode-3.0 or BlueOak-1.0.0, and their licence notices ship with the build. Build and dev tools that never ship may also use MPL-2.0. GPL, LGPL, AGPL, SSPL and other copyleft or non-commercial licences are not allowed anywhere. The policy is in `license-policy.json`; CI enforces it with `cargo-deny` (Rust), a pnpm licence check and a dashboard bundle check (npm), and `cargo-deny` also blocks crates with security advisories.
 - **NFR-15** No vendor trademarks in package names, device kinds or UI labels. Dialects are described as "ePOS-Print-compatible" and "WebPRNT-compatible". README carries a non-affiliation disclaimer.
 - **NFR-16** Protocol support is implemented from public command references only. No code copied from vendor SDKs.
 
