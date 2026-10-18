@@ -7,6 +7,7 @@ expression: parse(data)
     "type": "pulse",
     "pin": 2,
     "onMs": 300,
-    "offMs": 300
+    "offMs": 300,
+    "realtime": true
   }
 ]

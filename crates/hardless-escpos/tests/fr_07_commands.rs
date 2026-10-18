@@ -142,7 +142,8 @@ fn fr_07_esc_p_kicks_the_drawer_with_2ms_units() {
         Node::Pulse {
             pin: 2,
             on_ms: 50,
-            off_ms: 500
+            off_ms: 500,
+            realtime: false
         }
     );
     assert_eq!(
@@ -150,7 +151,8 @@ fn fr_07_esc_p_kicks_the_drawer_with_2ms_units() {
         Node::Pulse {
             pin: 5,
             on_ms: 100,
-            off_ms: 100
+            off_ms: 100,
+            realtime: false
         }
     );
 }
@@ -292,7 +294,8 @@ fn fr_07_common_extras() {
         Node::Pulse {
             pin: 2,
             on_ms: 300,
-            off_ms: 300
+            off_ms: 300,
+            realtime: true
         }
     );
 }

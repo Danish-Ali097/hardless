@@ -92,7 +92,11 @@ onMs: number,
 /**
  * Off time in milliseconds.
  */
-offMs: number, } | { "type": "qr-model", 
+offMs: number, 
+/**
+ * A real-time command (`DLE DC4`), executed even while the printer is offline.
+ */
+realtime?: boolean, } | { "type": "qr-model", 
 /**
  * The model number.
  */

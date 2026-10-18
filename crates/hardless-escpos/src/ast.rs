@@ -184,6 +184,9 @@ pub enum Node {
         on_ms: u64,
         /// Off time in milliseconds.
         off_ms: u64,
+        /// A real-time command (`DLE DC4`), executed even while the printer is offline.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        realtime: bool,
     },
     /// `GS ( k` function 165: QR code model (1, 2 or 3 for Micro QR).
     QrModel {

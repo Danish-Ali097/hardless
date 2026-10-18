@@ -95,6 +95,18 @@ impl Parser {
         self.table
     }
 
+    /// Whether bytes are buffered: pending text, an incomplete command or data being skipped.
+    ///
+    /// ```
+    /// use hardless_escpos::Parser;
+    /// let mut parser = Parser::new();
+    /// parser.push(b"\x1d");
+    /// assert!(parser.has_pending());
+    /// ```
+    pub fn has_pending(&self) -> bool {
+        !self.buf.is_empty() || !self.text.is_empty() || self.skip > 0
+    }
+
     /// Feeds bytes and returns every command they complete. Printable text is returned once
     /// something ends it (a command or [`Parser::finish`]), so the result never depends on
     /// how the data was chunked.
@@ -284,6 +296,7 @@ impl Parser {
                         pin,
                         on_ms: u64::from(data[3]) * 2,
                         off_ms: u64::from(data[4]) * 2,
+                        realtime: false,
                     },
                     5,
                 )
@@ -715,6 +728,7 @@ fn dle(data: &[u8]) -> Step {
                         pin,
                         on_ms: ms,
                         off_ms: ms,
+                        realtime: true,
                     },
                     5,
                 );
