@@ -1,0 +1,30 @@
+name: Feature or device request
+description: A new device, command, code page, fault or API.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to test?
+      description: The app flow or hardware behaviour you cannot test today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What should Hardless do?
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Public reference
+      description: >-
+        A public command reference or spec for the protocol. Hardless implements protocols from
+        public references only and never copies vendor SDK code.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I would like to implement this

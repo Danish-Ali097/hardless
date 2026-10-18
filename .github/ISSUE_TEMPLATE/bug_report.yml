@@ -1,0 +1,60 @@
+name: Bug report
+description: Something an emulated device, shim, API or the dashboard does wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For security issues, use a private security advisory instead (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Hardless version or commit
+      placeholder: e.g. v0.1.0 or a1b2c3d
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Engine (core, ESC/POS parser, renderer, devices)
+        - Browser shim (Web Serial, WebUSB, Web NFC, keyboard wedge)
+        - Server (bridge, REST API, HTTP printers)
+        - Dashboard
+        - CLI
+        - MCP server
+        - Playwright fixture
+        - Chrome extension
+        - Docs or build
+    validations:
+      required: true
+  - type: input
+    id: requirement
+    attributes:
+      label: Requirement ID (if known)
+      description: The FR or NFR in docs/PRD.md this breaks, e.g. FR-07.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the bytes or request your app sent if you can (hex is fine).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What a real device or the browser spec does
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What Hardless does
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and browser
+      placeholder: e.g. Windows 11, Chrome 141

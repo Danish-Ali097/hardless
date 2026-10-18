@@ -1,0 +1,10 @@
+/target
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+# Generated locally on first run (NFR-05); never commit.
+*.pem
+*.key
+/.hardless/
