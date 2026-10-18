@@ -6,6 +6,7 @@ import type { JobId } from "./JobId.js";
 import type { LogLevel } from "./LogLevel.js";
 import type { Millis } from "./Millis.js";
 import type { PeripheralSignal } from "./PeripheralSignal.js";
+import type { SerialSignals } from "./SerialSignals.js";
 import type { JsonValue } from "./JsonValue.js";
 
 /**
@@ -70,7 +71,11 @@ level: LogLevel,
 /**
  * Message.
  */
-message: string, } | { "type": "reset" } | { "type": "peripheral", 
+message: string, } | { "type": "reset" } | { "type": "signals", 
+/**
+ * The signals that were set.
+ */
+signals: SerialSignals, } | { "type": "peripheral", 
 /**
  * The sending device.
  */

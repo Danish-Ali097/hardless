@@ -395,6 +395,7 @@ JSON messages, one per frame, with binary payloads base64-encoded. Every message
 | server → client | `devices`                   | Full device list for picker/`getPorts`                          |
 | client → server | `open` / `close`            | `{ deviceId, options }`                                         |
 | client → server | `write`                     | `{ deviceId, data }`; server replies `ack` (or `error`)         |
+| client → server | `signals` | `{ deviceId, signals: { dataTerminalReady?, requestToSend?, break? } }`; recorded in the event log, server replies `ack` |
 | server → client | `data`                      | `{ deviceId, data }` (device → host bytes)                      |
 | server → client | `connect` / `disconnect`    | `{ deviceId }`                                                  |
 | server → client | `nfc-reading` / `nfc-error` | `{ deviceId, serialNumber, records }`                           |

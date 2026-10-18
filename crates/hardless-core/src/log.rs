@@ -5,6 +5,7 @@ use std::collections::VecDeque;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
+use crate::bridge::SerialSignals;
 use crate::device::{ControlCommand, LogLevel, PeripheralSignal};
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::{DeviceId, JobId};
@@ -91,6 +92,11 @@ pub enum EventKind {
     },
     /// The device was reset.
     Reset,
+    /// The app set serial output signals (DTR, RTS, break).
+    Signals {
+        /// The signals that were set.
+        signals: SerialSignals,
+    },
     /// A peripheral signal between attached devices, recorded in both devices' logs.
     Peripheral {
         /// The sending device.
@@ -117,6 +123,7 @@ impl EventKind {
             EventKind::JobCompleted { .. } => "job-completed",
             EventKind::Log { .. } => "log",
             EventKind::Reset => "reset",
+            EventKind::Signals { .. } => "signals",
             EventKind::Peripheral { .. } => "peripheral",
         }
     }

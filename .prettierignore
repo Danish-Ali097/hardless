@@ -9,3 +9,6 @@ packages/types/src/
 **/snapshots/
 # The PRD is kept as authored.
 docs/PRD.md
+packages/shim-web/wasm/
+test-results/
+playwright-report/

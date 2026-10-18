@@ -24,6 +24,7 @@ export type * from "./Node.js";
 export type * from "./OptionDefault.js";
 export type * from "./PeripheralSignal.js";
 export type * from "./QrErrorCorrection.js";
+export type * from "./SerialSignals.js";
 export type * from "./ServerFrame.js";
 export type * from "./StatusKind.js";
 export type * from "./Symbology.js";

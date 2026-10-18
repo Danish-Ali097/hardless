@@ -404,6 +404,19 @@ impl Registry {
         Ok(events)
     }
 
+    /// Records serial output signals set by the app (`SerialPort.setSignals()`) in the
+    /// device's event log. Devices do not react to them yet.
+    pub fn host_signals(
+        &mut self,
+        id: &DeviceId,
+        signals: crate::bridge::SerialSignals,
+    ) -> Result<(), RegistryError> {
+        let now = self.now();
+        self.slot(id)?;
+        self.record(id, now, EventKind::Signals { signals });
+        Ok(())
+    }
+
     /// Sends a control command and returns the device's events.
     pub fn control(
         &mut self,

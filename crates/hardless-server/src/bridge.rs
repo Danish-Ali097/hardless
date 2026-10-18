@@ -130,6 +130,19 @@ impl Session {
                     )]
                 }
             }
+            ClientMessage::Signals { device_id, signals } => {
+                if !self.open.contains(&device_id) {
+                    return vec![error(
+                        BridgeErrorCode::InvalidState,
+                        format!("port `{device_id}` is not open"),
+                        reply_to,
+                    )];
+                }
+                match self.engine.with(|r| r.host_signals(&device_id, signals)) {
+                    Ok(()) => ack(reply_to),
+                    Err(e) => vec![error(BridgeErrorCode::NotFound, e.to_string(), reply_to)],
+                }
+            }
             ClientMessage::Write { device_id, data } => {
                 self.write(device_id, &data, reply_to).await
             }

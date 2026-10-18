@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hardless shim test page</title>
+  </head>
+  <body>
+    <!-- Tests click this button to run code with transient user activation. -->
+    <button id="gesture">Run with a user gesture</button>
+    <script type="module">
+      import * as shim from "/dist/hardless-shim.js";
+      window.shim = shim;
+      const settle = (promise) =>
+        Promise.resolve(promise).then(
+          (value) => ({ ok: true, value }),
+          (error) => ({ ok: false, name: error?.name, message: error?.message }),
+        );
+      window.settle = settle;
+      document.getElementById("gesture").addEventListener("click", () => {
+        window.result = settle(window.onGesture?.());
+      });
+      window.ready = true;
+    </script>
+  </body>
+</html>

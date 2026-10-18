@@ -1,2 +1,6 @@
 [alias]
 xtask = "run --quiet --package xtask --"
+
+[target.wasm32-unknown-unknown]
+# wasm-bindgen-test runs the engine tests in WebAssembly (under Node).
+runner = "wasm-bindgen-test-runner"

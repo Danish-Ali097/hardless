@@ -34,3 +34,5 @@ expect_used = "deny"
 lto = "thin"
 codegen-units = 1
 strip = true
+[profile.release.package.hardless-wasm]
+opt-level = "s"

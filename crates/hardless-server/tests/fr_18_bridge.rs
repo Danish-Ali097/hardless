@@ -287,3 +287,34 @@ async fn bridge_round_trip_is_fast() {
         times[47]
     );
 }
+
+#[tokio::test]
+async fn fr_18_signals_are_recorded_in_the_event_log() {
+    let server = server().await;
+    let mut ws = bridge(&server).await;
+    send(&mut ws, json!({ "v": 1, "type": "signals", "id": "s0", "deviceId": "printer-1", "signals": { "dataTerminalReady": true } })).await;
+    assert_eq!(
+        recv_type(&mut ws, "error").await["code"],
+        "invalid_state",
+        "port not open"
+    );
+    send(
+        &mut ws,
+        json!({ "v": 1, "type": "open", "id": "o", "deviceId": "printer-1" }),
+    )
+    .await;
+    recv_type(&mut ws, "ack").await;
+    send(&mut ws, json!({ "v": 1, "type": "signals", "id": "s1", "deviceId": "printer-1", "signals": { "dataTerminalReady": true, "requestToSend": false } })).await;
+    assert_eq!(recv_type(&mut ws, "ack").await["replyTo"], "s1");
+    let (_, events) = common::get_json(&server, "/api/v1/devices/printer-1/events").await;
+    let signals = events
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["type"] == "signals")
+        .unwrap();
+    assert_eq!(
+        signals["signals"],
+        json!({ "dataTerminalReady": true, "requestToSend": false })
+    );
+}

@@ -23,6 +23,57 @@ decision from the maintainer.
   Section 5 says the dashboard receives jobs over a WebSocket, but the PRD defines none for it.
 - **New endpoint `POST /api/v1/devices/:id/close`**: closes an open cash drawer (FR-25, FR-37),
   in the style of `/scan` and `/tap`.
+- **New bridge message `signals`** (client to server): `{ deviceId, signals }` from
+  `SerialPort.setSignals()`, recorded in the event log and acknowledged. Section 8.1 asks for
+  DTR/RTS in the event log, but section 11.2 had no message to carry them.
+
+### Where the Web Serial shim follows the spec instead of the PRD (section 8.1)
+
+The PRD says to follow the WICG specification where they disagree. Checked against the spec
+source (`WICG/serial`, `index.bs`) and Chrome:
+
+- **`close()` with a locked stream rejects with `TypeError`, not `InvalidStateError`.** The
+  spec's close() cancels the readable and aborts the writable; on a locked stream that fails,
+  and Chrome reports `TypeError: Cannot cancel a locked stream`. Apps are written against
+  Chrome, so the shim matches it, and rejects before changing anything.
+- **`requestPort()` validates filters**: an empty filter, a `usbProductId` without
+  `usbVendorId`, or Bluetooth and USB IDs together reject with `TypeError` (spec steps; not in
+  the PRD).
+- **`open()` validates every option**, not only `baudRate`: `dataBits` 7 or 8, `stopBits` 1 or
+  2, `parity` and `flowControl` enum values, `bufferSize` above 0 and at most 16 MiB (Chrome's
+  limit), all with WebIDL `[EnforceRange]` semantics.
+- **`connect` and `disconnect` fire on the port and bubble to `navigator.serial`** (spec), with
+  `event.target` being the port. `port.connected` reflects the state.
+- **`getPorts()` returns only granted ports whose device is connected** ("available" in the
+  spec). `forget()` removes the grant.
+- **`getSignals()`** reports the inputs of a ready printer: CTS and DSR set, DCD and RI clear.
+- After a disconnect, `readable` and `writable` become `null` but the port stays open until the
+  app calls `close()`, as in the spec; it can then reopen once the device is back.
+
+### Other M1 choices
+
+- **`picker-cancel` is one-shot**, as PRD section 10 says ("next request"): the shim turns it
+  off after using it, through `PUT /api/v1/devices/:id/faults/picker-cancel` in server mode.
+  The REST API therefore allows CORS from local origins (any origin when a token is set).
+- **Default devices.** Without a config file the server creates `printer-1` and `drawer-1`, so
+  `hardless start` is enough for a first receipt.
+- **Job closing.** Jobs close on a cut or after `idleMs` (default 300 ms). Status requests do
+  not start a job. Settings sent without anything printable carry over into the next job.
+- **Paper out and cover open** stop printing like a real printer: prints are dropped, buffered
+  `ESC p` kicks are not executed, and real-time `DLE DC4` kicks still are. The app learns the
+  cause through `DLE EOT` status, which is how ESC/POS apps detect it.
+- **Drawer sensor**: `DLE EOT 1` bit 2 set means the drawer is open. Real drawers differ in
+  polarity; this can become a printer setting if needed.
+- **Code pages** come from the Windows definitions of CP437 and CP858.
+- **Parser extras** beyond the phase 1 list (`CR`, `HT`, `ESC !`, `ESC M`, `GS h/w/H`,
+  `ESC i/m`, `DLE DC4 1`), because apps send them constantly. Other known commands are
+  skipped by length so their parameters are not printed.
+- **Render endpoint** takes `unknown=0` to hide unknown-command badges (FR-12's toggle).
+- **New dependencies**: `tokio`, `axum`, `qrcode`, `barcoders` (all named in section 6),
+  `clap` for the CLI and `futures-util` for WebSocket handling (both MIT/Apache-2.0, widely
+  used); `zustand` for the dashboard (section 6).
+- **Sizes (NFR-08)**: `dist/hardless-shim.js` is 7.6 KiB gzipped (limit 30 KB); the
+  WebAssembly engine is 169 KiB gzipped (limit 500 KB) and loads only in standalone mode.
 
 ## M0 — Foundation
 

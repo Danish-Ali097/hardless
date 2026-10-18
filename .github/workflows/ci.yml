@@ -44,6 +44,11 @@ jobs:
       - name: wasm32 build of engine crates
         shell: bash
         run: cargo build --target wasm32-unknown-unknown $WASM_CRATES
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - name: engine tests in WebAssembly (FR-15)
+        run: cargo test -p hardless-wasm --target wasm32-unknown-unknown
       - name: packages/types is up to date
         run: cargo xtask gen-types --check
       - name: rustdoc
@@ -97,3 +102,38 @@ jobs:
         run: pnpm build
       - name: npm licences (NFR-14)
         run: pnpm run check:licenses
+
+  e2e:
+    name: Browser tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: build the dashboard, server and standalone engine
+        run: |
+          pnpm --filter @hardless/dashboard build
+          cargo build -p hardless-cli
+          cargo xtask build-wasm
+          pnpm --filter @hardless/shim-web build
+      - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium
+      - name: Web Serial shim conformance (PRD section 8.1)
+        run: pnpm --filter @hardless/shim-web test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-${{ matrix.os }}
+          path: packages/shim-web/test-results

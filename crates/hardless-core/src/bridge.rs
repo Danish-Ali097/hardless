@@ -68,6 +68,14 @@ pub enum ClientMessage {
         /// The device.
         device_id: DeviceId,
     },
+    /// `SerialPort.setSignals()`: output signals set by the app (PRD section 8.1).
+    #[serde(rename_all = "camelCase")]
+    Signals {
+        /// The device.
+        device_id: DeviceId,
+        /// The signals that were set.
+        signals: SerialSignals,
+    },
     /// Bytes written by the app.
     #[serde(rename_all = "camelCase")]
     Write {
@@ -78,6 +86,32 @@ pub enum ClientMessage {
         #[cfg_attr(feature = "ts", ts(type = "string"))]
         data: Bytes,
     },
+}
+
+/// Output signals from `SerialPort.setSignals()`; only the ones the app set are present.
+///
+/// ```
+/// use hardless_core::bridge::SerialSignals;
+/// let s: SerialSignals = serde_json::from_str(r#"{ "dataTerminalReady": true }"#).unwrap();
+/// assert_eq!(s.data_terminal_ready, Some(true));
+/// assert_eq!(s.request_to_send, None);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SerialSignals {
+    /// Data Terminal Ready (DTR).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub data_terminal_ready: Option<bool>,
+    /// Request To Send (RTS).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub request_to_send: Option<bool>,
+    /// Break.
+    #[serde(rename = "break", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(rename = "break", optional))]
+    pub brk: Option<bool>,
 }
 
 /// A message from the server to the shim.
