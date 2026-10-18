@@ -204,6 +204,12 @@ name = "hardless-devices"
 version = "0.0.0"
 dependencies = [
  "hardless-core",
+ "hardless-escpos",
+ "hardless-render",
+ "insta",
+ "schemars",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
