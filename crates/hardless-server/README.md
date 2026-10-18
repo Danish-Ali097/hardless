@@ -2,12 +2,12 @@
 
 The Hardless server (tokio + axum). It owns all I/O and time for the sans-IO engine.
 
-| Path | What |
-| --- | --- |
-| `/` | The dashboard (embedded from `packages/dashboard/dist` at build time) |
-| `/api/v1/...` | REST control API (PRD section 11.1) |
-| `/api/v1/stream` | WebSocket: the event bus, for the dashboard |
-| `/bridge` | WebSocket bridge for the browser shim (PRD section 11.2) |
+| Path             | What                                                                  |
+| ---------------- | --------------------------------------------------------------------- |
+| `/`              | The dashboard (embedded from `packages/dashboard/dist` at build time) |
+| `/api/v1/...`    | REST control API (PRD section 11.1)                                   |
+| `/api/v1/stream` | WebSocket: the event bus, for the dashboard                           |
+| `/bridge`        | WebSocket bridge for the browser shim (PRD section 11.2)              |
 
 Configuration (FR-21) comes from `hardless.config.json`, then `HARDLESS_*` environment
 variables, then CLI flags. Without a config, it creates `printer-1` (ESC/POS) and `drawer-1`

@@ -41,22 +41,22 @@ assert!(parser.finish().is_empty());
 
 ## Commands
 
-| Command | Bytes | Node |
-| --- | --- | --- |
-| Initialize | `ESC @` | `Init` |
-| Print and line feed | `LF` | `LineFeed` |
-| Print and feed n lines | `ESC d n` | `Feed { lines }` |
-| Justification | `ESC a n` | `Align` |
-| Emphasized | `ESC E n` | `Bold` |
-| Underline | `ESC - n` | `Underline { dots }` |
-| Character size | `GS ! n` | `Size { width, height }` |
-| Character code table | `ESC t n` | `CodePage` |
-| Cut | `GS V m` / `GS V m n` | `Cut { partial, feed }` |
-| Drawer kick pulse | `ESC p m t1 t2` | `Pulse { pin, onMs, offMs }` |
-| QR code | `GS ( k` (cn = 49) | `QrModel`, `QrModuleSize`, `QrErrorCorrection`, `QrStore`, `QrPrint` |
-| Barcode | `GS k` (CODE128, EAN13, CODE39) | `Barcode` |
-| Raster bit image | `GS v 0` | `RasterImage` |
-| Real-time status | `DLE EOT n` | `Status { kind }` |
+| Command                | Bytes                           | Node                                                                 |
+| ---------------------- | ------------------------------- | -------------------------------------------------------------------- |
+| Initialize             | `ESC @`                         | `Init`                                                               |
+| Print and line feed    | `LF`                            | `LineFeed`                                                           |
+| Print and feed n lines | `ESC d n`                       | `Feed { lines }`                                                     |
+| Justification          | `ESC a n`                       | `Align`                                                              |
+| Emphasized             | `ESC E n`                       | `Bold`                                                               |
+| Underline              | `ESC - n`                       | `Underline { dots }`                                                 |
+| Character size         | `GS ! n`                        | `Size { width, height }`                                             |
+| Character code table   | `ESC t n`                       | `CodePage`                                                           |
+| Cut                    | `GS V m` / `GS V m n`           | `Cut { partial, feed }`                                              |
+| Drawer kick pulse      | `ESC p m t1 t2`                 | `Pulse { pin, onMs, offMs }`                                         |
+| QR code                | `GS ( k` (cn = 49)              | `QrModel`, `QrModuleSize`, `QrErrorCorrection`, `QrStore`, `QrPrint` |
+| Barcode                | `GS k` (CODE128, EAN13, CODE39) | `Barcode`                                                            |
+| Raster bit image       | `GS v 0`                        | `RasterImage`                                                        |
+| Real-time status       | `DLE EOT n`                     | `Status { kind }`                                                    |
 
 Extras beyond the phase 1 list, because apps send them all the time: `CR` (`CarriageReturn`),
 `HT` (`Tab`), `ESC !` (`PrintMode`), `ESC M` (`Font`), `GS h` / `GS w` / `GS H` (barcode

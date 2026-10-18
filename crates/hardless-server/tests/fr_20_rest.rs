@@ -298,3 +298,33 @@ async fn fr_20_cors_allows_local_origins_only_without_a_token() {
         .iter()
         .any(|(k, _)| k == "access-control-allow-origin"));
 }
+
+#[tokio::test]
+async fn fr_20_render_can_hide_unknown_command_badges() {
+    let server = server().await;
+    let printer = "printer-1".parse().unwrap();
+    server
+        .engine
+        .drive(&printer, |r| {
+            r.host_bytes(&printer, b"a\x1b3\x18b\n\x1dV\x00")
+        })
+        .unwrap();
+    let (_, _, with) = http(
+        &server,
+        "GET",
+        "/api/v1/devices/printer-1/jobs/1/render",
+        None,
+        &[],
+    )
+    .await;
+    assert!(with.contains(r#"class="hl-unknown""#));
+    let (_, _, without) = http(
+        &server,
+        "GET",
+        "/api/v1/devices/printer-1/jobs/1/render?unknown=0",
+        None,
+        &[],
+    )
+    .await;
+    assert!(!without.contains(r#"class="hl-unknown""#));
+}

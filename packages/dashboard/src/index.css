@@ -1,1 +1,85 @@
 @import "tailwindcss";
+
+/*
+ * The counter: brushed-steel greys, with drawer brass as the only accent (an open drawer,
+ * an active fault). Receipts are always white paper. Light and dark follow the system
+ * (NFR-13). System fonts only: Hardless makes no outbound network calls (NFR-04).
+ */
+:root {
+  --counter: #e6eaee;
+  --panel: #f6f7f9;
+  --raised: #ffffff;
+  --ink: #1c2228;
+  --muted: #56606a;
+  --line: #cfd6dc;
+  --brass: #a8701b;
+  --brass-soft: #f4e4c4;
+  --brass-ink: #6b440b;
+  --ok: #0f766e;
+  --danger: #b42318;
+  --focus: #2563eb;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --counter: #1d2227;
+    --panel: #262c32;
+    --raised: #2e353c;
+    --ink: #e4e8eb;
+    --muted: #9ca7b1;
+    --line: #3b434b;
+    --brass: #d9a441;
+    --brass-soft: #4a3714;
+    --brass-ink: #f5d896;
+    --ok: #34d3be;
+    --danger: #f97066;
+    --focus: #7aa2ff;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-counter: var(--counter);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-brass-ink: var(--brass-ink);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --font-sans:
+    "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--counter);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

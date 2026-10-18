@@ -1,17 +1,75 @@
+import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { App } from "../src/App.js";
+import { Dashboard } from "../src/App.js";
+import { drawer, job, printer, stateWith } from "./fixtures.js";
 
-describe("dashboard shell", () => {
-  it("renders the empty state", () => {
-    const html = renderToString(<App />);
-    expect(html).toContain("Hardless");
-    expect(html).toContain("No devices yet");
+/** Server-rendered markup without React's text separators (`<!-- -->`). */
+const html = (state: Parameters<typeof Dashboard>[0]["state"]) =>
+  renderToString(<Dashboard state={state} />).replaceAll("<!-- -->", "");
+
+describe("dashboard", () => {
+  it("FR-23: lists every device with its status and active faults", () => {
+    const page = html(
+      stateWith([
+        printer({ faults: [{ id: "paper-out", options: {} }] }, { paperOut: true }),
+        drawer({ state: "open" }),
+      ]),
+    );
+    expect(page).toContain("Receipt printer, paper out");
+    expect(page).toContain("1 fault");
+    expect(page).toContain("Cash drawer, open");
+    expect(page).toContain("Add device");
   });
 
-  it("NFR-13: has light and dark theme styles", () => {
-    const html = renderToString(<App />);
-    expect(html).toContain("bg-white");
-    expect(html).toContain("dark:bg-neutral-950");
+  it("FR-24: shows the printer's tray with width switch, clear and an empty state", () => {
+    const page = html(stateWith([printer()]));
+    expect(page).toContain("Nothing printed yet.");
+    expect(page).toMatch(/role="radio" aria-checked="true"[^>]*>80 mm/);
+    expect(page).toContain(">Clear<");
+    expect(page).toContain("Mark unknown commands");
+  });
+
+  it("FR-24: lists receipts newest first with raw bytes and a download link", () => {
+    const page = html(stateWith([printer()], { jobs: { "printer-1": [job(2), job(1)] } }));
+    expect(page.indexOf("Receipt 2:")).toBeLessThan(page.indexOf("Receipt 1:"));
+    expect(page).toContain("Raw bytes");
+    expect(page).toContain("1b 40");
+    expect(page).toContain("jobs/2/render?format=html&amp;width=80");
+  });
+
+  it("FR-25: shows the attached drawer opening, its kick count and a close button", () => {
+    const open = html(stateWith([printer(), drawer({ state: "open", kicks: 3 })]));
+    expect(open).toContain(">Open<");
+    expect(open).toContain("kicked 3 times");
+    expect(open).toMatch(/<button type="button"[^>]*>Close drawer<\/button>/);
+    expect(open).toContain("translate-y-6");
+
+    const closed = html(stateWith([printer(), drawer()]));
+    expect(closed).toMatch(/<button type="button" disabled=""[^>]*>Close drawer<\/button>/);
+  });
+
+  it("FR-28: offers a switch for every supported fault, on for active ones", () => {
+    const page = html(
+      stateWith([
+        printer({ faults: [{ id: "slow-write", options: { msPerChunk: 500 } }] }),
+        drawer(),
+      ]),
+    );
+    expect(page.match(/role="switch"/g)?.length).toBe(6 + 2);
+    expect(page).toMatch(/aria-checked="true" aria-label="Slow writes"/);
+    expect(page).toMatch(/aria-checked="false" aria-label="Paper out"/);
+    expect(page).toContain('value="500"');
+    expect(page).toContain("Jammed");
+  });
+
+  it("NFR-13: defines light and dark themes", () => {
+    const css = readFileSync(new URL("../src/index.css", import.meta.url), "utf8");
+    expect(css).toContain("@media (prefers-color-scheme: dark)");
+    expect(css).toContain("prefers-reduced-motion");
+  });
+
+  it("explains how to start when there are no devices", () => {
+    expect(html(stateWith([]))).toContain("No devices yet.");
   });
 });

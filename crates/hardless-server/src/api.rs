@@ -165,6 +165,8 @@ async fn last_job(
 struct RenderQuery {
     format: Option<String>,
     width: Option<u16>,
+    /// `false` (or `0`) hides the badges for unknown commands (FR-12).
+    unknown: Option<String>,
 }
 
 async fn render_job(
@@ -193,7 +195,7 @@ async fn render_job(
                 &nodes,
                 &RenderOptions {
                     paper,
-                    show_unknown: true,
+                    show_unknown: !matches!(query.unknown.as_deref(), Some("0" | "false")),
                 },
             );
             Ok(([(header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response())

@@ -32,15 +32,15 @@ assert!(html.contains("hl-cut"));
 
 ## Output reference
 
-| AST node | HTML | `to_text` |
-| --- | --- | --- |
-| Text, line feed, feed | `.hl-line` per printed line | one line each, aligned with spaces |
-| Cut | `.hl-cut` (`.hl-cut-partial` for partial) | nothing |
-| QR print | inline `<svg class="hl-qr">` | `[QR: <data>]` |
-| Barcode | inline `<svg class="hl-barcode">` plus HRI text if enabled | `[BARCODE <symbology>: <data>]` |
-| Raster image | inline `<svg class="hl-image">` | `[IMAGE <w>x<h>]` |
-| Unknown | `<span class="hl-unknown">` badge (if `show_unknown`) | nothing |
-| Drawer pulse, status request, settings | nothing (not printed) | nothing |
+| AST node                               | HTML                                                       | `to_text`                          |
+| -------------------------------------- | ---------------------------------------------------------- | ---------------------------------- |
+| Text, line feed, feed                  | `.hl-line` per printed line                                | one line each, aligned with spaces |
+| Cut                                    | `.hl-cut` (`.hl-cut-partial` for partial)                  | nothing                            |
+| QR print                               | inline `<svg class="hl-qr">`                               | `[QR: <data>]`                     |
+| Barcode                                | inline `<svg class="hl-barcode">` plus HRI text if enabled | `[BARCODE <symbology>: <data>]`    |
+| Raster image                           | inline `<svg class="hl-image">`                            | `[IMAGE <w>x<h>]`                  |
+| Unknown                                | `<span class="hl-unknown">` badge (if `show_unknown`)      | nothing                            |
+| Drawer pulse, status request, settings | nothing (not printed)                                      | nothing                            |
 
 ## License
 

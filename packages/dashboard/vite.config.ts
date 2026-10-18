@@ -7,6 +7,9 @@ import { licenses } from "./build/licenses.js";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
+/** The Hardless server the dev server proxies to (`hardless start`). */
+const server = process.env.HARDLESS_URL ?? "http://127.0.0.1:8080";
+
 export default defineConfig({
   plugins: [
     react(),
@@ -22,4 +25,9 @@ export default defineConfig({
   // hardless-server serves these files at `/` (FR-21).
   base: "./",
   build: { outDir: "dist", emptyOutDir: true },
+  server: {
+    proxy: {
+      "/api": { target: server, ws: true },
+    },
+  },
 });
