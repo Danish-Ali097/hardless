@@ -14,13 +14,13 @@ pub use bytes::Bytes;
 
 pub use device::{
     ConfigError, ControlCommand, Device, DeviceEvent, DevicePlugin, Job, LogEntry, LogLevel,
-    Terminator,
+    PeripheralSignal, Terminator,
 };
 pub use fault::{catalogue, FaultId, FaultOptionSpec, FaultOptions, FaultSpec, OptionDefault};
 pub use ids::{DeviceId, InvalidId, JobId, MAX_DEVICE_ID_LEN};
 pub use log::{Direction, EventKind, EventLog, EventRecord, DEFAULT_LOG_CAPACITY};
 pub use registry::{
     ActiveFault, BusEvent, DeviceSummary, Registry, RegistryConfig, RegistryError,
-    DEFAULT_BUS_CAPACITY, DEFAULT_JOB_CAPACITY,
+    DEFAULT_BUS_CAPACITY, DEFAULT_JOB_CAPACITY, MAX_PERIPHERAL_DEPTH,
 };
 pub use time::{Clock, FakeClock, Millis};

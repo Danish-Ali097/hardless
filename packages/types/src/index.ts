@@ -16,4 +16,5 @@ export type * from "./LogEntry.js";
 export type * from "./LogLevel.js";
 export type * from "./Millis.js";
 export type * from "./OptionDefault.js";
+export type * from "./PeripheralSignal.js";
 export type * from "./Terminator.js";

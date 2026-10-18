@@ -75,6 +75,57 @@ pub trait Device: Send {
     /// Back to the freshly created state at `now`: clears buffers, jobs and faults. Returns
     /// what that caused, e.g. [`DeviceEvent::Connected`] if the device was offline.
     fn reset(&mut self, now: Millis) -> Vec<DeviceEvent>;
+
+    /// The device this one is attached to as a peripheral, e.g. a cash drawer's printer.
+    /// [`DeviceEvent::Peripheral`] signals travel between attached devices.
+    fn attached_to(&self) -> Option<DeviceId> {
+        None
+    }
+
+    /// A [`PeripheralSignal`] from an attached device: from a peripheral to the device it is
+    /// attached to (e.g. the drawer's open sensor), or from that device to its peripherals
+    /// (e.g. a drawer-kick pulse).
+    fn on_peripheral(
+        &mut self,
+        from: &DeviceId,
+        signal: PeripheralSignal,
+        now: Millis,
+    ) -> Vec<DeviceEvent> {
+        let _ = (from, signal, now);
+        Vec::new()
+    }
+}
+
+/// A signal on the wires between a device and its peripherals, modelled on the drawer-kick
+/// connector of receipt printers.
+///
+/// ```
+/// use hardless_core::PeripheralSignal;
+/// let kick = PeripheralSignal::Pulse { pin: 2, on_ms: 50, off_ms: 500 };
+/// assert_eq!(
+///     serde_json::to_value(&kick).unwrap(),
+///     serde_json::json!({ "type": "pulse", "pin": 2, "onMs": 50, "offMs": 500 })
+/// );
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum PeripheralSignal {
+    /// A drawer-kick pulse: `pin` (2 or 5) is driven for `on_ms`, then released for `off_ms`.
+    #[serde(rename_all = "camelCase")]
+    Pulse {
+        /// Connector pin, 2 or 5.
+        pin: u8,
+        /// Pulse on time in milliseconds.
+        on_ms: u64,
+        /// Pulse off time in milliseconds.
+        off_ms: u64,
+    },
+    /// The drawer-open sensor (connector pin 3): `true` while the drawer is open.
+    Sensor {
+        /// Whether the drawer is open.
+        open: bool,
+    },
 }
 
 /// Something a device did, returned from every [`Device`] call.
@@ -92,6 +143,8 @@ pub enum DeviceEvent {
     Disconnected,
     /// A diagnostic message, e.g. an unknown command.
     Log(LogEntry),
+    /// A signal to attached devices; the registry delivers it (see [`Device::attached_to`]).
+    Peripheral(PeripheralSignal),
 }
 
 /// A completed print job.

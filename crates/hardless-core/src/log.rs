@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
-use crate::device::{ControlCommand, LogLevel};
+use crate::device::{ControlCommand, LogLevel, PeripheralSignal};
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::{DeviceId, JobId};
 use crate::time::Millis;
@@ -91,6 +91,15 @@ pub enum EventKind {
     },
     /// The device was reset.
     Reset,
+    /// A peripheral signal between attached devices, recorded in both devices' logs.
+    Peripheral {
+        /// The sending device.
+        from: DeviceId,
+        /// The receiving device.
+        to: DeviceId,
+        /// The signal.
+        signal: PeripheralSignal,
+    },
 }
 
 impl EventKind {
@@ -108,6 +117,7 @@ impl EventKind {
             EventKind::JobCompleted { .. } => "job-completed",
             EventKind::Log { .. } => "log",
             EventKind::Reset => "reset",
+            EventKind::Peripheral { .. } => "peripheral",
         }
     }
 }

@@ -27,4 +27,8 @@ faults: Array<ActiveFault>,
 /**
  * Faults that can be set on this device ([`Device::faults`]), e.g. for the fault panel.
  */
-supportedFaults: Array<FaultId>, };
+supportedFaults: Array<FaultId>, 
+/**
+ * The device this one is attached to, e.g. a cash drawer's printer.
+ */
+attachedTo: DeviceId | null, };

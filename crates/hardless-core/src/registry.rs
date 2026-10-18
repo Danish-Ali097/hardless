@@ -6,7 +6,9 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::device::{ConfigError, ControlCommand, Device, DeviceEvent, DevicePlugin, Job};
+use crate::device::{
+    ConfigError, ControlCommand, Device, DeviceEvent, DevicePlugin, Job, LogLevel, PeripheralSignal,
+};
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::DeviceId;
 use crate::log::{EventKind, EventLog, EventRecord, DEFAULT_LOG_CAPACITY};
@@ -14,6 +16,8 @@ use crate::time::{Clock, Millis};
 
 /// Default number of jobs kept per device.
 pub const DEFAULT_JOB_CAPACITY: usize = 1_000;
+/// How many hops a chain of peripheral signals may take before it is dropped.
+pub const MAX_PERIPHERAL_DEPTH: u8 = 8;
 /// Default number of undrained events kept on the bus.
 pub const DEFAULT_BUS_CAPACITY: usize = 10_000;
 
@@ -113,6 +117,8 @@ pub struct DeviceSummary {
     pub faults: Vec<ActiveFault>,
     /// Faults that can be set on this device ([`Device::faults`]), e.g. for the fault panel.
     pub supported_faults: Vec<FaultId>,
+    /// The device this one is attached to, e.g. a cash drawer's printer.
+    pub attached_to: Option<DeviceId>,
 }
 
 /// An error from a [`Registry`] operation.
@@ -582,7 +588,12 @@ impl Registry {
     /// Records a device's events in its log, stores jobs, and publishes bus events. State
     /// changes are coalesced into one `device:state`, published after any `device:output`.
     fn absorb(&mut self, id: &DeviceId, now: Millis, events: &[DeviceEvent]) {
+        self.absorb_at_depth(id, now, events, 0);
+    }
+
+    fn absorb_at_depth(&mut self, id: &DeviceId, now: Millis, events: &[DeviceEvent], depth: u8) {
         let mut state_changed = false;
+        let mut signals = Vec::new();
         for event in events {
             match event {
                 DeviceEvent::ToHost(data) => {
@@ -618,6 +629,7 @@ impl Registry {
                     };
                     self.record(id, now, kind);
                 }
+                DeviceEvent::Peripheral(signal) => signals.push(signal.clone()),
             }
         }
         if state_changed {
@@ -635,6 +647,65 @@ impl Registry {
                     at: now,
                 });
             }
+        }
+        for signal in signals {
+            self.deliver_peripheral(id, now, signal, depth);
+        }
+    }
+
+    /// Delivers a peripheral signal from `from` to the device it is attached to and to every
+    /// device attached to it. Signals that cause further signals are delivered too, up to
+    /// [`MAX_PERIPHERAL_DEPTH`] hops, so two devices cannot loop forever.
+    fn deliver_peripheral(
+        &mut self,
+        from: &DeviceId,
+        now: Millis,
+        signal: PeripheralSignal,
+        depth: u8,
+    ) {
+        if depth >= MAX_PERIPHERAL_DEPTH {
+            let message = format!(
+                "peripheral signal dropped after {MAX_PERIPHERAL_DEPTH} hops (devices signalling in a loop?)"
+            );
+            self.record(
+                from,
+                now,
+                EventKind::Log {
+                    level: LogLevel::Warn,
+                    message,
+                },
+            );
+            return;
+        }
+        let host = self
+            .devices
+            .get(from)
+            .and_then(|slot| slot.device.attached_to());
+        let mut targets: Vec<DeviceId> = host.into_iter().collect();
+        targets.extend(
+            self.devices
+                .iter()
+                .filter(|(id, slot)| {
+                    *id != from && slot.device.attached_to().as_ref() == Some(from)
+                })
+                .map(|(id, _)| id.clone()),
+        );
+        targets.retain(|t| t != from);
+        targets.dedup();
+        for to in targets {
+            let Some(slot) = self.devices.get_mut(&to) else {
+                // Attached to a device that does not exist (yet): nothing receives the signal.
+                continue;
+            };
+            let events = slot.device.on_peripheral(from, signal.clone(), now);
+            let kind = EventKind::Peripheral {
+                from: from.clone(),
+                to: to.clone(),
+                signal: signal.clone(),
+            };
+            self.record(from, now, kind.clone());
+            self.record(&to, now, kind);
+            self.absorb_at_depth(&to, now, &events, depth + 1);
         }
     }
 }
@@ -660,6 +731,7 @@ fn summarize(id: &DeviceId, slot: &Slot) -> DeviceSummary {
             })
             .collect(),
         supported_faults: slot.device.faults(),
+        attached_to: slot.device.attached_to(),
     }
 }
 

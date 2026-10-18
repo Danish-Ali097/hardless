@@ -4,6 +4,26 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## M1 — Printer and drawer over Web Serial
+
+### Maintainer decisions taken before starting
+
+- **Printer and drawer connect through a peripheral link in `hardless-core`** (changes FR-01
+  and FR-02). A device can name the device it is attached to; a device can emit a
+  `PeripheralSignal` (the printer's drawer-kick pulse, the drawer's open sensor), and the
+  registry delivers it between attached devices. This mirrors the real drawer-kick connector
+  and keeps `cash-drawer` a separate device kind as in the PRD.
+- **No PNG download in M1.** FR-24's "download PNG" button arrives with PNG rendering (FR-11)
+  in M2. M1 offers the raw hex view and an HTML download.
+- **`hardless start` ships in M1** (`--config`, `--port`, `--host`, `--token`), because FR-21
+  needs CLI flags and the M1 acceptance test needs a running server. The other FR-30
+  subcommands stay in M2.
+- **New endpoint `GET /api/v1/stream`** (WebSocket): pushes event bus events
+  (`device:added`, `device:removed`, `device:state`, `device:output`) to the dashboard.
+  Section 5 says the dashboard receives jobs over a WebSocket, but the PRD defines none for it.
+- **New endpoint `POST /api/v1/devices/:id/close`**: closes an open cash drawer (FR-25, FR-37),
+  in the style of `/scan` and `/tap`.
+
 ## M0 — Foundation
 
 ### Toolchain

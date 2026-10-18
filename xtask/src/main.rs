@@ -67,6 +67,7 @@ fn export_all(dir: &Path) -> Result<(), String> {
         core::FaultSpec,
         core::LogEntry,
         core::Direction,
+        core::PeripheralSignal,
     );
     Ok(())
 }

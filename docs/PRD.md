@@ -193,6 +193,9 @@ pub trait Device: Send {
     fn set_fault(&mut self, fault: FaultId, active: bool, opts: FaultOptions, now: Millis)
         -> Vec<DeviceEvent>; // e.g. offline -> Disconnected
     fn reset(&mut self, now: Millis) -> Vec<DeviceEvent>;
+    fn attached_to(&self) -> Option<DeviceId> { None }   // e.g. a drawer's printer
+    fn on_peripheral(&mut self, from: &DeviceId, signal: PeripheralSignal, now: Millis)
+        -> Vec<DeviceEvent> { Vec::new() }                // drawer kick, drawer sensor
 }
 
 pub enum DeviceEvent {
@@ -201,10 +204,16 @@ pub enum DeviceEvent {
     JobCompleted(Job),        // a print job with its AST
     Connected, Disconnected,
     Log(LogEntry),
+    Peripheral(PeripheralSignal), // delivered by the registry to attached devices
+}
+
+pub enum PeripheralSignal {
+    Pulse { pin: u8, on_ms: u64, off_ms: u64 }, // drawer kick on pin 2 or 5
+    Sensor { open: bool },                      // drawer-open sensor (pin 3)
 }
 ```
 
-- **FR-02 Device registry.** Register plugins, create/remove instances by config, look up by `id`, list all. Setting a fault the device does not declare in `Device::faults` is rejected (`unsupported_fault`, HTTP 400). Emits `device:added`, `device:removed`, `device:state`, `device:output` on an event bus.
+- **FR-02 Device registry.** Register plugins, create/remove instances by config, look up by `id`, list all. Setting a fault the device does not declare in `Device::faults` is rejected (`unsupported_fault`, HTTP 400). `Peripheral` signals are delivered between a device and the devices attached to it (`attached_to`), e.g. printer and cash drawer. Emits `device:added`, `device:removed`, `device:state`, `device:output` on an event bus.
 - **FR-03 Event log.** Every byte in/out and every state change is recorded with a monotonic timestamp, capped at a configurable size (default 10,000 events per device).
 - **FR-04 Scenario runner.** Executes a JSON scenario: an ordered list of steps (`scan`, `tap`, `wait`, `setFault`, `clearFault`, `expect`) with millisecond delays.
 - **FR-05 Deterministic clock.** Inject a clock so tests can use fake timers.
@@ -367,10 +376,12 @@ Every fault can be toggled from the dashboard, REST API, CLI, scenario runner an
 | GET    | `/devices/:id/jobs/:jobId/render?format=html\|svg\|png&width=58\|80` | Rendered receipt                                            |
 | POST   | `/devices/:id/scan`                                                  | `{ code, terminator?, delayMs? }`                           |
 | POST   | `/devices/:id/tap`                                                   | `{ uid, records[] }`                                        |
+| POST   | `/devices/:id/close` | Close an open cash drawer (FR-25, FR-37) |
 | PUT    | `/devices/:id/faults/:faultId`                                       | `{ active, options? }`                                      |
 | GET    | `/devices/:id/events?since=`                                         | Event log                                                   |
 | POST   | `/scenarios/run`                                                     | Run a scenario JSON; returns step results                   |
 | GET    | `/health`                                                            | Liveness for Docker/CI                                      |
+| GET    | `/stream` (WebSocket) | Event bus for the dashboard: `device:added`, `device:removed`, `device:state`, `device:output` |
 
 Errors use `{ error: { code, message, details? } }` with 400/404/409/500.
 
