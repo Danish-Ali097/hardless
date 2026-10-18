@@ -41,10 +41,16 @@ decision from the maintainer.
   code block was updated. The registry still publishes `device:state` after every fault
   toggle and reset, because the active faults are part of the device summary.
 - **Faults are open strings.** `FaultId` is a validated kebab-case string so plugins can add
-  faults (goal 5); the section 10 IDs are constants and `catalogue()`. The registry does not
-  check that a fault applies to a device kind, because `DevicePlugin` has no way to declare
-  its faults. **Open:** add `fn faults(&self) -> &[FaultId]` to `DevicePlugin` so the REST API
-  can return 400 for a fault that does not apply?
+  faults (goal 5); the section 10 IDs are constants and `catalogue()`.
+- **FR-01/FR-02 changed (maintainer decision, M0): devices declare their faults.**
+  `DevicePlugin::faults()` lists every fault a kind can support (for listing faults by kind,
+  e.g. the MCP `list_faults` tool). `Device::faults()` lists the faults that apply to one
+  instance, because applicability can depend on config: the same `printer-escpos` kind gets
+  `baud-mismatch` over serial but `stall` over USB. `Registry::set_fault` rejects any other
+  fault with `RegistryError::UnsupportedFault` (code `unsupported_fault`, HTTP 400 in M1),
+  whether turning it on or off, and changes and records nothing. `DeviceSummary` gains
+  `supportedFaults` so the dashboard fault panel (FR-28) shows only toggles that apply. Both
+  return `Vec<FaultId>` so plugins can return their own fault IDs.
 - **Device IDs** are 1–64 ASCII letters, digits, `-`, `_` and `.`, because they appear in URL
   paths. Generated IDs are `<kind>-<n>`.
 - **Event log `seq`** is unique across all devices, so `?since=` works for merged views.

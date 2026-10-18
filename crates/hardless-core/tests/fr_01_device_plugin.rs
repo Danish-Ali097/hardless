@@ -162,3 +162,14 @@ fn fr_01_control_command_wire_format() {
     let close: ControlCommand = serde_json::from_value(json!({ "type": "close-drawer" })).unwrap();
     assert_eq!(close, ControlCommand::CloseDrawer);
 }
+
+#[test]
+fn fr_01_plugin_and_device_declare_their_supported_faults() {
+    let plugin_faults = SamplePlugin.faults();
+    assert_eq!(plugin_faults, common::SUPPORTED_FAULTS);
+    let device = SamplePlugin.create(id("p1"), json!({})).unwrap();
+    // An instance supports a subset of what its kind can support.
+    assert!(device.faults().iter().all(|f| plugin_faults.contains(f)));
+    assert!(device.faults().contains(&FaultId::PAPER_OUT));
+    assert!(!device.faults().contains(&FaultId::STALL));
+}

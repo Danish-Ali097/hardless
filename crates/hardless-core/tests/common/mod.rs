@@ -31,6 +31,13 @@ fn default_idle() -> u64 {
     300
 }
 
+/// Faults the sample device supports. `disconnect-mid-write` is accepted but has no effect.
+pub const SUPPORTED_FAULTS: &[FaultId] = &[
+    FaultId::DISCONNECT_MID_WRITE,
+    FaultId::OFFLINE,
+    FaultId::PAPER_OUT,
+];
+
 pub struct SamplePlugin;
 
 impl DevicePlugin for SamplePlugin {
@@ -40,6 +47,10 @@ impl DevicePlugin for SamplePlugin {
 
     fn config_schema(&self) -> schemars::Schema {
         schemars::schema_for!(SampleConfig)
+    }
+
+    fn faults(&self) -> Vec<FaultId> {
+        SUPPORTED_FAULTS.to_vec()
     }
 
     fn create(&self, id: DeviceId, config: Value) -> Result<Box<dyn Device>, ConfigError> {
@@ -169,6 +180,10 @@ impl Device for SampleDevice {
 
     fn next_deadline(&self) -> Option<Millis> {
         self.deadline
+    }
+
+    fn faults(&self) -> Vec<FaultId> {
+        SUPPORTED_FAULTS.to_vec()
     }
 
     fn set_fault(

@@ -19,6 +19,10 @@ pub trait DevicePlugin: Send + Sync + 'static {
     /// JSON Schema for the `config` accepted by [`DevicePlugin::create`].
     fn config_schema(&self) -> schemars::Schema;
 
+    /// Every fault a device of this kind can support, e.g. for listing faults by kind. A
+    /// particular instance may support fewer, see [`Device::faults`].
+    fn faults(&self) -> Vec<FaultId>;
+
     /// Creates a device instance. Invalid config is a [`ConfigError`], never a panic.
     fn create(
         &self,
@@ -51,6 +55,11 @@ pub trait Device: Send {
     /// When the device next needs [`Device::on_tick`], if ever. A deadline at or before the
     /// current time means "as soon as possible".
     fn next_deadline(&self) -> Option<Millis>;
+
+    /// The faults that apply to this instance, which may depend on its config (a serial
+    /// printer has `baud-mismatch`, a USB one has `stall`). The registry rejects any other
+    /// fault with [`RegistryError::UnsupportedFault`](crate::RegistryError::UnsupportedFault).
+    fn faults(&self) -> Vec<FaultId>;
 
     /// Turns a fault on or off at `now`, returning what that caused, e.g.
     /// [`DeviceEvent::Disconnected`] for `offline`. Turning on a fault that is already on

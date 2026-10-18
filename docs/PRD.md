@@ -176,6 +176,7 @@ Requirement IDs (FR-xx) are referenced by the milestones in section 13.
 pub trait DevicePlugin: Send + Sync + 'static {
     fn kind(&self) -> &'static str;                  // e.g. "printer-escpos"
     fn config_schema(&self) -> schemars::Schema;
+    fn faults(&self) -> Vec<FaultId>;                // every fault this kind can support
     fn create(&self, id: DeviceId, config: serde_json::Value)
         -> Result<Box<dyn Device>, ConfigError>;
 }
@@ -188,6 +189,7 @@ pub trait Device: Send {
     fn on_control(&mut self, cmd: ControlCommand, now: Millis) -> Vec<DeviceEvent>; // scan, tap, close drawer
     fn on_tick(&mut self, now: Millis) -> Vec<DeviceEvent>; // pulses, idle job close
     fn next_deadline(&self) -> Option<Millis>;
+    fn faults(&self) -> Vec<FaultId>; // faults that apply to this instance (may depend on config)
     fn set_fault(&mut self, fault: FaultId, active: bool, opts: FaultOptions, now: Millis)
         -> Vec<DeviceEvent>; // e.g. offline -> Disconnected
     fn reset(&mut self, now: Millis) -> Vec<DeviceEvent>;
@@ -202,7 +204,7 @@ pub enum DeviceEvent {
 }
 ```
 
-- **FR-02 Device registry.** Register plugins, create/remove instances by config, look up by `id`, list all. Emits `device:added`, `device:removed`, `device:state`, `device:output` on an event bus.
+- **FR-02 Device registry.** Register plugins, create/remove instances by config, look up by `id`, list all. Setting a fault the device does not declare in `Device::faults` is rejected (`unsupported_fault`, HTTP 400). Emits `device:added`, `device:removed`, `device:state`, `device:output` on an event bus.
 - **FR-03 Event log.** Every byte in/out and every state change is recorded with a monotonic timestamp, capped at a configurable size (default 10,000 events per device).
 - **FR-04 Scenario runner.** Executes a JSON scenario: an ordered list of steps (`scan`, `tap`, `wait`, `setFault`, `clearFault`, `expect`) with millisecond delays.
 - **FR-05 Deterministic clock.** Inject a clock so tests can use fake timers.

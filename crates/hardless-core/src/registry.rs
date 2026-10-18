@@ -101,6 +101,7 @@ pub struct ActiveFault {
 /// A device as listed by [`Registry::list`] (and `GET /api/v1/devices`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
 pub struct DeviceSummary {
     /// Device ID.
     pub id: DeviceId,
@@ -110,6 +111,8 @@ pub struct DeviceSummary {
     pub state: serde_json::Value,
     /// Active faults, sorted by ID.
     pub faults: Vec<ActiveFault>,
+    /// Faults that can be set on this device ([`Device::faults`]), e.g. for the fault panel.
+    pub supported_faults: Vec<FaultId>,
 }
 
 /// An error from a [`Registry`] operation.
@@ -125,6 +128,13 @@ pub enum RegistryError {
     NotFound(DeviceId),
     /// The plugin rejected the config.
     InvalidConfig(ConfigError),
+    /// The device does not declare this fault in [`Device::faults`].
+    UnsupportedFault {
+        /// The device.
+        device: DeviceId,
+        /// The fault that was asked for.
+        fault: FaultId,
+    },
 }
 
 impl RegistryError {
@@ -141,6 +151,7 @@ impl RegistryError {
             RegistryError::DuplicateId(_) => "duplicate_id",
             RegistryError::NotFound(_) => "not_found",
             RegistryError::InvalidConfig(_) => "invalid_config",
+            RegistryError::UnsupportedFault { .. } => "unsupported_fault",
         }
     }
 }
@@ -155,6 +166,9 @@ impl fmt::Display for RegistryError {
             RegistryError::DuplicateId(id) => write!(f, "device `{id}` already exists"),
             RegistryError::NotFound(id) => write!(f, "device `{id}` not found"),
             RegistryError::InvalidConfig(err) => write!(f, "invalid device config: {err}"),
+            RegistryError::UnsupportedFault { device, fault } => {
+                write!(f, "device `{device}` does not support fault `{fault}`")
+            }
         }
     }
 }
@@ -406,6 +420,10 @@ impl Registry {
 
     /// Turns a fault on or off, returns the device's events (e.g. `Disconnected` for
     /// `offline`) and emits `device:state`, since the active faults are part of the summary.
+    ///
+    /// A fault the device does not declare in [`Device::faults`] is rejected with
+    /// [`RegistryError::UnsupportedFault`], whether it is being turned on or off, and nothing
+    /// is changed or recorded.
     pub fn set_fault(
         &mut self,
         id: &DeviceId,
@@ -413,6 +431,12 @@ impl Registry {
         active: bool,
         options: FaultOptions,
     ) -> Result<Vec<DeviceEvent>, RegistryError> {
+        if !self.slot(id)?.device.faults().contains(&fault) {
+            return Err(RegistryError::UnsupportedFault {
+                device: id.clone(),
+                fault,
+            });
+        }
         let now = self.now();
         let slot = self.slot_mut(id)?;
         if active {
@@ -635,6 +659,7 @@ fn summarize(id: &DeviceId, slot: &Slot) -> DeviceSummary {
                 options: options.clone(),
             })
             .collect(),
+        supported_faults: slot.device.faults(),
     }
 }
 

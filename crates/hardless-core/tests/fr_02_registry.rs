@@ -336,3 +336,53 @@ fn fr_02_bus_is_bounded() {
     assert_eq!(bus.len(), 3);
     assert!(matches!(&bus[0], BusEvent::Added { device_id, .. } if device_id == &id("p2")));
 }
+
+#[test]
+fn fr_02_set_fault_rejects_faults_the_device_does_not_support() {
+    let (_, mut registry) = registry();
+    registry.create(KIND, Some(id("p1")), json!({})).unwrap();
+    registry.drain_bus();
+    let log_before = registry.events(&id("p1"), None).unwrap().len();
+
+    for active in [true, false] {
+        let err = registry
+            .set_fault(&id("p1"), FaultId::STALL, active, FaultOptions::new())
+            .unwrap_err();
+        assert_eq!(
+            err,
+            RegistryError::UnsupportedFault {
+                device: id("p1"),
+                fault: FaultId::STALL
+            }
+        );
+        assert_eq!(err.code(), "unsupported_fault");
+        assert_eq!(
+            err.to_string(),
+            "device `p1` does not support fault `stall`"
+        );
+    }
+
+    // Nothing changed: no active fault, no log record, no bus event.
+    assert!(registry.summary(&id("p1")).unwrap().faults.is_empty());
+    assert_eq!(registry.events(&id("p1"), None).unwrap().len(), log_before);
+    assert!(registry.drain_bus().is_empty());
+
+    // An unknown device is still `not_found`, not `unsupported_fault`.
+    assert_eq!(
+        registry.set_fault(&id("nope"), FaultId::STALL, true, FaultOptions::new()),
+        Err(RegistryError::NotFound(id("nope")))
+    );
+}
+
+#[test]
+fn fr_02_summary_lists_supported_faults() {
+    let (_, mut registry) = registry();
+    registry.create(KIND, Some(id("p1")), json!({})).unwrap();
+    let summary = registry.summary(&id("p1")).unwrap();
+    assert_eq!(summary.supported_faults, common::SUPPORTED_FAULTS);
+    let wire = serde_json::to_value(&summary).unwrap();
+    assert_eq!(
+        wire["supportedFaults"],
+        json!(["disconnect-mid-write", "offline", "paper-out"])
+    );
+}

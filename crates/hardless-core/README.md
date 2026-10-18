@@ -35,6 +35,7 @@ impl Device for Echo {
     fn on_control(&mut self, _cmd: ControlCommand, _now: Millis) -> Vec<DeviceEvent> { vec![] }
     fn on_tick(&mut self, _now: Millis) -> Vec<DeviceEvent> { vec![] }
     fn next_deadline(&self) -> Option<Millis> { None }
+    fn faults(&self) -> Vec<FaultId> { vec![] }
     fn set_fault(&mut self, _fault: FaultId, _active: bool, _opts: FaultOptions, _now: Millis)
         -> Vec<DeviceEvent> { vec![] }
     fn reset(&mut self, _now: Millis) -> Vec<DeviceEvent> { vec![] }
@@ -45,6 +46,7 @@ struct EchoPlugin;
 impl DevicePlugin for EchoPlugin {
     fn kind(&self) -> &'static str { "echo" }
     fn config_schema(&self) -> schemars::Schema { schemars::json_schema!({ "type": "object" }) }
+    fn faults(&self) -> Vec<FaultId> { vec![] }
     fn create(&self, _id: DeviceId, _config: serde_json::Value)
         -> Result<Box<dyn Device>, ConfigError> {
         Ok(Box::new(Echo))
