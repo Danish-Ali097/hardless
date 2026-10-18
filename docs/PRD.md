@@ -545,15 +545,15 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 
 ### M1 — Printer and drawer over Web Serial (first end-to-end path)
 
-- [ ] `hardless-escpos` streaming parser with the full phase 1 command set (FR-06–FR-09)
-- [ ] Golden fixtures in `fixtures/escpos/` (at least 30 cases, including commands split across chunks)
-- [ ] `hardless-render` HTML + `to_text` (FR-10, FR-12, FR-13); SVG/PNG may follow in M2
-- [ ] `hardless-devices::printer` and `hardless-devices::drawer` (FR-36–FR-39)
-- [ ] `shim-web` Web Serial with picker, grants, streams, events and errors (FR-14–FR-17, section 8.1)
-- [ ] `server` bridge + REST endpoints for devices, jobs, faults (FR-18, FR-20, FR-21)
-- [ ] Dashboard: device list, printer panel, drawer panel, fault panel (FR-23–FR-25, FR-28)
-- [ ] Faults: `paper-out`, `cover-open`, `offline`, `disconnect-mid-write`, `slow-write`, `picker-cancel`, `jammed`
-- [ ] `examples/react-pwa` prints a sample receipt and kicks the drawer via Web Serial
+- [x] `hardless-escpos` streaming parser with the full phase 1 command set (FR-06–FR-09)
+- [x] Golden fixtures in `fixtures/escpos/` (at least 30 cases, including commands split across chunks)
+- [x] `hardless-render` HTML + `to_text` (FR-10, FR-12, FR-13); SVG/PNG may follow in M2
+- [x] `hardless-devices::printer` and `hardless-devices::drawer` (FR-36–FR-39)
+- [x] `shim-web` Web Serial with picker, grants, streams, events and errors (FR-14–FR-17, section 8.1)
+- [x] `server` bridge + REST endpoints for devices, jobs, faults (FR-18, FR-20, FR-21)
+- [x] Dashboard: device list, printer panel, drawer panel, fault panel (FR-23–FR-25, FR-28)
+- [x] Faults: `paper-out`, `cover-open`, `offline`, `disconnect-mid-write`, `slow-write`, `picker-cancel`, `jammed`
+- [x] `examples/react-pwa` prints a sample receipt and kicks the drawer via Web Serial
 
 **Accept:** In Chrome, the example app selects the virtual port, prints, and the dashboard shows the rendered receipt within 500 ms and the drawer opening. Toggling `paper-out` makes the app's next print fail with a status the app can read. Shim spec-conformance tests for section 8.1 pass.
 

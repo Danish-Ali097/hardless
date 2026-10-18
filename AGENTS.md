@@ -8,7 +8,8 @@ in [docs/decisions.md](docs/decisions.md).
 
 ## Status
 
-Milestone **M0 (foundation)** is done. M1 (printer and drawer over Web Serial) is next.
+Milestones **M0 (foundation)** and **M1 (printer and drawer over Web Serial)** are done. M2
+(HTTP printers, scanner, CLI, Docker) is next.
 Work one milestone at a time, in order (PRD section 13), and build bottom-up (PRD section 15).
 
 ## Prerequisites
@@ -67,6 +68,35 @@ cargo xtask gen-types     # Rust wire types -> packages/types/src (ts-rs). Never
 Run it after changing any type that derives `ts_rs::TS` in `crates/hardless-core`, and commit
 the result. CI fails if `packages/types` is stale.
 
+### WebAssembly engine and browser tests
+
+```sh
+cargo install wasm-bindgen-cli --version 0.2.129 --locked   # once; must match Cargo.lock
+cargo test -p hardless-wasm --target wasm32-unknown-unknown  # engine tests inside WebAssembly
+cargo xtask build-wasm                                       # -> packages/shim-web/wasm (standalone mode)
+pnpm --filter @hardless/shim-web build
+pnpm --filter @hardless/shim-web exec playwright install chromium   # once
+pnpm --filter @hardless/dashboard build && cargo build -p hardless-cli   # server for the tests
+pnpm --filter @hardless/shim-web test:browser              # Web Serial conformance (section 8.1)
+pnpm --filter @hardless/example-react-pwa test:acceptance  # M1 acceptance, example app
+```
+
+### Running it
+
+```sh
+pnpm --filter @hardless/dashboard build   # embed the dashboard (rebuild the server after)
+cargo run -p hardless-cli -- start        # http://localhost:8080
+node scripts/print-sample.mjs             # print fixtures/escpos/33-full-receipt.bin to printer-1
+pnpm --filter @hardless/example-react-pwa dev   # example POS app on http://localhost:5173
+```
+
+### ESC/POS fixtures
+
+```sh
+node scripts/gen-escpos-fixtures.mjs                     # regenerate fixtures/escpos/*.bin
+INSTA_UPDATE=always cargo test -p hardless-escpos -p hardless-render   # then review the diffs
+```
+
 ### Release notes
 
 - Rust crates: Conventional Commits; `release-plz` writes changelogs (`release-plz.toml`).
@@ -75,23 +105,26 @@ the result. CI fails if `packages/types` is stale.
 ## Repo layout
 
 ```
-crates/hardless-core           Device trait, registry, event log, faults, clock (sans-IO)   [M0: done]
-crates/hardless-escpos         ESC/POS bytes -> AST (sans-IO)                                 [M1]
-crates/hardless-render         AST -> HTML / SVG / PNG, to_text (sans-IO)                    [M1/M2]
-crates/hardless-devices        printer, drawer, scanner, NFC (sans-IO)                       [M1+]
-crates/hardless-http-dialects  ePOS-Print / WebPRNT-compatible XML -> AST (sans-IO)          [M2]
-crates/hardless-server         axum: /bridge, /api/v1, HTTP printers, dashboard              [M1]
-crates/hardless-mcp            MCP server for agents                                         [M3]
-crates/hardless-wasm           engine for shim-web standalone mode (wasm-bindgen)            [M1]
-crates/hardless-cli            the `hardless` binary                                         [M2]
-xtask/                         `cargo xtask gen-types`
+crates/hardless-core           Device trait, registry, event log, faults, clock, bridge types  [M0, M1]
+crates/hardless-escpos         ESC/POS bytes -> AST (sans-IO); fuzz/ has the cargo-fuzz target  [M1]
+crates/hardless-render         AST -> HTML and to_text (SVG/PNG in M2)                          [M1]
+crates/hardless-devices        printer-escpos, cash-drawer (scanner, NFC later)                 [M1]
+crates/hardless-http-dialects  ePOS-Print / WebPRNT-compatible XML -> AST                       [M2]
+crates/hardless-server         axum: /bridge, /api/v1, /api/v1/stream, dashboard                [M1]
+crates/hardless-mcp            MCP server for agents                                            [M3]
+crates/hardless-wasm           the engine for shim-web standalone mode (wasm-bindgen)           [M1]
+crates/hardless-cli            the `hardless` binary: `start` (more subcommands in M2)          [M1]
+xtask/                         `cargo xtask gen-types`, `cargo xtask build-wasm`
+fixtures/escpos/               golden ESC/POS inputs and AST/HTML/text snapshots
 packages/types                 generated TS wire types (never edit by hand)
-packages/shim-web              navigator.serial / usb / NDEFReader / wedge shims             [M1]
-packages/dashboard             React + Vite + Tailwind UI served by hardless-server           [M1]
-packages/extension             Chrome MV3 extension                                          [M3]
-packages/playwright            Playwright fixture + matchers                                 [M3]
-packages/npm-wrapper           `npx hardless`                                                [release]
-docs/PRD.md                    the spec
+packages/shim-web              navigator.serial shim (usb, NDEFReader, wedge later)             [M1]
+packages/dashboard             React + Vite + Tailwind UI served by hardless-server             [M1]
+packages/extension             Chrome MV3 extension                                             [M3]
+packages/playwright            Playwright fixture + matchers                                    [M3]
+packages/npm-wrapper           `npx hardless`                                                   [release]
+examples/react-pwa             example POS PWA, with the M1 acceptance test                     [M1]
+scripts/                       licence check, fixture generator, print-sample
+docs/PRD.md                    the spec; docs/decisions.md records decisions and deviations
 ```
 
 ## Rules that CI or review enforces

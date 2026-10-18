@@ -1,0 +1,143 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f5f4;
+  --card: #ffffff;
+  --ink: #1c1917;
+  --muted: #57534e;
+  --line: #d6d3d1;
+  --brand: #14532d;
+  --brand-ink: #ffffff;
+  --ok: #166534;
+  --error: #b91c1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1917;
+    --card: #292524;
+    --ink: #f5f5f4;
+    --muted: #a8a29e;
+    --line: #44403c;
+    --brand: #4ade80;
+    --brand-ink: #052e16;
+    --ok: #86efac;
+    --error: #fca5a5;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+}
+
+.pos {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.printer {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.printer.on {
+  color: var(--ok);
+}
+
+.order {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.order ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.order li,
+.total {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.total {
+  margin: 8px 0 0;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  font-weight: 700;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid currentColor;
+}
+
+.notice.ok {
+  color: var(--ok);
+}
+
+.notice.error {
+  color: var(--error);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button {
+  font: inherit;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}

@@ -9,39 +9,38 @@ the same `navigator.serial`, `navigator.usb`, `NDEFReader` and HTTP printer endp
 in production; Hardless plays the device, renders the receipt and lets you inject faults such
 as paper out, cover open or a disconnect mid-print.
 
-> **Status: early development.** Milestone M0 (foundation) is done; nothing is released yet.
+> **Status: early development.** Milestone M1 is done: an ESC/POS receipt printer and a cash
+> drawer over Web Serial, with the dashboard. Nothing is released yet, so you build from source.
 > See the [roadmap](#roadmap).
 
-## Planned features (phase 1)
+## Features
 
-| Device                                                           | Route into the browser                 | Milestone |
-| ---------------------------------------------------------------- | -------------------------------------- | --------- |
-| ESC/POS receipt printer                                          | Web Serial                             | M1        |
-| Cash drawer (kicked through the printer)                         | Web Serial                             | M1        |
-| HTTP receipt printer (ePOS-Print-compatible, WebPRNT-compatible) | `fetch`, all browsers incl. iOS Safari | M2        |
-| Barcode scanner                                                  | keyboard wedge                         | M2        |
-| USB receipt printer                                              | WebUSB                                 | M3        |
-| NFC reader                                                       | Web NFC (`NDEFReader`)                 | M3        |
+| Device                                                           | Route into the browser                 | Status         |
+| ---------------------------------------------------------------- | -------------------------------------- | -------------- |
+| ESC/POS receipt printer                                          | Web Serial                             | Available (M1) |
+| Cash drawer (kicked through the printer)                         | Web Serial                             | Available (M1) |
+| HTTP receipt printer (ePOS-Print-compatible, WebPRNT-compatible) | `fetch`, all browsers incl. iOS Safari | Planned (M2)   |
+| Barcode scanner                                                  | keyboard wedge                         | Planned (M2)   |
+| USB receipt printer                                              | WebUSB                                 | Planned (M3)   |
+| NFC reader                                                       | Web NFC (`NDEFReader`)                 | Planned (M3)   |
 
-Plus a dashboard, a REST API, a CLI, a Playwright fixture with matchers like
-`toHavePrinted(/Total: 1,250/)`, and an MCP server so coding agents can print, look at the
-rendered receipt and toggle faults.
+Available now: a dashboard with rendered receipts and fault switches, a REST API, faults such
+as paper out, cover open, offline, disconnect mid-print and slow writes, and a standalone mode
+that runs the devices inside the page for tests. Planned: a CLI for scans and receipts, a
+Playwright fixture with matchers like `toHavePrinted(/Total: 1,250/)`, and an MCP server so
+coding agents can print, look at the rendered receipt and toggle faults.
 
 ## Roadmap
 
-- **Phase 1, browser and PWA** (in progress): M0 foundation, then M1 printer and drawer over
-  Web Serial, M2 HTTP printers, scanner, CLI and Docker, M3 WebUSB, Web NFC, extension,
-  Playwright and MCP, then v0.1.0.
+- **Phase 1, browser and PWA** (in progress): M0 foundation and M1 printer and drawer over Web
+  Serial are done. Next: M2 HTTP printers, scanner, CLI and Docker; M3 WebUSB, Web NFC,
+  extension, Playwright and MCP; then v0.1.0.
 - **Later phases**: desktop and Electron (TCP 9100, virtual COM ports, IPP), smart cards and
   WebHID, mobile and Bluetooth, real USB emulation and record/replay.
 
 The full spec is [docs/PRD.md](docs/PRD.md).
 
 ## Getting started
-
-Hardless is not released yet, so for now you build it from source. What works today is the
-engine core, which you can use as a Rust library and in tests. Printing from your own app
-arrives in milestone M1; the steps for it are under [Using Hardless with your app](#using-hardless-with-your-app).
 
 ### 1. Install the prerequisites
 
@@ -51,102 +50,101 @@ arrives in milestone M1; the steps for it are under [Using Hardless with your ap
 | Node.js | 22 or later                   | [nodejs.org](https://nodejs.org)                                                    |
 | pnpm    | 12                            | `npm install -g pnpm@12.14.0`                                                       |
 | Git     | any recent version            | [git-scm.com](https://git-scm.com)                                                  |
+| Chrome  | recent                        | Web Serial works in Chrome and Edge on desktop                                      |
 
-### 2. Get the code
+### 2. Get the code and build
 
 ```sh
 git clone https://github.com/Danish-Ali097/hardless.git
 cd hardless
+pnpm install
+pnpm --filter @hardless/dashboard build   # the dashboard, embedded into the server
+cargo build -p hardless-cli               # the `hardless` binary (first build takes a few minutes)
 ```
 
-### 3. Build and test
+### 3. Start Hardless
 
 ```sh
-cargo test --workspace     # builds the Rust crates and runs their tests
-pnpm install               # installs the TypeScript packages
-pnpm -r test               # runs their tests
+cargo run -p hardless-cli -- start
 ```
 
-The first `cargo` command downloads the pinned Rust toolchain, so it takes a few minutes.
+The dashboard opens at <http://localhost:8080>. Without a config file you get `printer-1`, an
+ESC/POS receipt printer, and `drawer-1`, a cash drawer plugged into it.
 
-### 4. Try what exists today
+### 4. Print something
 
-Check that the `hardless` binary builds and runs:
+Print a sample receipt without writing any code:
 
 ```sh
-cargo run -p hardless-cli -- --version
+node scripts/print-sample.mjs
 ```
 
-Open the dashboard shell in your browser (it shows an empty device list until M1):
+Or run the example POS app, which prints over Web Serial like a real app:
 
 ```sh
-pnpm --filter @hardless/dashboard dev
+pnpm --filter @hardless/example-react-pwa dev   # http://localhost:5173
 ```
 
-Write your own emulated device in Rust with `hardless-core`: add it to a Rust project with
-
-```sh
-cargo add hardless-core --git https://github.com/Danish-Ali097/hardless
-```
-
-and follow the example in [crates/hardless-core/README.md](crates/hardless-core/README.md). A
-device receives the bytes your app sends plus the current time, and returns what it did:
-status replies, finished print jobs, connects and disconnects.
+Click **Connect printer**, choose `printer-1`, then **Pay cash**. The receipt appears in the
+dashboard and the drawer opens. Turn on **Paper out** in the dashboard and pay again: the app
+reports that the receipt did not print. See [examples/react-pwa](examples/react-pwa).
 
 [AGENTS.md](AGENTS.md) lists every build, test and lint command.
 
 ## Using Hardless with your app
 
-> **Planned.** These steps describe the workflow from the [PRD](docs/PRD.md). They become
-> available milestone by milestone, and names may still change before v0.1.0.
+**Print from a PWA over Web Serial (available now).**
 
-**Print from a PWA over Web Serial (M1).**
-
-1. Start Hardless: `hardless start` (later also `npx hardless start` or Docker). The dashboard
-   opens at `http://localhost:8080`.
+1. Start Hardless: `hardless start`. The dashboard is at `http://localhost:8080`.
 2. In your app's development build, install the shim before your app code runs:
 
    ```ts
    import { install } from "@hardless/shim-web";
 
-   install({ transport: { mode: "server", url: "ws://localhost:8080/bridge" } });
+   if (import.meta.env.DEV) {
+     install({ mode: "server", url: "ws://localhost:8080/bridge" });
+   }
    ```
 
    Your app's own Web Serial code does not change.
 
-3. In your app, connect to the printer as usual. The browser's port picker lists the virtual
-   printer `printer-1`.
+3. In your app, connect to the printer as usual. The port picker lists the emulated printer
+   `printer-1`.
 4. Print a receipt. It appears, rendered, in the dashboard, and the cash drawer opens there if
    your app sent a drawer kick.
-5. Test failures: turn on **paper out**, **cover open** or **offline** in the dashboard's
-   fault panel and check that your app shows the right error.
+5. Test failures: turn on **Paper out**, **Cover open**, **Offline**, **Disconnect mid-print**
+   or **Slow writes** in the dashboard and check that your app handles them.
 
-**Print from iPad or any browser over HTTP (M2):** point your app's ePOS-Print-compatible or
-WebPRNT-compatible printer address at `http://<your computer>:8080` (or `https://...:8443`).
+For unit tests without a server, use standalone mode, which runs the devices in the page; see
+[packages/shim-web](packages/shim-web).
 
-**Assert on printed receipts in Playwright (M3):**
+**Planned** (names may change before v0.1.0):
 
-```ts
-import { test, expect } from "@hardless/playwright";
+- **HTTP printers (M2):** point your app's ePOS-Print-compatible or WebPRNT-compatible printer
+  address at `http://<your computer>:8080` (or `https://...:8443`), for iPad and any browser.
+- **Playwright (M3):**
 
-test("cash sale prints and opens drawer", async ({ page, hardless }) => {
-  await page.goto("/pos");
-  await page.getByRole("button", { name: "Pay cash" }).click();
-  await expect(hardless.printer("printer-1")).toHavePrinted(/Total:\s+1,250/);
-  await expect(hardless.drawer("drawer-1")).toHaveOpened({ times: 1 });
-});
-```
+  ```ts
+  import { test, expect } from "@hardless/playwright";
 
-**Let an AI coding agent drive it (M3):** add Hardless as an MCP server in your agent's
-config, so it can print, look at the rendered receipt and toggle faults itself:
+  test("cash sale prints and opens drawer", async ({ page, hardless }) => {
+    await page.goto("/pos");
+    await page.getByRole("button", { name: "Pay cash" }).click();
+    await expect(hardless.printer("printer-1")).toHavePrinted(/Total:s+1,250/);
+    await expect(hardless.drawer("drawer-1")).toHaveOpened({ times: 1 });
+  });
+  ```
 
-```json
-{
-  "mcpServers": {
-    "hardless": { "command": "hardless", "args": ["mcp", "--url", "http://localhost:8080"] }
+- **AI coding agents (M3):** add Hardless as an MCP server in your agent's config, so it can
+  print, look at the rendered receipt and toggle faults itself:
+
+  ```json
+  {
+    "mcpServers": {
+      "hardless": { "command": "hardless", "args": ["mcp", "--url", "http://localhost:8080"] }
+    }
   }
-}
-```
+  ```
 
 ## Repository layout
 

@@ -132,8 +132,12 @@ jobs:
       - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium
       - name: Web Serial shim conformance (PRD section 8.1)
         run: pnpm --filter @hardless/shim-web test:browser
+      - name: M1 acceptance (example app, server and dashboard)
+        run: pnpm --filter @hardless/example-react-pwa test:acceptance
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-${{ matrix.os }}
-          path: packages/shim-web/test-results
+          path: |
+            packages/shim-web/test-results
+            examples/react-pwa/test-results
