@@ -522,7 +522,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 - [x] Cargo workspace with every crate from section 6 and pnpm workspace with every browser package, each compiling
 - [x] `rustfmt`, `clippy`, `cargo-deny` config; shared `tsconfig`, ESLint, Prettier, Vitest; `release-plz` and Changesets initialised
 - [x] `cargo xtask gen-types` generating `packages/types` with `ts-rs`, plus a CI staleness check
-- [ ] GitHub Actions on Ubuntu, Windows and macOS: fmt, clippy, test, `wasm32-unknown-unknown` build of engine crates, `cargo-deny`, browser lint/test
+- [x] GitHub Actions on Ubuntu, Windows and macOS: fmt, clippy, test, `wasm32-unknown-unknown` build of engine crates, `cargo-deny`, browser lint/test
 - [x] `LICENSE` (Apache-2.0), `README.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `AGENTS.md` skeleton with build/test commands, issue and PR templates
 - [x] `hardless-core` Device trait, registry, event log, faults (FR-01–FR-03, FR-05)
 
