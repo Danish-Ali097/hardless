@@ -70,6 +70,8 @@ fn export_all(dir: &Path) -> Result<(), String> {
         core::Direction,
         core::PeripheralSignal,
         escpos::Node,
+        core::bridge::ClientFrame,
+        core::bridge::ServerFrame,
     );
     Ok(())
 }

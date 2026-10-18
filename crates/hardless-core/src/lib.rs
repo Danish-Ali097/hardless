@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+pub mod base64;
+pub mod bridge;
 mod device;
 mod fault;
 mod hex;
