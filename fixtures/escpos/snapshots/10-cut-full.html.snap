@@ -1,0 +1,11 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-line hl-align-left">
+<span class="">bye</span>
+</div>
+<div class="hl-cut" role="separator" aria-label="cut">
+</div>
+</div>

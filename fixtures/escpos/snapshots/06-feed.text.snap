@@ -1,0 +1,9 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: to_text(&ast)
+---
+a
+
+
+
+b

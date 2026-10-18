@@ -1,0 +1,10 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-line hl-align-left">
+<span class="hl-unknown" title="UPC-A barcodes are not emulated (1d 6b 41 0b 30 31 32 33 34 35 36 37 38 39 30)">GS k UPC-A</span>
+<span class="">after</span>
+</div>
+</div>

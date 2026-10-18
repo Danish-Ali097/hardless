@@ -1,0 +1,17 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: to_text(&ast)
+---
+           HARDLESS CAFE
+                 1 Test Street
+
+2 x Flat white          900
+1 x Croissant           350
+--------------------------------
+Total:                 1,250
+
+        [BARCODE CODE128: 123456789010]
+
+               [QR: receipt:1250]
+
+                   Thank you!

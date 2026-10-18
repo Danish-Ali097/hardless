@@ -1,0 +1,6 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: to_text(&ast)
+---
+[BARCODE CODE39: HARDLESS]
+[BARCODE CODE39: M1-2]

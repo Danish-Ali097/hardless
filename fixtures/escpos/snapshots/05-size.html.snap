@@ -1,0 +1,12 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-line hl-align-left" style="--hl-lh:2">
+<span class="hl-s" style="--w:2;--h:2;--n:3">2x2</span>
+</div>
+<div class="hl-line hl-align-left">
+<span class="hl-s" style="--w:8;--h:1;--n:3">8x1</span>
+</div>
+</div>

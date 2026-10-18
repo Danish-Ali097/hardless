@@ -1,0 +1,10 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-line hl-align-left">
+<span class="hl-unknown" title="unknown command ESC 0xf0 (1b f0)">?</span>
+<span class="">after</span>
+</div>
+</div>

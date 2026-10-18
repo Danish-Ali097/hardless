@@ -1,0 +1,5 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: to_text(&ast)
+---
+[IMAGE 16x8]

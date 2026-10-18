@@ -1,0 +1,6 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: to_text(&ast)
+---
+2x2
+8x1

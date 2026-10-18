@@ -1,0 +1,5 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: to_text(&ast)
+---
+[BARCODE EAN13: 400638133393]

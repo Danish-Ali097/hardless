@@ -1,0 +1,13 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-line hl-align-left">
+<span class="">a</span>
+</div>
+<div class="hl-line hl-align-left">
+<span class="">b       c</span>
+<span class="hl-unknown" title="control byte 0x07 is not emulated (07)">?</span>
+</div>
+</div>

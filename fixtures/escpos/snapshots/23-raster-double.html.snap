@@ -1,0 +1,11 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-block hl-align-left">
+<svg style="width:1.333ch;height:0.333ch" class="hl-image" viewBox="0 0 8 2" preserveAspectRatio="none" shape-rendering="crispEdges" role="img" aria-label="image">
+<path d="M0 0h1v1h-1zM2 0h1v1h-1zM4 0h1v1h-1zM6 0h1v1h-1zM1 1h1v1h-1zM3 1h1v1h-1zM5 1h1v1h-1zM7 1h1v1h-1z"/>
+</svg>
+</div>
+</div>

@@ -1,0 +1,13 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: html
+---
+<div class="hl-receipt hl-paper-80" style="--hl-cols:48">
+<div class="hl-line hl-align-left">
+<span class="hl-b">Bold</span>
+<span class=""> plain</span>
+</div>
+<div class="hl-line hl-align-left">
+<span class="hl-b">odd n</span>
+</div>
+</div>

@@ -11,7 +11,15 @@ authors.workspace = true
 readme = "README.md"
 
 [dependencies]
+barcoders = { version = "2.0.0", default-features = false }
+hardless-escpos.workspace = true
+qrcode = { version = "0.14.1", default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
 
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+insta = "1.49.0"
+serde_json = "1.0.154"
