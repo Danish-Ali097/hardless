@@ -1,6 +1,6 @@
 # hardless-core
 
-The sans-IO core of [Hardless](https://github.com/Danish-Ali097/hardless), an open-source
+The sans-IO core of [Hardless](https://github.com/hardlessdev/hardless), an open-source
 POS hardware emulator.
 
 It defines what a device is and keeps track of the devices that exist. It does no I/O and

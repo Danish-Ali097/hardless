@@ -28,7 +28,7 @@ personal appearance, race, caste, colour, religion, or sexual identity and orien
 ## Enforcement
 
 Report unacceptable behaviour to the maintainers through a private
-[GitHub security advisory](https://github.com/Danish-Ali097/hardless/security/advisories/new)
+[GitHub security advisory](https://github.com/hardlessdev/hardless/security/advisories/new)
 or by contacting a maintainer directly. Reports are handled promptly and confidentially.
 Maintainers may remove comments, commits, code or issues that break this code, and may ban
 contributors temporarily or permanently, following the Contributor Covenant's enforcement

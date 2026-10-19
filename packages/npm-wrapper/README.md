@@ -1,6 +1,6 @@
 # hardless (npm)
 
-`npx hardless` runs the [Hardless](https://github.com/Danish-Ali097/hardless) POS hardware
+`npx hardless` runs the [Hardless](https://github.com/hardlessdev/hardless) POS hardware
 emulator without a global install. It downloads the `hardless` binary for your platform from
 GitHub Releases.
 

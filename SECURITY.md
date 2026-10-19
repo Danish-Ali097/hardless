@@ -6,7 +6,7 @@ Hardless is a development and testing tool. By default the server binds to `127.
 ## Reporting a vulnerability
 
 Please report vulnerabilities privately through
-[GitHub security advisories](https://github.com/Danish-Ali097/hardless/security/advisories/new),
+[GitHub security advisories](https://github.com/hardlessdev/hardless/security/advisories/new),
 not in public issues. We aim to acknowledge reports within a week.
 
 ## Supported versions

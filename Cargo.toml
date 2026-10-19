@@ -9,8 +9,8 @@ version = "0.0.0"
 edition = "2021"
 rust-version = "1.97"
 license = "Apache-2.0"
-repository = "https://github.com/Danish-Ali097/hardless"
-homepage = "https://github.com/Danish-Ali097/hardless"
+repository = "https://github.com/hardlessdev/hardless"
+homepage = "https://github.com/hardlessdev/hardless"
 authors = ["Hardless contributors"]
 
 [workspace.dependencies]

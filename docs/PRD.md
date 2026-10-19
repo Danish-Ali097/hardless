@@ -4,7 +4,7 @@ Oct 18, 2026 · @Danish Ali
 
 ## 1. Overview
 
-Hardless is an open-source (Apache-2.0) sandbox that emulates POS hardware — receipt printers, cash drawers, barcode scanners and NFC readers — so web and PWA applications can be developed and tested without physical devices. The name stands for hardware-less development. The npm package name was unclaimed on 18 Oct 2026; the npm scope and GitHub org still need to be secured.
+Hardless is an open-source (Apache-2.0) sandbox that emulates POS hardware — receipt printers, cash drawers, barcode scanners and NFC readers — so web and PWA applications can be developed and tested without physical devices. The name stands for hardware-less development. The npm scope `@hardless`, the Docker Hub namespace `hardless` and the GitHub org `hardlessdev` were secured on 19 Oct 2026 (`hardless` itself was taken on GitHub); the repository is <https://github.com/hardlessdev/hardless>.
 
 **Problem.** Teams building POS, retail and hospitality web apps test hardware by keeping real devices on their desks. That is slow, cannot run in CI, and makes failure paths (paper out, unplugged mid-print, user cancels the device picker) almost impossible to reproduce on demand. Web NFC exists only on Android Chrome, so NFC flows cannot be built on a desktop at all.
 
@@ -667,7 +667,8 @@ Each later phase reuses phase 1's core, plugin API, renderer, dashboard, REST AP
 
 ## 16. Open questions
 
-- [ ] Secure the hardless npm scope and GitHub org, and run a trademark search for the name.
+- [x] Secure the hardless npm scope and GitHub org: `@hardless` on npm, `hardless` on Docker Hub, `hardlessdev` on GitHub (19 Oct 2026).
+- [ ] Run a trademark search for the name.
 - [ ] Should the WebSerial shim emulate USB-serial adapters only, or also Bluetooth-serial ports (`bluetoothServiceClassId` in `getInfo()`)?
 - [ ] Which additional code pages are needed first (e.g. CP864 for Arabic, Windows-1256 for Urdu receipts)?
 - [ ] Should Web Bluetooth printers move from phase 4 into phase 2? BLE printers are common with tablet POS setups.

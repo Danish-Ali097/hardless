@@ -1,6 +1,6 @@
 # hardless-devices
 
-Emulated POS devices for [Hardless](https://github.com/Danish-Ali097/hardless), built on
+Emulated POS devices for [Hardless](https://github.com/hardlessdev/hardless), built on
 `hardless-core`. Each device is a sans-IO state machine: it receives bytes, control commands
 and the current time, and returns what it did. Each device is a Cargo feature.
 

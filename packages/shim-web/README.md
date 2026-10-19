@@ -1,6 +1,6 @@
 # @hardless/shim-web
 
-Browser API shims backed by [Hardless](https://github.com/Danish-Ali097/hardless) emulated
+Browser API shims backed by [Hardless](https://github.com/hardlessdev/hardless) emulated
 devices. Your app's own hardware code runs unchanged: it calls `navigator.serial` as usual and
 talks to an emulated receipt printer and cash drawer.
 

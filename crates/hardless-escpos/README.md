@@ -1,6 +1,6 @@
 # hardless-escpos
 
-Streaming ESC/POS parser for [Hardless](https://github.com/Danish-Ali097/hardless): it turns
+Streaming ESC/POS parser for [Hardless](https://github.com/hardlessdev/hardless): it turns
 the bytes an app sends to a receipt printer into a list of commands (an AST) that the
 renderer, the emulated printer and test assertions all share.
 

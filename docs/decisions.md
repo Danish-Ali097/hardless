@@ -4,6 +4,19 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## Between M1 and M2
+
+- **Names secured (PRD section 16).** On 19 Oct 2026 the maintainer registered the npm
+  organization `hardless` (scope `@hardless`), the Docker Hub account `hardless` (image
+  `hardless/hardless`) and the GitHub organization `hardlessdev`, then moved the repository to
+  <https://github.com/hardlessdev/hardless>. The GitHub name `hardless` belongs to a dormant
+  personal account from 2013, and GitHub no longer releases dormant names on request, so the
+  GitHub org differs from the npm scope. `hardlessdev` was picked because it is free on GitHub,
+  npm and Docker Hub alike. Docker Hub uses a free personal account rather than an organization,
+  which needs a paid plan; the image name is the same. The PRD's names for the npm packages and
+  the Docker image are unchanged. Every repository URL now points at `hardlessdev/hardless`.
+  The trademark search is still **open**.
+
 ## M1 — Printer and drawer over Web Serial
 
 ### Maintainer decisions taken before starting

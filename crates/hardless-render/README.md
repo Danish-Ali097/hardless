@@ -1,6 +1,6 @@
 # hardless-render
 
-Receipt renderer for [Hardless](https://github.com/Danish-Ali097/hardless): turns the ESC/POS
+Receipt renderer for [Hardless](https://github.com/hardlessdev/hardless): turns the ESC/POS
 command AST from `hardless-escpos` into what a thermal printer would print.
 
 - **HTML (FR-10)** at 58 mm (32 columns Font A / 42 Font B) or 80 mm (48 / 64 columns).

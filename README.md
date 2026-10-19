@@ -55,7 +55,7 @@ The full spec is [docs/PRD.md](docs/PRD.md).
 ### 2. Get the code and build
 
 ```sh
-git clone https://github.com/Danish-Ali097/hardless.git
+git clone https://github.com/hardlessdev/hardless.git
 cd hardless
 pnpm install
 pnpm --filter @hardless/dashboard build   # the dashboard, embedded into the server

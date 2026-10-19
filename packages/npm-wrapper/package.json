@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Danish-Ali097/hardless.git",
+    "url": "git+https://github.com/hardlessdev/hardless.git",
     "directory": "packages/npm-wrapper"
   },
   "type": "module",
