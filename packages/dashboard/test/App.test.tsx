@@ -19,6 +19,9 @@ describe("dashboard", () => {
     expect(page).toContain("Receipt printer, paper out");
     expect(page).toContain("1 fault");
     expect(page).toContain("Cash drawer, open");
+    expect(html(stateWith([printer({}, { paperNearEnd: true })]))).toContain(
+      "Receipt printer, paper low",
+    );
     expect(page).toContain("Add device");
   });
 

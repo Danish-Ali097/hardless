@@ -1,4 +1,5 @@
-//! One test per M1 fault (PRD section 10) proving its observable effect on the device.
+//! One test per printer and drawer fault (PRD section 10) proving its observable effect on the
+//! device.
 //! `slow-write` and `picker-cancel` are applied by the transport and the shim; here they are
 //! accepted and reported in state, and their effects are tested in the server and shim.
 #![allow(clippy::unwrap_used, clippy::expect_used, missing_docs)]
@@ -147,4 +148,97 @@ fn printer_reset_clears_faults_and_reconnects() {
     let events = rig.registry.reset(&id(PRINTER)).unwrap();
     assert!(events.contains(&DeviceEvent::Connected));
     assert_eq!(rig.status(1), 0x12);
+}
+
+fn fault_with(rig: &mut Rig, fault: FaultId, options: serde_json::Value) -> Vec<DeviceEvent> {
+    let options: FaultOptions = serde_json::from_value(options).unwrap();
+    rig.registry
+        .set_fault(&id(PRINTER), fault, true, options)
+        .unwrap()
+}
+
+/// The raw bytes of the latest job, after an idle close.
+fn last_job_bytes(rig: &mut Rig) -> Vec<u8> {
+    rig.advance(300);
+    rig.registry
+        .last_job(&id(PRINTER))
+        .unwrap()
+        .expect("a job")
+        .bytes
+        .to_vec()
+}
+
+#[test]
+fn fault_paper_near_end_prints_and_reports_near_end() {
+    let mut rig = Rig::new();
+    rig.fault(PRINTER, FaultId::PAPER_NEAR_END, true);
+    rig.print(b"Total: 1,250\n\x1dV\x00");
+    assert_eq!(rig.jobs(), ["Total: 1,250\n"], "prints still succeed");
+    assert_eq!(rig.status(4) & 0x0c, 0x0c, "DLE EOT 4: near end");
+    assert_eq!(rig.status(4) & 0x60, 0, "DLE EOT 4: not paper end");
+    assert_eq!(rig.status(1) & 0x08, 0, "DLE EOT 1: still online");
+    assert_eq!(rig.state(PRINTER)["paperNearEnd"], true);
+}
+
+#[test]
+fn fault_baud_mismatch_scrambles_received_bytes() {
+    let mut rig = Rig::new();
+    rig.fault(PRINTER, FaultId::BAUD_MISMATCH, true);
+    let events = rig.print(&[0x10, 0x04, 0x01]);
+    assert!(
+        !events.iter().any(|e| matches!(e, DeviceEvent::ToHost(_))),
+        "a scrambled status request gets no reply: {events:?}"
+    );
+    rig.print(b"Hello\n");
+    let received = last_job_bytes(&mut rig);
+    assert!(!received.windows(5).any(|w| w == b"Hello"), "{received:?}");
+    assert_eq!(rig.state(PRINTER)["baudMismatch"], true);
+    // The event log still shows what the app sent.
+    let sent = rig.registry.events(&id(PRINTER), None).unwrap();
+    assert!(sent.iter().any(|r| matches!(
+        &r.kind,
+        hardless_core::EventKind::BytesIn { data } if data.as_ref() == b"Hello\n"
+    )));
+
+    rig.fault(PRINTER, FaultId::BAUD_MISMATCH, false);
+    assert_eq!(rig.status(1), 0x12, "back to normal");
+}
+
+#[test]
+fn fault_garbled_flips_bits_in_about_rate_of_the_bytes() {
+    let mut rig = Rig::new();
+    fault_with(&mut rig, FaultId::GARBLED, json!({ "rate": 0.25 }));
+    // Single-bit flips of `a` are never control codes, so this stays one job.
+    rig.print(&[b'a'; 8000]);
+    let received = last_job_bytes(&mut rig);
+    assert_eq!(received.len(), 8000);
+    let corrupted = received.iter().filter(|&&b| b != b'a').count();
+    assert!((1700..=2300).contains(&corrupted), "{corrupted} of 8000");
+    assert!(received
+        .iter()
+        .all(|&b| b == b'a' || (b ^ b'a').count_ones() == 1));
+    assert_eq!(rig.state(PRINTER)["garbleRate"], 0.25);
+}
+
+#[test]
+fn fault_garbled_defaults_to_5_percent_and_is_repeatable() {
+    let run = || {
+        let mut rig = Rig::new();
+        fault_with(&mut rig, FaultId::GARBLED, json!({}));
+        rig.print(&[b'a'; 4000]);
+        last_job_bytes(&mut rig)
+    };
+    let first = run();
+    let corrupted = first.iter().filter(|&&b| b != b'a').count();
+    assert!((120..=280).contains(&corrupted), "{corrupted} of 4000");
+    assert_eq!(first, run(), "same clock, same corruption");
+}
+
+#[test]
+fn fault_garbled_rate_is_clamped_with_a_warning() {
+    let mut rig = Rig::new();
+    let events = fault_with(&mut rig, FaultId::GARBLED, json!({ "rate": 2 }));
+    assert!(has_warning(&events, "garbled rate must be 0 to 1"));
+    rig.print(&[b'a'; 100]);
+    assert!(last_job_bytes(&mut rig).iter().all(|&b| b != b'a'));
 }

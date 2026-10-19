@@ -45,6 +45,22 @@ decision from the maintainer.
   step (see M0, Licences) must include it, alongside the Rust dependencies' notices.
 - **Dashboard (FR-24):** "Download PNG" sits next to "Download HTML" on every receipt.
 
+### Printer faults (section 10)
+
+- **`paper-near-end`** sets `DLE EOT 4` bits 2-3 only; prints and `DLE EOT 1` stay normal.
+- **`baud-mismatch`** applies a fixed, reversible scramble to every received byte
+  (`rotate_left(3) ^ 0x5A`). Real garbage depends on the two baud rates; a fixed scramble
+  shows the app the same symptoms (nonsense output, unanswered status requests) and keeps
+  tests repeatable.
+- **`garbled`** flips one random bit per corrupted byte, with probability `rate`. Devices are
+  sans-IO and read no randomness, so the generator (xorshift64*) is seeded from the time the
+  fault is turned on: the same steps under a fake clock corrupt the same bytes. `rate` outside
+  0 to 1 is clamped, with a warning in the event log.
+- **Where corruption shows:** the event log records the bytes the app sent; the job's
+  `bytesHex` holds what the printer received, so both views are available.
+- These faults apply to serial printers now. When HTTP printers arrive, `garbled` applies to
+  them too and `baud-mismatch` does not (PRD section 10).
+
 ### Keyboard-wedge scanner (FR-26, section 8.4)
 
 - **New `DeviceEvent::Wedge(WedgeScan)`** (maintainer decision; changes FR-01, additive). A

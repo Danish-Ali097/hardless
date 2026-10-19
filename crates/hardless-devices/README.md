@@ -68,8 +68,13 @@ Bits 1 and 4 are always set, as on real printers.
 
 Faults (PRD section 10): `paper-out` and `cover-open` reject prints and stop buffered drawer
 kicks (real-time `DLE DC4` kicks still work); `offline` disconnects the printer;
-`disconnect-mid-write` disconnects after `afterBytes` (default 64) bytes; `slow-write` and
-`picker-cancel` are applied by the transport and the browser shim.
+`disconnect-mid-write` disconnects after `afterBytes` (default 64) bytes; `paper-near-end`
+reports near end in `DLE EOT 4` while prints still work; `baud-mismatch` scrambles every
+received byte (a fixed, repeatable scramble, so status requests go unanswered); `garbled` flips
+one bit in a byte with probability `rate` (default 0.05), from a generator seeded when the fault
+is turned on, so runs under a fake clock repeat exactly. `slow-write` and `picker-cancel` are
+applied by the transport and the browser shim. The event log always shows the bytes the app
+sent; a job's `bytesHex` shows what the printer received.
 
 ## Cash drawer (`cash-drawer`)
 

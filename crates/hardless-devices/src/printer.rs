@@ -86,15 +86,67 @@ impl Default for PrinterConfig {
     }
 }
 
-/// Faults the printer supports in milestone M1.
-const FAULTS: [FaultId; 6] = [
+/// Default `rate` for `garbled` (PRD section 10).
+const DEFAULT_GARBLE_RATE: f64 = 0.05;
+
+/// Faults a serial printer supports (PRD section 10).
+const FAULTS: [FaultId; 9] = [
     FaultId::PAPER_OUT,
+    FaultId::PAPER_NEAR_END,
     FaultId::COVER_OPEN,
     FaultId::OFFLINE,
     FaultId::DISCONNECT_MID_WRITE,
     FaultId::SLOW_WRITE,
+    FaultId::BAUD_MISMATCH,
+    FaultId::GARBLED,
     FaultId::PICKER_CANCEL,
 ];
+
+/// `garbled`: flips one random bit in a byte with probability `rate`. The generator is
+/// seeded when the fault is turned on, so a run is repeatable under a fake clock.
+#[derive(Clone, Copy, Debug)]
+struct Garble {
+    rate: f64,
+    state: u64,
+}
+
+impl Garble {
+    fn new(rate: f64, now: Millis) -> Self {
+        let seed = 0x9E37_79B9_7F4A_7C15 ^ now.0;
+        Self {
+            rate,
+            state: seed.max(1),
+        }
+    }
+
+    /// xorshift64*: small, fast and deterministic; no cryptographic needs here.
+    fn next(&mut self) -> u64 {
+        let mut x = self.state;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        self.state = x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+
+    fn apply(&mut self, byte: u8) -> u8 {
+        let r = self.next();
+        // 53 high bits as a uniform number in [0, 1); 3 low bits pick the bit to flip.
+        let p = (r >> 11) as f64 / (1u64 << 53) as f64;
+        if p < self.rate {
+            byte ^ (1 << (r & 7))
+        } else {
+            byte
+        }
+    }
+}
+
+/// `baud-mismatch`: what a byte looks like when read at the wrong baud rate. Real framing
+/// errors depend on the two rates; any fixed, reversible scramble shows the app the same
+/// symptom (garbage and no status replies) and keeps tests repeatable.
+fn baud_scramble(byte: u8) -> u8 {
+    byte.rotate_left(3) ^ 0x5A
+}
 
 /// Creates [`Printer`]s.
 #[derive(Debug, Default)]
@@ -143,6 +195,7 @@ pub struct Printer {
     rejected: u64,
     connected: bool,
     paper_out: bool,
+    paper_near_end: bool,
     cover_open: bool,
     drawer_open: bool,
     /// Whether the rejection of the current print has been logged.
@@ -155,6 +208,8 @@ pub struct Printer {
     disconnected_mid_write: bool,
     offline_fault: bool,
     slow_write: bool,
+    baud_mismatch: bool,
+    garbled: Option<Garble>,
     picker_cancel: bool,
 }
 
@@ -172,6 +227,7 @@ impl Printer {
             rejected: 0,
             connected: true,
             paper_out: false,
+            paper_near_end: false,
             cover_open: false,
             drawer_open: false,
             rejection_logged: false,
@@ -180,6 +236,8 @@ impl Printer {
             disconnected_mid_write: false,
             offline_fault: false,
             slow_write: false,
+            baud_mismatch: false,
+            garbled: None,
             picker_cancel: false,
         }
     }
@@ -217,6 +275,8 @@ impl Printer {
                 if self.paper_out {
                     // An empty roll trips the near-end sensor as well as the end sensor.
                     byte |= 0x0c | 0x60;
+                } else if self.paper_near_end {
+                    byte |= 0x0c;
                 }
             }
         }
@@ -351,12 +411,15 @@ impl Device for Printer {
             "connected": self.connected,
             "online": self.connected && !self.stopped(),
             "paperOut": self.paper_out,
+            "paperNearEnd": self.paper_near_end,
             "coverOpen": self.cover_open,
             "drawerOpen": self.drawer_open,
             "jobs": self.jobs,
             "rejectedPrints": self.rejected,
             "receiving": !self.job_bytes.is_empty(),
             "slowWrite": self.slow_write,
+            "baudMismatch": self.baud_mismatch,
+            "garbleRate": self.garbled.map(|g| g.rate),
             "pickerCancel": self.picker_cancel,
         })
     }
@@ -379,6 +442,24 @@ impl Device for Printer {
                 self.disconnect_after = Some(left - data.len() as u64);
             }
         }
+        // What the printer actually receives once line faults have had their way.
+        let received: Vec<u8>;
+        let data = if self.baud_mismatch || self.garbled.is_some() {
+            received = data
+                .iter()
+                .map(|&b| {
+                    let b = if self.baud_mismatch {
+                        baud_scramble(b)
+                    } else {
+                        b
+                    };
+                    self.garbled.as_mut().map_or(b, |g| g.apply(b))
+                })
+                .collect();
+            &received[..]
+        } else {
+            data
+        };
         let jobs_before = self.jobs;
         self.job_bytes.extend_from_slice(data);
         for node in self.parser.push(data) {
@@ -481,7 +562,21 @@ impl Device for Printer {
                     self.connect(&mut events);
                 }
             }
+            "paper-near-end" => self.paper_near_end = active,
             "slow-write" => self.slow_write = active,
+            "baud-mismatch" => self.baud_mismatch = active,
+            "garbled" => {
+                self.garbled = if active {
+                    let asked = opts.get("rate").and_then(Value::as_f64);
+                    let rate = asked.unwrap_or(DEFAULT_GARBLE_RATE).clamp(0.0, 1.0);
+                    if asked.is_some_and(|r| r != rate) {
+                        events.push(warn(format!("garbled rate must be 0 to 1; using {rate}")));
+                    }
+                    Some(Garble::new(rate, now))
+                } else {
+                    None
+                };
+            }
             "picker-cancel" => self.picker_cancel = active,
             _ => {}
         }

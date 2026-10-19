@@ -41,6 +41,7 @@ export function status(device: DeviceSummary): { text: string; tone: "ok" | "att
     if (!stateOf.bool(device, "connected")) return { text: "Disconnected", tone: "off" };
     if (stateOf.bool(device, "paperOut")) return { text: "Paper out", tone: "attention" };
     if (stateOf.bool(device, "coverOpen")) return { text: "Cover open", tone: "attention" };
+    if (stateOf.bool(device, "paperNearEnd")) return { text: "Paper low", tone: "attention" };
     return { text: "Online", tone: "ok" };
   }
   if (device.kind === "cash-drawer") {
