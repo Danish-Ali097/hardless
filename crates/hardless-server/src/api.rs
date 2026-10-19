@@ -9,6 +9,7 @@ use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use hardless_core::{
     ControlCommand, DeviceId, DeviceSummary, EventRecord, FaultId, FaultOptions, Job, JobId,
+    Terminator,
 };
 use hardless_escpos::Node;
 use hardless_render::{render_html_document, render_png, render_svg, PaperWidth, RenderOptions};
@@ -26,6 +27,7 @@ pub fn routes() -> Router<AppState> {
         .route("/devices/{id}", get(get_device).delete(remove_device))
         .route("/devices/{id}/reset", post(reset_device))
         .route("/devices/{id}/close", post(close_drawer))
+        .route("/devices/{id}/scan", post(scan))
         .route("/devices/{id}/jobs", get(list_jobs))
         .route("/devices/{id}/jobs/last", get(last_job))
         .route("/devices/{id}/jobs/{job_id}/render", get(render_job))
@@ -116,6 +118,34 @@ async fn close_drawer(
     state
         .engine
         .drive(&id, |r| r.control(&id, ControlCommand::CloseDrawer))?;
+    summary(&state, &id)
+}
+
+/// `POST /devices/:id/scan` body.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ScanBody {
+    code: String,
+    #[serde(default)]
+    terminator: Option<Terminator>,
+    #[serde(default)]
+    delay_ms: Option<u64>,
+}
+
+/// Scans a barcode on a keyboard-wedge scanner (FR-26): every page with the wedge shim types it.
+async fn scan(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    body: Result<Json<ScanBody>, axum::extract::rejection::JsonRejection>,
+) -> Result<Json<DeviceSummary>, ApiError> {
+    let id = device_id(&id)?;
+    let Json(body) = body.map_err(|e| ApiError::bad_request("bad_request", e.body_text()))?;
+    let command = ControlCommand::Scan {
+        code: body.code,
+        terminator: body.terminator,
+        delay_ms: body.delay_ms,
+    };
+    state.engine.drive(&id, |r| r.control(&id, command))?;
     summary(&state, &id)
 }
 

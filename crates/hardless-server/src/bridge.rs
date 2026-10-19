@@ -22,6 +22,8 @@ struct Session {
     id: SessionId,
     engine: Arc<Engine>,
     open: HashSet<DeviceId>,
+    /// Whether the shim's `hello` listed `wedge`: only then does it get scans.
+    wedge: bool,
 }
 
 /// Runs one bridge connection until it closes.
@@ -31,6 +33,7 @@ pub async fn run(socket: WebSocket, engine: Arc<Engine>) {
         id,
         engine: engine.clone(),
         open: HashSet::new(),
+        wedge: false,
     };
     let mut events = engine.subscribe();
     let (mut tx, mut rx) = futures_util::StreamExt::split(socket);
@@ -112,7 +115,8 @@ impl Session {
         }
         let reply_to = frame.id;
         match frame.message {
-            ClientMessage::Hello { .. } => {
+            ClientMessage::Hello { apis, .. } => {
+                self.wedge = apis.iter().any(|api| api == "wedge");
                 let mut out = vec![devices(&self.engine)];
                 out.extend(ack(reply_to));
                 out
@@ -254,6 +258,12 @@ impl Session {
                         data: data.clone(),
                     }]
                 }
+                // A wedge scanner types into every page that shims the wedge, like a keyboard
+                // types into whichever window has focus.
+                DeviceEvent::Wedge(scan) if self.wedge => vec![ServerMessage::WedgeScan {
+                    device_id: device_id.clone(),
+                    scan: scan.clone(),
+                }],
                 DeviceEvent::Connected => vec![ServerMessage::Connect {
                     device_id: device_id.clone(),
                 }],

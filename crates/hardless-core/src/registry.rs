@@ -202,7 +202,7 @@ struct Slot {
 ///
 /// The registry is sans-IO: it reads time only from the injected [`Clock`] and never blocks.
 /// Methods that feed a device return the device's [`DeviceEvent`]s so the caller can deliver
-/// `ToHost` bytes and connection changes to the app.
+/// `ToHost` bytes, wedge scans and connection changes to the app.
 ///
 /// ```
 /// use hardless_core::{FakeClock, Registry};
@@ -643,6 +643,9 @@ impl Registry {
                     self.record(id, now, kind);
                 }
                 DeviceEvent::Peripheral(signal) => signals.push(signal.clone()),
+                DeviceEvent::Wedge(scan) => {
+                    self.record(id, now, EventKind::Wedge { scan: scan.clone() });
+                }
             }
         }
         if state_changed {

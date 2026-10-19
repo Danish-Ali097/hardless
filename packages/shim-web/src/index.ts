@@ -2,8 +2,8 @@
  * `@hardless/shim-web` replaces browser hardware APIs with shims backed by Hardless emulated
  * devices, so an app's production code runs unchanged (FR-14 to FR-17).
  *
- * Milestone M1 shims `navigator.serial` (Web Serial, PRD section 8.1). `navigator.usb`,
- * `NDEFReader` and the keyboard wedge arrive in M2 and M3.
+ * It shims `navigator.serial` (Web Serial, PRD section 8.1) and runs the keyboard-wedge
+ * injector (section 8.4). `navigator.usb` and `NDEFReader` arrive in M3.
  *
  * @example
  * ```ts
@@ -17,16 +17,22 @@
 import { HardlessSerial } from "./serial.js";
 import { ServerTransport } from "./server-transport.js";
 import { StandaloneTransport, type StandaloneDevice } from "./standalone-transport.js";
-import type { Transport, TransportListener } from "./transport.js";
+import type { ScanOptions, Transport, TransportListener } from "./transport.js";
+import { WedgeInjector } from "./wedge.js";
 
 export type { StandaloneDevice } from "./standalone-transport.js";
 export { HardlessSerial, HardlessSerialPort } from "./serial.js";
+export type { ScanOptions } from "./transport.js";
+export { WedgeInjector } from "./wedge.js";
 
 /** The browser APIs the shim can replace. */
 export type ShimApi = "serial" | "usb" | "nfc" | "wedge";
 
 /** Every API the shim knows about, in the order the bridge `hello` message lists them. */
 export const SHIM_APIS: readonly ShimApi[] = ["serial", "usb", "nfc", "wedge"];
+
+/** The APIs this version implements; the others arrive in M3. */
+const IMPLEMENTED: ReadonlySet<ShimApi> = new Set(["serial", "wedge"]);
 
 /** The version of this package, sent as `shimVersion` in the bridge `hello` message. */
 export const SHIM_VERSION = "0.0.0";
@@ -71,6 +77,14 @@ export interface Installation {
   readonly transport: Transport;
   /** The `navigator.serial` replacement, if installed. */
   readonly serial: HardlessSerial | null;
+  /** The keyboard-wedge injector, if installed. */
+  readonly wedge: WedgeInjector | null;
+  /**
+   * Scans `code` on a keyboard-wedge scanner (FR-26). In standalone mode it resolves once
+   * the keys have been typed; in server mode, once the server has taken the scan (the keys
+   * follow over the bridge).
+   */
+  scan(deviceId: string, code: string, options?: ScanOptions): Promise<void>;
 }
 
 const KEY = Symbol.for("hardless.shim");
@@ -111,13 +125,15 @@ export function install(options: InstallOptions): Installation {
   }
 
   let serial: HardlessSerial | null = null;
+  const wedge = options.wedge === false ? null : new WedgeInjector(document);
   const listener: TransportListener = {
     devices: () => undefined,
     data: (id, bytes) => serial?.handleData(id, bytes),
     connect: (id) => serial?.handleConnect(id),
     disconnect: (id) => serial?.handleDisconnect(id),
+    wedge: (_id, scan) => void wedge?.type(scan),
   };
-  const apis = SHIM_APIS.filter((api) => options[api] !== false && api === "serial");
+  const apis = SHIM_APIS.filter((api) => options[api] !== false && IMPLEMENTED.has(api));
   const transport: Transport =
     options.mode === "server"
       ? new ServerTransport(
@@ -147,7 +163,17 @@ export function install(options: InstallOptions): Installation {
     });
   }
 
-  const installation: Installation = { options, transport, serial };
+  const installation: Installation = {
+    options,
+    transport,
+    serial,
+    wedge,
+    async scan(deviceId, code, scanOptions) {
+      await transport.scan(deviceId, code, scanOptions);
+      // Standalone: the engine's events are delivered in microtasks that have run by now.
+      if (options.mode === "standalone") await wedge?.idle();
+    },
+  };
   global[KEY] = installation;
   return installation;
 }
@@ -161,6 +187,7 @@ export function uninstall(): void {
     // Removing the own property brings back the browser's getter on Navigator.prototype.
     delete (navigator as unknown as Record<string, unknown>).serial;
   }
+  installation.wedge?.stop();
   installation.transport.stop();
   Reflect.deleteProperty(global, KEY);
 }

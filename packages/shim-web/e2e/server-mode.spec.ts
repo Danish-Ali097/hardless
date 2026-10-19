@@ -40,7 +40,7 @@ test.afterAll(() => {
 });
 
 test.beforeEach(async () => {
-  for (const id of ["printer-1", "drawer-1"]) {
+  for (const id of ["printer-1", "drawer-1", "scanner-1"]) {
     await fetch(`${API}/devices/${id}/reset`, { method: "POST" });
   }
 });
@@ -138,4 +138,32 @@ test("FR-15: a dropped bridge is reported as a disconnect", async ({ page }) => 
       }
     })
     .toBe(true);
+});
+
+test("FR-26: a scan on the server is typed into the page by the wedge", async ({ page }) => {
+  await page.goto("/e2e/page.html");
+  await page.waitForFunction(() => window.ready === true);
+  await page.evaluate(async (port) => {
+    document.body.insertAdjacentHTML("beforeend", '<textarea id="field"></textarea>');
+    const installation = window.shim.install({
+      mode: "server",
+      url: `ws://127.0.0.1:${String(port)}/bridge`,
+    });
+    await installation.transport.ready;
+    window.installation = installation as unknown as Window["installation"];
+  }, PORT);
+  await page.focus("#field");
+
+  // From outside the page (the dashboard, CLI or a test), through the REST API...
+  const response = await fetch(`${API}/devices/scanner-1/scan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: "4006381333931" }),
+  });
+  expect(response.ok).toBe(true);
+  await expect(page.locator("#field")).toHaveValue("4006381333931\n");
+
+  // ...and from the page itself, which calls the same API.
+  await page.evaluate(() => window.installation.scan("scanner-1", "ABC", { terminator: "none" }));
+  await expect(page.locator("#field")).toHaveValue("4006381333931\nABC");
 });

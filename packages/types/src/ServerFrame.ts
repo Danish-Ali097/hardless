@@ -2,6 +2,7 @@
 import type { BridgeErrorCode } from "./BridgeErrorCode.js";
 import type { DeviceId } from "./DeviceId.js";
 import type { DeviceSummary } from "./DeviceSummary.js";
+import type { Terminator } from "./Terminator.js";
 
 /**
  * A message from the server to the shim.
@@ -34,7 +35,23 @@ deviceId: DeviceId, } | { "type": "disconnect",
 /**
  * The device.
  */
-deviceId: DeviceId, } | { "type": "error", 
+deviceId: DeviceId, } | { "type": "wedge-scan", 
+/**
+ * The scanner.
+ */
+deviceId: DeviceId, 
+/**
+ * The characters to type, including any prefix and suffix.
+ */
+code: string, 
+/**
+ * Milliseconds between key presses.
+ */
+delayMs: number, 
+/**
+ * The key pressed after the characters.
+ */
+terminator: Terminator, } | { "type": "error", 
 /**
  * A machine-readable code, see [`BridgeErrorCode`].
  */

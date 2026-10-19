@@ -16,7 +16,7 @@ async fn fr_20_health() {
 }
 
 #[tokio::test]
-async fn fr_20_default_devices_are_a_printer_and_a_drawer() {
+async fn fr_20_default_devices_are_a_printer_a_drawer_and_a_scanner() {
     let server = server().await;
     let (status, body) = get_json(&server, "/api/v1/devices").await;
     assert_eq!(status, 200);
@@ -26,7 +26,7 @@ async fn fr_20_default_devices_are_a_printer_and_a_drawer() {
         .iter()
         .map(|d| d["id"].as_str().unwrap())
         .collect();
-    assert_eq!(ids, ["drawer-1", "printer-1"]);
+    assert_eq!(ids, ["drawer-1", "printer-1", "scanner-1"]);
     assert_eq!(body[0]["attachedTo"], "printer-1");
     assert!(body[1]["supportedFaults"]
         .as_array()
@@ -359,4 +359,50 @@ async fn fr_20_render_can_hide_unknown_command_badges() {
     )
     .await;
     assert!(!without.contains(r#"class="hl-unknown""#));
+}
+
+#[tokio::test]
+async fn fr_26_scan_endpoint_scans_and_validates_its_body() {
+    let server = server().await;
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/scanner-1/scan",
+        json!({ "code": "ABC-1", "terminator": "tab", "delayMs": 0 }),
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["state"]["scans"], 1);
+    assert_eq!(body["state"]["lastCode"], "ABC-1");
+
+    let (status, events) = get_json(&server, "/api/v1/devices/scanner-1/events").await;
+    assert_eq!(status, 200);
+    let wedge = events
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["type"] == "wedge")
+        .expect("the scan is in the event log");
+    assert_eq!(
+        wedge["scan"],
+        json!({ "code": "ABC-1", "delayMs": 0, "terminator": "tab" })
+    );
+
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/scanner-1/scan",
+        json!({ "code": "1", "terminator": "space" }),
+    )
+    .await;
+    assert_eq!(status, 400, "{body}");
+    assert_eq!(body["error"]["code"], "bad_request");
+    let (status, _) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nope/scan",
+        json!({ "code": "1" }),
+    )
+    .await;
+    assert_eq!(status, 404);
 }

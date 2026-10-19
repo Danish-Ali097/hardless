@@ -7,6 +7,8 @@ export function kindName(kind: string): string {
       return "Receipt printer";
     case "cash-drawer":
       return "Cash drawer";
+    case "scanner-wedge":
+      return "Barcode scanner";
     default:
       return kind;
   }
@@ -48,6 +50,7 @@ export function status(device: DeviceSummary): { text: string; tone: "ok" | "att
     if (drawer === "opening") return { text: "Opening", tone: "attention" };
     return { text: "Closed", tone: "ok" };
   }
+  if (device.kind === "scanner-wedge") return { text: "Ready", tone: "ok" };
   return { text: "", tone: "ok" };
 }
 

@@ -10,6 +10,7 @@ import {
   isConnected,
   toBase64,
   TransportError,
+  type ScanOptions,
   type Transport,
   type TransportListener,
 } from "./transport.js";
@@ -163,6 +164,13 @@ export class ServerTransport implements Transport {
       case "disconnect":
         if (this.reachable.delete(frame.deviceId)) this.listener.disconnect(frame.deviceId);
         break;
+      case "wedge-scan":
+        this.listener.wedge(frame.deviceId, {
+          code: frame.code,
+          delayMs: frame.delayMs,
+          terminator: frame.terminator,
+        });
+        break;
     }
   }
 
@@ -203,15 +211,25 @@ export class ServerTransport implements Transport {
   }
 
   async clearFault(deviceId: string, fault: string): Promise<void> {
+    await this.rest("PUT", `/faults/${encodeURIComponent(fault)}`, deviceId, { active: false });
+  }
+
+  async scan(deviceId: string, code: string, options: ScanOptions = {}): Promise<void> {
+    const response = await this.rest("POST", "/scan", deviceId, { code, ...options });
+    if (!response.ok) {
+      const code = response.status === 404 ? "not_found" : "bad_message";
+      throw new TransportError(code, `scan failed (HTTP ${String(response.status)})`);
+    }
+  }
+
+  /** Calls the server's REST API for a device: `/api/v1/devices/<id><path>`. */
+  private rest(method: string, path: string, deviceId: string, body: unknown): Promise<Response> {
     const base = new URL(this.options.url, window.location.href);
     base.protocol = base.protocol === "wss:" ? "https:" : "http:";
-    const url = new URL(
-      `/api/v1/devices/${encodeURIComponent(deviceId)}/faults/${encodeURIComponent(fault)}`,
-      base,
-    );
+    const url = new URL(`/api/v1/devices/${encodeURIComponent(deviceId)}${path}`, base);
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (this.options.token) headers.Authorization = `Bearer ${this.options.token}`;
-    await fetch(url, { method: "PUT", headers, body: JSON.stringify({ active: false }) });
+    return fetch(url, { method, headers, body: JSON.stringify(body) });
   }
 
   stop(): void {

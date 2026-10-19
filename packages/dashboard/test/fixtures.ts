@@ -48,3 +48,23 @@ export function stateWith(
     ...extra,
   };
 }
+
+export function scanner(state: object = {}, overrides: Partial<DeviceSummary> = {}): DeviceSummary {
+  return {
+    id: "scanner-1",
+    kind: "scanner-wedge",
+    state: {
+      terminator: "enter",
+      delayMs: 8,
+      prefix: "",
+      suffix: "",
+      scans: 0,
+      lastCode: null,
+      ...state,
+    },
+    faults: [],
+    supportedFaults: ["double-scan", "partial-scan"],
+    attachedTo: null,
+    ...overrides,
+  };
+}

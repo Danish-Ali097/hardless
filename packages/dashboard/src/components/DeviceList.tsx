@@ -108,6 +108,7 @@ function AddDevice({ printers }: { printers: DeviceSummary[] }) {
         >
           <option value="printer-escpos">Receipt printer</option>
           <option value="cash-drawer">Cash drawer</option>
+          <option value="scanner-wedge">Barcode scanner</option>
         </select>
       </label>
       <label className="text-xs text-muted">
@@ -117,7 +118,13 @@ function AddDevice({ printers }: { printers: DeviceSummary[] }) {
           onChange={(e) => {
             setId(e.target.value);
           }}
-          placeholder={kind === "cash-drawer" ? "drawer-2" : "printer-2"}
+          placeholder={
+            kind === "cash-drawer"
+              ? "drawer-2"
+              : kind === "scanner-wedge"
+                ? "scanner-2"
+                : "printer-2"
+          }
           className={input}
         />
       </label>

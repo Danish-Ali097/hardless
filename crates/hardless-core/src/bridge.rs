@@ -6,6 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::device::WedgeScan;
 use crate::ids::DeviceId;
 use crate::registry::DeviceSummary;
 use crate::Bytes;
@@ -174,6 +175,17 @@ pub enum ServerMessage {
     Disconnect {
         /// The device.
         device_id: DeviceId,
+    },
+    /// A keyboard-wedge scanner typed a scan: the shim presses the keys on the focused
+    /// element (PRD section 8.4). Sent only to shims whose `hello` listed `wedge`.
+    #[serde(rename_all = "camelCase")]
+    WedgeScan {
+        /// The scanner.
+        device_id: DeviceId,
+        /// What to type: `code`, `delayMs` and `terminator`.
+        #[serde(flatten)]
+        #[cfg_attr(feature = "ts", ts(flatten))]
+        scan: WedgeScan,
     },
     /// Something failed; `replyTo` names the client message, if any.
     #[serde(rename_all = "camelCase")]

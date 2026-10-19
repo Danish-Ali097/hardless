@@ -1,4 +1,16 @@
-import type { BridgeErrorCode, DeviceSummary, SerialSignals } from "@hardless/types";
+import type {
+  BridgeErrorCode,
+  DeviceSummary,
+  SerialSignals,
+  Terminator,
+  WedgeScan,
+} from "@hardless/types";
+
+/** Per-scan overrides of a scanner's settings. */
+export interface ScanOptions {
+  terminator?: Terminator;
+  delayMs?: number;
+}
 
 /** Things a transport tells the shim about. */
 export interface TransportListener {
@@ -10,6 +22,8 @@ export interface TransportListener {
   connect(deviceId: string): void;
   /** A device stopped being reachable (or the bridge dropped). */
   disconnect(deviceId: string): void;
+  /** A keyboard-wedge scanner typed a scan (PRD section 8.4). */
+  wedge(deviceId: string, scan: WedgeScan): void;
 }
 
 /**
@@ -28,6 +42,8 @@ export interface Transport {
   signals(deviceId: string, signals: SerialSignals): Promise<void>;
   /** Turns a fault off, e.g. a one-shot `picker-cancel` once it has been used. */
   clearFault(deviceId: string, fault: string): Promise<void>;
+  /** Scans `code` on a keyboard-wedge scanner (FR-26); the wedge types it into the page. */
+  scan(deviceId: string, code: string, options?: ScanOptions): Promise<void>;
   /** Disconnects and stops reconnecting. */
   stop(): void;
 }

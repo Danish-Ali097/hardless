@@ -8,6 +8,7 @@ and the current time, and returns what it did. Each device is a Cargo feature.
 | ---------------- | --------- | ------------------------------------------------------------------------------------------------- |
 | `printer-escpos` | `printer` | ESC/POS receipt printer: parses jobs, answers `DLE EOT` status requests, kicks an attached drawer |
 | `cash-drawer`    | `drawer`  | Cash drawer attached to a printer's drawer-kick connector (FR-36 to FR-39)                        |
+| `scanner-wedge`  | `scanner` | Keyboard-wedge barcode scanner: types each scan into the page through the shim (FR-26)            |
 
 ## Usage
 
@@ -78,6 +79,27 @@ Config: `attachedTo` (printer ID, required), `pin` (`2` or `5`, default `2`), `a
 States: `closed` → `opening` (for the kick's on-time, at least 50 ms) → `open` → `closed`
 (by hand, or after `autoCloseMs`). Faults: `jammed` (kick counted, drawer stays closed) and
 `not-connected` (kick ignored; the printer sees no open drawer).
+
+## Barcode scanner (`scanner-wedge`)
+
+A wedge scanner is a keyboard to the computer: for each barcode it types the characters a few
+milliseconds apart, then a terminator key. A scan is a `ControlCommand::Scan` (from the
+dashboard, `POST /devices/:id/scan`, the CLI or a scenario); the scanner answers with a
+`DeviceEvent::Wedge` carrying `{ code, delayMs, terminator }`, which the transport hands to the
+shim to type.
+
+Config (all optional):
+
+| Field        | Default   | Meaning                                             |
+| ------------ | --------- | --------------------------------------------------- |
+| `terminator` | `"enter"` | Key after each code: `"enter"`, `"tab"` or `"none"` |
+| `delayMs`    | `8`       | Milliseconds between key presses                    |
+| `prefix`     | `""`      | Typed before every code                             |
+| `suffix`     | `""`      | Typed after every code, before the terminator       |
+
+A scan can override `terminator` and `delayMs`. Empty codes and codes over 4,096 characters are
+ignored with a warning. Faults: `double-scan` repeats each scan `gapMs` (default 30) after its
+last key, and `partial-scan` drops the terminator.
 
 ## License
 

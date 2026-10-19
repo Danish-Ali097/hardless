@@ -93,6 +93,17 @@ export async function closeDrawer(id: string): Promise<void> {
   }
 }
 
+/** Scans a code (FR-26). Returns whether the server took it. */
+export async function scan(id: string, code: string): Promise<boolean> {
+  try {
+    putDevice(await api.scan(id, code));
+    return true;
+  } catch (error) {
+    report(error);
+    return false;
+  }
+}
+
 export async function resetDevice(id: string): Promise<void> {
   try {
     putDevice(await api.resetDevice(id));

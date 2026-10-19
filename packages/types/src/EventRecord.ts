@@ -7,6 +7,7 @@ import type { LogLevel } from "./LogLevel.js";
 import type { Millis } from "./Millis.js";
 import type { PeripheralSignal } from "./PeripheralSignal.js";
 import type { SerialSignals } from "./SerialSignals.js";
+import type { WedgeScan } from "./WedgeScan.js";
 import type { JsonValue } from "./JsonValue.js";
 
 /**
@@ -87,4 +88,8 @@ to: DeviceId,
 /**
  * The signal.
  */
-signal: PeripheralSignal, });
+signal: PeripheralSignal, } | { "type": "wedge", 
+/**
+ * What was typed.
+ */
+scan: WedgeScan, });

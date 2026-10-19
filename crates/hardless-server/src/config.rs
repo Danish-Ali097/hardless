@@ -83,8 +83,8 @@ impl Default for ServerConfig {
     }
 }
 
-/// `printer-1` (ESC/POS over Web Serial) with `drawer-1` attached on pin 2: enough to print
-/// a first receipt without writing any config.
+/// `printer-1` (ESC/POS over Web Serial) with `drawer-1` attached on pin 2, and `scanner-1`
+/// (keyboard wedge): enough to print a first receipt and scan without writing any config.
 pub fn default_devices() -> Vec<DeviceSpec> {
     let id = |s: &str| s.parse::<DeviceId>().ok();
     vec![
@@ -97,6 +97,11 @@ pub fn default_devices() -> Vec<DeviceSpec> {
             kind: "cash-drawer".into(),
             id: id("drawer-1"),
             config: json!({ "attachedTo": "printer-1" }),
+        },
+        DeviceSpec {
+            kind: "scanner-wedge".into(),
+            id: id("scanner-1"),
+            config: json!({}),
         },
     ]
 }

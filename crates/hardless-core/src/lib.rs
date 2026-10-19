@@ -16,7 +16,7 @@ pub use bytes::Bytes;
 
 pub use device::{
     ConfigError, ControlCommand, Device, DeviceEvent, DevicePlugin, Job, LogEntry, LogLevel,
-    PeripheralSignal, Terminator,
+    PeripheralSignal, Terminator, WedgeScan,
 };
 pub use fault::{catalogue, FaultId, FaultOptionSpec, FaultOptions, FaultSpec, OptionDefault};
 pub use ids::{DeviceId, InvalidId, JobId, MAX_DEVICE_ID_LEN};

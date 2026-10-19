@@ -6,7 +6,7 @@ use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
 use crate::bridge::SerialSignals;
-use crate::device::{ControlCommand, LogLevel, PeripheralSignal};
+use crate::device::{ControlCommand, LogLevel, PeripheralSignal, WedgeScan};
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::{DeviceId, JobId};
 use crate::time::Millis;
@@ -106,6 +106,11 @@ pub enum EventKind {
         /// The signal.
         signal: PeripheralSignal,
     },
+    /// A keyboard-wedge scanner typed a scan into the page.
+    Wedge {
+        /// What was typed.
+        scan: WedgeScan,
+    },
 }
 
 impl EventKind {
@@ -125,6 +130,7 @@ impl EventKind {
             EventKind::Reset => "reset",
             EventKind::Signals { .. } => "signals",
             EventKind::Peripheral { .. } => "peripheral",
+            EventKind::Wedge { .. } => "wedge",
         }
     }
 }
@@ -150,11 +156,12 @@ pub struct EventRecord {
 }
 
 impl EventRecord {
-    /// The direction of a byte record, `None` for everything else (used by the log filter).
+    /// The direction of a byte or keystroke record, `None` for everything else (used by the
+    /// log filter).
     pub fn direction(&self) -> Option<Direction> {
         match self.kind {
             EventKind::BytesIn { .. } => Some(Direction::HostToDevice),
-            EventKind::BytesOut { .. } => Some(Direction::DeviceToHost),
+            EventKind::BytesOut { .. } | EventKind::Wedge { .. } => Some(Direction::DeviceToHost),
             _ => None,
         }
     }

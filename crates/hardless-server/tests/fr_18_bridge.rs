@@ -16,7 +16,7 @@ async fn fr_18_hello_returns_the_device_list() {
     let devices = recv(&mut ws).await;
     assert_eq!(devices["v"], 1);
     assert_eq!(devices["type"], "devices");
-    assert_eq!(devices["devices"].as_array().unwrap().len(), 2);
+    assert_eq!(devices["devices"].as_array().unwrap().len(), 3);
     assert_eq!(
         recv(&mut ws).await,
         json!({ "v": 1, "type": "ack", "replyTo": "1" })
@@ -316,5 +316,76 @@ async fn fr_18_signals_are_recorded_in_the_event_log() {
     assert_eq!(
         signals["signals"],
         json!({ "dataTerminalReady": true, "requestToSend": false })
+    );
+}
+
+/// Every frame `ws` receives within `ms`, without failing on silence.
+async fn frames_within(ws: &mut common::Ws, ms: u64) -> Vec<serde_json::Value> {
+    use futures_util::StreamExt;
+    use tokio_tungstenite::tungstenite::Message;
+    let deadline = tokio::time::Instant::now() + Duration::from_millis(ms);
+    let mut frames = Vec::new();
+    while let Ok(Some(Ok(message))) = tokio::time::timeout_at(deadline, ws.next()).await {
+        if let Message::Text(text) = message {
+            frames.push(serde_json::from_str(text.as_str()).unwrap());
+        }
+    }
+    frames
+}
+
+#[tokio::test]
+async fn fr_26_wedge_scans_reach_only_shims_that_asked_for_the_wedge() {
+    let server = server().await;
+    let mut wedge = ws(&server, "/bridge").await;
+    send(&mut wedge, json!({ "v": 1, "type": "hello", "id": "h", "origin": "http://localhost", "shimVersion": "0.0.0", "apis": ["serial", "wedge"] })).await;
+    recv_type(&mut wedge, "ack").await;
+    let mut serial_only = bridge(&server).await;
+
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/scanner-1/scan",
+        json!({ "code": "4006381333931" }),
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(
+        recv_type(&mut wedge, "wedge-scan").await,
+        json!({ "v": 1, "type": "wedge-scan", "deviceId": "scanner-1", "code": "4006381333931", "delayMs": 8, "terminator": "enter" })
+    );
+    let others = frames_within(&mut serial_only, 300).await;
+    assert!(
+        others.iter().all(|f| f["type"] != "wedge-scan"),
+        "{others:?}"
+    );
+}
+
+#[tokio::test]
+async fn fault_double_scan_repeat_arrives_over_the_bridge_on_time() {
+    let server = server().await;
+    let mut ws = ws(&server, "/bridge").await;
+    send(&mut ws, json!({ "v": 1, "type": "hello", "id": "h", "origin": "http://localhost", "shimVersion": "0.0.0", "apis": ["wedge"] })).await;
+    recv_type(&mut ws, "ack").await;
+    let (status, _) = send_json(
+        &server,
+        "PUT",
+        "/api/v1/devices/scanner-1/faults/double-scan",
+        json!({ "active": true, "options": { "gapMs": 100 } }),
+    )
+    .await;
+    assert_eq!(status, 200);
+    let start = Instant::now();
+    send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/scanner-1/scan",
+        json!({ "code": "1", "delayMs": 0 }),
+    )
+    .await;
+    assert_eq!(recv_type(&mut ws, "wedge-scan").await["code"], "1");
+    assert_eq!(recv_type(&mut ws, "wedge-scan").await["code"], "1");
+    assert!(
+        start.elapsed() >= Duration::from_millis(100),
+        "the repeat waits for the gap"
     );
 }

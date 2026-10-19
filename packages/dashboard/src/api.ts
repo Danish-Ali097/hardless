@@ -80,6 +80,8 @@ export const api = {
   removeDevice: (id: string) => request<undefined>("DELETE", `/devices/${enc(id)}`),
   resetDevice: (id: string) => request<DeviceSummary>("POST", `/devices/${enc(id)}/reset`),
   closeDrawer: (id: string) => request<DeviceSummary>("POST", `/devices/${enc(id)}/close`),
+  scan: (id: string, code: string) =>
+    request<DeviceSummary>("POST", `/devices/${enc(id)}/scan`, { code }),
   jobs: (id: string, limit = 30) =>
     request<Job[]>("GET", `/devices/${enc(id)}/jobs?limit=${String(limit)}`),
   setFault: (id: string, fault: string, active: boolean, options?: Record<string, number>) =>

@@ -45,6 +45,44 @@ decision from the maintainer.
   step (see M0, Licences) must include it, alongside the Rust dependencies' notices.
 - **Dashboard (FR-24):** "Download PNG" sits next to "Download HTML" on every receipt.
 
+### Keyboard-wedge scanner (FR-26, section 8.4)
+
+- **New `DeviceEvent::Wedge(WedgeScan)`** (maintainer decision; changes FR-01, additive). A
+  real wedge scanner is a USB keyboard: it types each code key by key, then Enter or Tab. The
+  scanner emits one `Wedge { code, delayMs, terminator }` per scan and the shim presses the
+  keys, playing the computer's keyboard driver. This matches the PRD's existing `wedge-scan`
+  bridge message one-to-one. Rejected: reusing `ToHost` bytes, which is how a _serial-mode_
+  scanner works and loses the per-scan delay; and one message per key press, whose network
+  jitter would break "a 20-barcode sequence arrives in order with the configured delay".
+- **Event log:** scans are recorded as `wedge` records (`{ scan: { code, delayMs, terminator }
+}`) with direction device-to-host, so the log filter (FR-29) treats them like status bytes.
+- **`scanner-wedge` config:** `terminator` (default `enter`), `delayMs` (default 8),
+  `prefix`, `suffix`. A scan may override `terminator` and `delayMs`. Empty codes and codes
+  over 4,096 characters are ignored with a warning rather than typed.
+- **`double-scan` timing:** the repeat starts `gapMs` after the first scan's _last_ key, i.e.
+  at `(keys - 1) × delayMs + gapMs`. "Each scan is sent twice" with a gap only makes sense
+  measured from the end of the first one. The repeat is a fault, so it does not count as a
+  new scan in `scans`. Turning the fault off drops repeats not yet sent.
+- **Who receives scans:** every bridge connection whose `hello` listed `wedge`, the way a
+  keyboard types into whichever window has focus. Connections without `wedge` never get
+  `wedge-scan` frames.
+- **Default devices** now include `scanner-1`, so the dashboard has a scanner without config
+  (the PRD's own example config in section 11.3 uses that ID).
+- **Shim injector, where the spec leaves room:** legacy `keyCode`/`which`/`charCode` follow a
+  US keyboard layout (barcode listeners commonly read them); characters with no US key get
+  `keyCode` 0. Enter follows HTML implicit submission (click the default button; with none,
+  submit only a single-field form). Tab moves to the next focusable element in tab order
+  (positive `tabindex` first, then document order); it does not cross into iframes or shadow
+  roots. Text is inserted with `setRangeText` so React's controlled inputs see the change.
+  `isTrusted` is `false`, as section 8.4 says, documented in the shim README.
+- **`installation.scan(deviceId, code, options?)`** in the shim (new public API) triggers a
+  scan from the page in either mode: standalone resolves once the keys are typed; server mode
+  calls `POST /devices/:id/scan` and resolves once the server has taken it. It exists so
+  standalone-mode tests (and the M3 Playwright fixture) can scan without a server.
+- **Dashboard sequence runner** runs in the page: it sends each scan, waits for the server to
+  accept it, then waits the configured delay. Presets are kept in the browser's local storage
+  (sample presets until the user saves their own); they are a convenience, not shared state.
+
 ## Between M1 and M2
 
 - **Names secured (PRD section 16).** On 19 Oct 2026 the maintainer registered the npm

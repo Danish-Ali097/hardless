@@ -155,3 +155,28 @@ fn fr_15_bus_events_are_available_for_the_shim() {
         .iter()
         .any(|e| e["type"] == "device:output"));
 }
+
+#[test]
+fn fr_26_scanner_scans_reach_the_shim_like_on_the_server() {
+    let mut engine =
+        Engine::new(&json!([{ "kind": "scanner-wedge", "id": "scanner-1" }]).to_string()).unwrap();
+    let scan = parse(
+        &engine
+            .control(0.0, "scanner-1", r#"{ "type": "scan", "code": "123" }"#)
+            .unwrap(),
+    );
+    let expected = json!({
+        "type": "wedge", "deviceId": "scanner-1", "code": "123", "delayMs": 8, "terminator": "enter"
+    });
+    assert_eq!(scan, json!([expected.clone()]));
+
+    // double-scan: the repeat comes due after typing (3 gaps of 8 ms) plus the 30 ms gap.
+    engine
+        .set_fault(0.0, "scanner-1", "double-scan", true, "{}")
+        .unwrap();
+    engine
+        .control(100.0, "scanner-1", r#"{ "type": "scan", "code": "123" }"#)
+        .unwrap();
+    assert_eq!(engine.next_deadline(), Some(154.0));
+    assert_eq!(parse(&engine.tick(154.0).unwrap()), json!([expected]));
+}

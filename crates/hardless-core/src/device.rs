@@ -145,6 +145,46 @@ pub enum DeviceEvent {
     Log(LogEntry),
     /// A signal to attached devices; the registry delivers it (see [`Device::attached_to`]).
     Peripheral(PeripheralSignal),
+    /// Keystrokes a keyboard-wedge scanner types into the page (PRD section 8.4). The
+    /// transport hands them to the shim, which presses the keys like a keyboard driver.
+    Wedge(WedgeScan),
+}
+
+/// What a keyboard-wedge scanner types for one scan: the characters, how fast, and the key
+/// that ends it. On the bridge this is the `wedge-scan` message.
+///
+/// ```
+/// use hardless_core::{Terminator, WedgeScan};
+/// let scan = WedgeScan { code: "4006381333931".into(), delay_ms: 8, terminator: Terminator::Enter };
+/// assert_eq!(
+///     serde_json::to_value(&scan).unwrap(),
+///     serde_json::json!({ "code": "4006381333931", "delayMs": 8, "terminator": "enter" })
+/// );
+/// assert_eq!(scan.keys(), 14, "13 characters and Enter");
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WedgeScan {
+    /// The characters to type, including any prefix and suffix.
+    pub code: String,
+    /// Milliseconds between key presses.
+    pub delay_ms: u64,
+    /// The key pressed after the characters.
+    pub terminator: Terminator,
+}
+
+impl WedgeScan {
+    /// How many keys the scan presses: one per character, plus the terminator.
+    pub fn keys(&self) -> u64 {
+        let terminator = u64::from(self.terminator != Terminator::None);
+        self.code.chars().count() as u64 + terminator
+    }
+
+    /// How long typing takes, from the first key press to the last.
+    pub fn typing_ms(&self) -> u64 {
+        self.keys().saturating_sub(1).saturating_mul(self.delay_ms)
+    }
 }
 
 /// A completed print job.

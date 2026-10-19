@@ -4,8 +4,8 @@ Browser API shims backed by [Hardless](https://github.com/hardlessdev/hardless) 
 devices. Your app's own hardware code runs unchanged: it calls `navigator.serial` as usual and
 talks to an emulated receipt printer and cash drawer.
 
-> Status: milestone M1. `navigator.serial` (Web Serial) is shimmed. WebUSB, Web NFC and the
-> keyboard-wedge scanner arrive in M2 and M3.
+> Status: milestone M2. `navigator.serial` (Web Serial) and the keyboard-wedge scanner work.
+> WebUSB and Web NFC arrive in M3.
 
 ## Usage
 
@@ -74,6 +74,30 @@ The shim follows the WICG Web Serial specification and Chrome's behaviour:
 - `setSignals()` changes are recorded in the device's event log.
 - Faults: `slow-write` delays write acknowledgements, `disconnect-mid-write` fails the
   in-flight write, and `picker-cancel` makes the next `requestPort()` behave like Cancel.
+
+## Keyboard wedge (PRD section 8.4)
+
+With the wedge on (the default), scans from an emulated `scanner-wedge` are typed into the
+focused element, like a USB barcode scanner, one scan after another:
+
+- Each character fires `keydown`, `keypress`, `beforeinput` and `input` (in text fields, which
+  also receive the character, in a way React notices) and `keyup`. `preventDefault()` stops
+  the character, as with real typing. Legacy `keyCode`, `which` and `charCode` are set for a US
+  layout, because many barcode listeners still read them.
+- Enter submits the field's form (HTML implicit submission) or adds a line in a textarea; Tab
+  moves focus to the next field.
+- With nothing focused, keys go to `document.body`.
+
+Scan from the dashboard, `POST /api/v1/devices/<id>/scan`, or from the page:
+
+```ts
+const shim = install({ mode: "standalone", devices: [{ kind: "scanner-wedge", id: "scanner-1" }] });
+await shim.scan("scanner-1", "4006381333931"); // standalone: resolves once typed
+```
+
+**Limitation:** the events are synthetic, so `event.isTrusted` is `false`. Apps that ignore
+untrusted key events cannot be tested with the wedge in phase 1; OS-level key injection comes
+in phase 2.
 
 ## Building
 

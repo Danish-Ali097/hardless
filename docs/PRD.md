@@ -205,6 +205,7 @@ pub enum DeviceEvent {
     Connected, Disconnected,
     Log(LogEntry),
     Peripheral(PeripheralSignal), // delivered by the registry to attached devices
+    Wedge(WedgeScan),         // keys a keyboard-wedge scanner types: { code, delayMs, terminator }
 }
 
 pub enum PeripheralSignal {
@@ -560,7 +561,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 ### M2 — Cross-browser paths
 
 - [ ] HTTP printer endpoints, both dialects, CORS, HTTPS on 8443 (FR-31–FR-35)
-- [ ] Keyboard-wedge scanner device, dashboard panel, presets, sequences (FR-26, section 8.4)
+- [x] Keyboard-wedge scanner device, dashboard panel, presets, sequences (FR-26, section 8.4)
 - [x] Renderer SVG/PNG output (FR-11) and `/render` endpoint
 - [ ] Scenario runner (FR-04) and `/scenarios/run`
 - [ ] CLI (FR-30)

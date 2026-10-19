@@ -17,7 +17,8 @@ use crate::config::DeviceSpec;
 pub enum Event {
     /// An event bus event (`device:added`, `device:state`, ...).
     Bus(BusEvent),
-    /// A device event that reached a transport: bytes for the host, connect, disconnect.
+    /// A device event that reached a transport: bytes for the host, a wedge scan, connect,
+    /// disconnect.
     Device {
         /// The device.
         device_id: DeviceId,
@@ -121,7 +122,10 @@ impl Engine {
         for event in events {
             if matches!(
                 event,
-                DeviceEvent::ToHost(_) | DeviceEvent::Connected | DeviceEvent::Disconnected
+                DeviceEvent::ToHost(_)
+                    | DeviceEvent::Wedge(_)
+                    | DeviceEvent::Connected
+                    | DeviceEvent::Disconnected
             ) {
                 let _ = self.events.send(Arc::new(Event::Device {
                     device_id: device_id.clone(),

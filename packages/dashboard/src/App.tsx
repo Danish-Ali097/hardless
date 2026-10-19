@@ -4,10 +4,11 @@ import { DeviceList } from "./components/DeviceList.js";
 import { DrawerPanel } from "./components/DrawerPanel.js";
 import { FaultPanel } from "./components/FaultPanel.js";
 import { PrinterPanel } from "./components/PrinterPanel.js";
+import { ScannerPanel } from "./components/ScannerPanel.js";
 import { kindName, stateOf } from "./devices.js";
 import { type DashboardState, useDashboard, visibleJobs } from "./store.js";
 
-/** The dashboard, from a store snapshot (FR-23 to FR-25, FR-28). */
+/** The dashboard, from a store snapshot (FR-23 to FR-26, FR-28). */
 export function Dashboard({ state }: { state: DashboardState }) {
   const devices = Object.values(state.devices).sort((a, b) => a.id.localeCompare(b.id));
   const selected = state.selected ? state.devices[state.selected] : undefined;
@@ -72,6 +73,7 @@ function Selected({ state, device }: { state: DashboardState; device: DeviceSumm
       />
     );
   }
+  if (device.kind === "scanner-wedge") return <ScannerPanel scanner={device} />;
   return (
     <section className="flex flex-col gap-1 border-b border-line pb-4">
       <h1 className="text-2xl font-semibold tracking-tight">{device.id}</h1>

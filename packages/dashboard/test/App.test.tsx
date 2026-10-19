@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Dashboard } from "../src/App.js";
-import { drawer, job, printer, stateWith } from "./fixtures.js";
+import { drawer, job, printer, scanner, stateWith } from "./fixtures.js";
 
 /** Server-rendered markup without React's text separators (`<!-- -->`). */
 const html = (state: Parameters<typeof Dashboard>[0]["state"]) =>
@@ -38,6 +38,20 @@ describe("dashboard", () => {
     expect(page).toContain("jobs/2/render?format=html&amp;width=80");
     expect(page).toContain('render?format=png&amp;width=80" download="receipt-2.png"');
     expect(page).toContain("Download PNG");
+  });
+
+  it("FR-26: the scanner panel has a scan box, presets, a sequence runner and its faults", () => {
+    const page = html(stateWith([scanner({ scans: 3, lastCode: "4006381333931" })]));
+    expect(page).toContain(
+      "Keyboard-wedge barcode scanner, Enter after each code, 8 ms between keys",
+    );
+    expect(page).toContain("3 scans, last");
+    expect(page).toContain('id="scan-code"');
+    expect(page).toMatch(/<button type="submit" disabled=""[^>]*>Scan<\/button>/);
+    expect(page).toContain("EAN-13 sample");
+    expect(page).toContain("Sequence");
+    expect(page).toContain("Double scan");
+    expect(page).toContain("Barcode scanner, ready");
   });
 
   it("FR-25: shows the attached drawer opening, its kick count and a close button", () => {

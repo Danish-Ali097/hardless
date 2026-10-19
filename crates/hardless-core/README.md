@@ -76,7 +76,7 @@ assert_eq!(bus.len(), 1); // device:added
 - **Sans-IO.** The registry reads time only through the `Clock` it was given; the server
   passes a system clock, tests pass `FakeClock`. No API in this crate blocks or sleeps.
 - **Two outputs per call.** Methods that feed a device return its raw `DeviceEvent`s so the
-  caller (a transport) can route `ToHost` bytes back to the app. The same events are recorded
+  caller (a transport) can route `ToHost` bytes and `Wedge` scans back to the app. The same events are recorded
   in the event log, and the ones observers care about are put on the event bus.
 - **Timestamps are monotonic.** If an injected clock goes backwards, the registry keeps the
   last timestamp it handed out.

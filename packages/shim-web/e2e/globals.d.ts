@@ -21,7 +21,21 @@ declare global {
     ready?: boolean;
     shim: typeof Shim;
     settle: (value: unknown) => Promise<Settled>;
-    installation: { transport: StandaloneTransport };
+    installation: {
+      transport: StandaloneTransport;
+      scan: Shim.Installation["scan"];
+      wedge: Shim.WedgeInjector | null;
+    };
+    /** Key and input events recorded by the wedge tests. */
+    log: {
+      type: string;
+      key?: string;
+      keyCode: number;
+      which: number;
+      trusted: boolean;
+      target: string;
+    }[];
+    submitted: string[];
     /** Run by the page's #gesture click handler, with transient user activation. */
     onGesture?: () => unknown;
     result: Promise<Settled> | null;

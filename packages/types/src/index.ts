@@ -29,3 +29,4 @@ export type * from "./ServerFrame.js";
 export type * from "./StatusKind.js";
 export type * from "./Symbology.js";
 export type * from "./Terminator.js";
+export type * from "./WedgeScan.js";

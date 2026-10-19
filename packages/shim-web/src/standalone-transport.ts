@@ -1,8 +1,9 @@
-import type { DeviceSummary, SerialSignals } from "@hardless/types";
+import type { ControlCommand, DeviceSummary, SerialSignals, Terminator } from "@hardless/types";
 import {
   fromBase64,
   isConnected,
   TransportError,
+  type ScanOptions,
   type Transport,
   type TransportListener,
 } from "./transport.js";
@@ -33,6 +34,7 @@ interface WasmEngine {
   tick(now: number): string;
   nextDeadline(): number | undefined;
   setFault(now: number, deviceId: string, fault: string, active: boolean, options: string): string;
+  control(now: number, deviceId: string, command: string): string;
 }
 
 interface WasmModule {
@@ -43,7 +45,8 @@ interface WasmModule {
 type EngineEvent =
   | { type: "data"; deviceId: string; data: string }
   | { type: "connect"; deviceId: string }
-  | { type: "disconnect"; deviceId: string };
+  | { type: "disconnect"; deviceId: string }
+  | { type: "wedge"; deviceId: string; code: string; delayMs: number; terminator: Terminator };
 
 /** Turns a fixture-style device into the engine's `{ kind, id, config }`. */
 export function normalizeDevice(device: StandaloneDevice): {
@@ -133,6 +136,9 @@ export class StandaloneTransport implements Transport {
           }
         } else if (event.type === "connect") {
           this.listener.connect(event.deviceId);
+        } else if (event.type === "wedge") {
+          const { code, delayMs, terminator } = event;
+          this.listener.wedge(event.deviceId, { code, delayMs, terminator });
         } else {
           this.opened.delete(event.deviceId);
           this.listener.disconnect(event.deviceId);
@@ -221,6 +227,18 @@ export class StandaloneTransport implements Transport {
       this.call((e) => e.setFault(this.now(), deviceId, fault, active, JSON.stringify(options))),
     );
     this.refresh();
+  }
+
+  /** Sends a control command, e.g. a scan (used by tests and the Playwright fixture). */
+  async control(deviceId: string, command: ControlCommand): Promise<void> {
+    await this.ready;
+    this.device(deviceId);
+    this.emit(this.call((e) => e.control(this.now(), deviceId, JSON.stringify(command))));
+    this.refresh();
+  }
+
+  scan(deviceId: string, code: string, options: ScanOptions = {}): Promise<void> {
+    return this.control(deviceId, { type: "scan", code, ...options });
   }
 
   stop(): void {

@@ -13,11 +13,13 @@ keywords = ["pos", "emulator", "escpos", "cash-drawer", "testing"]
 categories = ["emulators", "development-tools::testing"]
 
 [features]
-default = ["printer", "drawer"]
+default = ["printer", "drawer", "scanner"]
 # ESC/POS receipt printer (`printer-escpos`).
 printer = ["dep:hardless-escpos", "dep:hardless-render"]
 # Cash drawer attached to a printer (`cash-drawer`).
 drawer = []
+# Keyboard-wedge barcode scanner (`scanner-wedge`).
+scanner = []
 
 [dependencies]
 hardless-core.workspace = true

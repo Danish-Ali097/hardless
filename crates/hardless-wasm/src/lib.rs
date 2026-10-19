@@ -7,7 +7,7 @@
 
 use hardless_core::{
     base64, ControlCommand, DeviceEvent, DeviceId, FakeClock, FaultId, FaultOptions, Millis,
-    Registry,
+    Registry, WedgeScan,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -44,6 +44,13 @@ enum EventOut {
     Connect { device_id: String },
     #[serde(rename_all = "camelCase")]
     Disconnect { device_id: String },
+    /// A keyboard-wedge scan for the shim to type, like the bridge `wedge-scan` message.
+    #[serde(rename_all = "camelCase")]
+    Wedge {
+        device_id: String,
+        #[serde(flatten)]
+        scan: WedgeScan,
+    },
 }
 
 fn out(device_id: &DeviceId, event: &DeviceEvent) -> Option<EventOut> {
@@ -55,6 +62,10 @@ fn out(device_id: &DeviceId, event: &DeviceEvent) -> Option<EventOut> {
         }),
         DeviceEvent::Connected => Some(EventOut::Connect { device_id }),
         DeviceEvent::Disconnected => Some(EventOut::Disconnect { device_id }),
+        DeviceEvent::Wedge(scan) => Some(EventOut::Wedge {
+            device_id,
+            scan: scan.clone(),
+        }),
         _ => None,
     }
 }
