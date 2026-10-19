@@ -45,6 +45,43 @@ decision from the maintainer.
   step (see M0, Licences) must include it, alongside the Rust dependencies' notices.
 - **Dashboard (FR-24):** "Download PNG" sits next to "Download HTML" on every receipt.
 
+### HTTP dialects (FR-31, FR-34)
+
+- **Sources:** the public "ePOS-Print XML User's Manual" (Epson), the public "Star webPRNT
+  User's Manual" and the public "ASB Function Specifications Manual" (Star). Only element
+  names, attribute values, codes and bit positions are used; no SDK code or manual text.
+- **XML is translated to ESC/POS bytes, not straight to the AST.** The printer device parses
+  them, so "the same command AST as ESC/POS" (FR-31) holds by construction, faults such as
+  `garbled` apply to HTTP prints too, and the receipt's raw-bytes view shows equivalent
+  ESC/POS. Tests check that a document gives exactly the AST of the hand-written ESC/POS.
+- **Each request starts with `ESC @`.** An HTTP request is a self-contained document, so it
+  starts from the power-on settings; formatting does not carry over between requests (it
+  still does within a Web Serial stream, see "Between M1 and M2").
+- **Text encoding:** XML text is Unicode; it is printed in CP437, switching to CP858
+  (`ESC t 19`) for characters only CP858 has, such as `€`. Characters neither table has print
+  as `?`. So `lang`, `codepage` and `international` need no translation.
+- **What the emulator does not reproduce** (buzzer, page mode, logos, reverse/rotated text,
+  ruled lines, hold print) gives a warning for the event log. Logos and symbol types other
+  than QR Code go out as their real commands and show as unknown-command badges, as on a
+  printer without them.
+- **Strictness:** elements and attribute values the manuals do not define are a schema error
+  (`SchemaError` in ePOS). Known quirks are accepted: WebPRNT's `poistion` typo and both
+  `bitimage` and `bitImage`.
+- **Status comes from the printer itself:** after printing, the endpoint sends `DLE EOT 1`,
+  `2` and `4` to the printer and builds the response from the replies, so faults and the
+  `drawerOpenLevel` setting behave the same over HTTP as over Web Serial. Paper end and an open
+  cover mean the print did not happen (`success="false"`).
+- **WebPRNT status:** 11 bytes as hex, starting `23 86` as in the manual's example; drawer
+  switch is status 1 bit 2, offline bit 3, cover bit 5; paper near end status 4 bit 2, paper
+  end bit 3. `code` is `0`, `1100` (offline or error, also used for a bad document) or `2001`
+  (busy, used for the `timeout` fault).
+- **Open, deviation from the PRD:** section 9.1 says the WebPRNT response has a `TraceID`.
+  Star's public response reference documents only `success`, `code` and `status`, so no
+  `TraceID` is sent. Following the vendor reference, as section 8 does for browser specs.
+- **Safety:** documents over 8 MB and documents with a DTD are refused. Both parsers have a
+  `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
+  one.
+
 ### Printer faults (section 10)
 
 - **`paper-near-end`** sets `DLE EOT 4` bits 2-3 only; prints and `DLE EOT 1` stay normal.

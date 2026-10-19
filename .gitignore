@@ -12,3 +12,7 @@ coverage/
 packages/shim-web/wasm/
 test-results/
 playwright-report/
+# cargo-fuzz output.
+crates/*/fuzz/target/
+crates/*/fuzz/corpus/
+crates/*/fuzz/artifacts/

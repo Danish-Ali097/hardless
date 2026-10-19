@@ -2,7 +2,7 @@
 resolver = "2"
 members = ["crates/*", "xtask"]
 default-members = ["crates/*"]
-exclude = ["crates/hardless-escpos/fuzz"]
+exclude = ["crates/hardless-escpos/fuzz", "crates/hardless-http-dialects/fuzz"]
 
 [workspace.package]
 version = "0.0.0"

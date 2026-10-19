@@ -679,6 +679,13 @@ dependencies = [
 [[package]]
 name = "hardless-http-dialects"
 version = "0.0.0"
+dependencies = [
+ "hardless-core",
+ "hardless-escpos",
+ "hardless-render",
+ "proptest",
+ "roxmltree",
+]
 
 [[package]]
 name = "hardless-mcp"
