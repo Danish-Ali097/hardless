@@ -16,6 +16,18 @@ decision from the maintainer.
   which needs a paid plan; the image name is the same. The PRD's names for the npm packages and
   the Docker image are unchanged. Every repository URL now points at `hardlessdev/hardless`.
   The trademark search is still **open**.
+- **Drawer sensor polarity is a printer setting** (maintainer decision, 19 Oct 2026; extends
+  FR-38). `DLE EOT 1` bit 2 reports the level of connector pin 3, and real drawers are wired
+  either way, so the meaning of the bit cannot be fixed. New optional printer config field
+  `drawerOpenLevel`: `"high"` (default, unchanged M1 behaviour: bit 2 set means open) or
+  `"low"` (bit 2 set means closed). The printer's `drawerOpen` state stays the logical value.
+  An unplugged drawer (`not-connected`) still reads as closed, so with `"low"` it sets bit 2.
+  The HTTP dialects' drawer status in M2 should apply the same setting.
+- **Formatting carries over between receipts, as on real printers** (maintainer decision,
+  19 Oct 2026). Settings such as bold or alignment sent without any printable text stay in
+  effect for the next job, until `ESC @` resets them. This keeps the emulator honest: an app
+  that forgets to reset formatting misbehaves here just as it would on a real printer. No code
+  change; `printer_settings_without_printing_carry_into_the_next_job` pins the behaviour.
 
 ## M1 — Printer and drawer over Web Serial
 

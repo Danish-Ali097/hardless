@@ -27,6 +27,19 @@ pub enum Transport {
     Serial,
 }
 
+/// What the drawer-open sensor (connector pin 3) reads while the drawer is open.
+///
+/// `DLE EOT 1` bit 2 reports the pin level, not "open", and real drawers are wired either way.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum PinLevel {
+    /// Pin 3 is high while the drawer is open: bit 2 set means open.
+    #[default]
+    High,
+    /// Pin 3 is low while the drawer is open: bit 2 set means closed.
+    Low,
+}
+
 /// Printer configuration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -50,6 +63,9 @@ pub struct PrinterConfig {
     /// Let the shim's port picker choose this device without asking.
     #[serde(default)]
     pub auto_select: bool,
+    /// The drawer sensor level that means "open" in `DLE EOT 1` bit 2.
+    #[serde(default)]
+    pub drawer_open_level: PinLevel,
 }
 
 fn default_idle_ms() -> u64 {
@@ -65,6 +81,7 @@ impl Default for PrinterConfig {
             usb_vendor_id: None,
             usb_product_id: None,
             auto_select: false,
+            drawer_open_level: PinLevel::High,
         }
     }
 }
@@ -178,7 +195,9 @@ impl Printer {
         let mut byte = 0x12;
         match kind {
             StatusKind::Printer => {
-                if self.drawer_open {
+                let pin3_high =
+                    self.drawer_open == (self.config.drawer_open_level == PinLevel::High);
+                if pin3_high {
                     byte |= 0x04;
                 }
                 if self.stopped() {

@@ -332,7 +332,7 @@ Requirements:
 
 - **FR-36** A drawer attaches to a printer (`attachedTo: "<printerId>"`, pin 2 or pin 5). It opens when the printer receives `ESC p` on the matching pin, an ePOS `pulse`, or a WebPRNT drawer command.
 - **FR-37** State machine: `closed` → `opening` (pulse duration from command `t1`, min 50 ms) → `open` → `closed` (manual close in dashboard/API, or auto-close after configurable N seconds, default off).
-- **FR-38** Drawer status is reported through the printer's real-time status (`DLE EOT 1` bit 2) and the HTTP dialects' status fields, so apps that poll "is the drawer closed?" work.
+- **FR-38** Drawer status is reported through the printer's real-time status (`DLE EOT 1` bit 2) and the HTTP dialects' status fields, so apps that poll "is the drawer closed?" work. Bit 2 reports the sensor pin level, and drawers are wired either way, so the printer setting `drawerOpenLevel` (`"high"` by default, or `"low"`) says which level means open.
 - **FR-39** Faults: `jammed` (kick received, stays `closed`), `not-connected` (kick ignored, status reports no drawer).
 
 ## 10. Fault injection catalogue

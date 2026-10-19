@@ -132,8 +132,12 @@ fn printer_config_is_validated() {
         .create(id("p"), json!({ "transport": "bluetooth" }))
         .is_err());
     assert!(plugin.create(id("p"), json!({ "nope": 1 })).is_err());
+    assert!(plugin
+        .create(id("p"), json!({ "drawerOpenLevel": "sideways" }))
+        .is_err());
     let schema = serde_json::to_value(plugin.config_schema()).unwrap();
     assert!(schema["properties"]["usbVendorId"].is_object());
+    assert!(schema["properties"]["drawerOpenLevel"].is_object());
 }
 
 #[test]

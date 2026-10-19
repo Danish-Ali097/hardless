@@ -144,6 +144,19 @@ fn fr_38_printer_status_reports_the_drawer_on_bit_2() {
 }
 
 #[test]
+fn fr_38_drawer_sensor_polarity_is_a_printer_setting() {
+    let mut rig = Rig::with(
+        json!({ "drawerOpenLevel": "low" }),
+        json!({ "attachedTo": PRINTER }),
+    );
+    assert_eq!(rig.status(1) & 0x04, 0x04, "closed reads high");
+    rig.print(KICK_PIN2);
+    rig.advance(50);
+    assert_eq!(rig.status(1) & 0x04, 0, "open reads low");
+    assert_eq!(rig.state(PRINTER)["drawerOpen"], true);
+}
+
+#[test]
 fn fr_39_jammed_drawer_counts_the_kick_but_stays_closed() {
     let mut rig = Rig::new();
     rig.fault(DRAWER, FaultId::JAMMED, true);

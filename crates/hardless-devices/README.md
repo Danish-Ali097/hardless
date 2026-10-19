@@ -47,19 +47,21 @@ Config (all optional):
 | `idleMs`                      | `300`      | A job closes after this much silence, or on a cut.                       |
 | `usbVendorId`, `usbProductId` | none       | Reported by `SerialPort.getInfo()` and matched by `requestPort` filters. |
 | `autoSelect`                  | `false`    | The shim's port picker picks this device without asking (tests).         |
+| `drawerOpenLevel`             | `"high"`   | Drawer sensor level that means open: `"high"` or `"low"` (bit 2 below).  |
 
 Jobs close on a cut or after `idleMs` of silence. A job's `ast` is the list of commands it
 contained and its `text` is the plain-text receipt (`hardless_render::to_text`). Commands that
-arrive without anything printable (only settings) carry over into the next job.
+arrive without anything printable (only settings) carry over into the next job, as on a real
+printer, until `ESC @` resets them.
 
 Real-time status (`DLE EOT n`) is answered immediately with the documented status byte:
 
-| Request                   | Bits set                                                                  |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `DLE EOT 1` printer       | bit 2: drawer open (pin 3 high); bit 3: offline (paper out or cover open) |
-| `DLE EOT 2` offline cause | bit 2: cover open; bit 5: printing stopped by paper end                   |
-| `DLE EOT 3` error cause   | none                                                                      |
-| `DLE EOT 4` paper sensor  | bits 2-3: paper near end; bits 5-6: paper end                             |
+| Request                   | Bits set                                                   |
+| ------------------------- | ---------------------------------------------------------- |
+| `DLE EOT 1` printer       | bit 2: pin 3 high (drawer open by default); bit 3: offline |
+| `DLE EOT 2` offline cause | bit 2: cover open; bit 5: printing stopped by paper end    |
+| `DLE EOT 3` error cause   | none                                                       |
+| `DLE EOT 4` paper sensor  | bits 2-3: paper near end; bits 5-6: paper end              |
 
 Bits 1 and 4 are always set, as on real printers.
 
