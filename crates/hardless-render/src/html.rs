@@ -220,7 +220,7 @@ pub(crate) fn symbology_name(symbology: Symbology) -> &'static str {
 }
 
 /// HTML-escapes text, and replaces control characters (which have no glyph) with U+FFFD.
-fn escape_into(out: &mut String, text: &str) {
+pub(crate) fn escape_into(out: &mut String, text: &str) {
     for c in text.chars() {
         match c {
             '&' => out.push_str("&amp;"),

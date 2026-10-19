@@ -90,16 +90,17 @@ export const api = {
     ),
 };
 
-/** URL of a job rendered as an HTML document. */
+/** URL of a job rendered by the server as an HTML document, an SVG or a PNG (FR-11). */
 export function renderUrl(
   deviceId: string,
   jobId: number,
   width: 58 | 80,
   showUnknown: boolean,
+  format: "html" | "svg" | "png" = "html",
 ): string {
   const unknown = showUnknown ? "" : "&unknown=0";
   return withToken(
-    `/api/v1/devices/${enc(deviceId)}/jobs/${String(jobId)}/render?format=html&width=${String(width)}${unknown}`,
+    `/api/v1/devices/${enc(deviceId)}/jobs/${String(jobId)}/render?format=${format}&width=${String(width)}${unknown}`,
   );
 }
 

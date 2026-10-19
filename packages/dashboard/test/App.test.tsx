@@ -30,12 +30,14 @@ describe("dashboard", () => {
     expect(page).toContain("Mark unknown commands");
   });
 
-  it("FR-24: lists receipts newest first with raw bytes and a download link", () => {
+  it("FR-24: lists receipts newest first with raw bytes and PNG and HTML downloads", () => {
     const page = html(stateWith([printer()], { jobs: { "printer-1": [job(2), job(1)] } }));
     expect(page.indexOf("Receipt 2:")).toBeLessThan(page.indexOf("Receipt 1:"));
     expect(page).toContain("Raw bytes");
     expect(page).toContain("1b 40");
     expect(page).toContain("jobs/2/render?format=html&amp;width=80");
+    expect(page).toContain('render?format=png&amp;width=80" download="receipt-2.png"');
+    expect(page).toContain("Download PNG");
   });
 
   it("FR-25: shows the attached drawer opening, its kick count and a close button", () => {

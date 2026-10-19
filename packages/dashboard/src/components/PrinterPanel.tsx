@@ -5,7 +5,7 @@ import { Receipt } from "./Receipt.js";
 
 /**
  * FR-24: the printer's output tray. Receipts stack newest first as they print, at the
- * chosen paper width, with their raw bytes and an HTML download.
+ * chosen paper width, with their raw bytes and PNG and HTML downloads.
  */
 export function PrinterPanel({
   printer,

@@ -21,6 +21,7 @@ export function Receipt({
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const url = renderUrl(deviceId, job.id, width, showUnknown);
+  const png = renderUrl(deviceId, job.id, width, showUnknown, "png");
 
   useEffect(() => {
     let cancelled = false;
@@ -57,9 +58,14 @@ export function Receipt({
         <span>
           Receipt {job.id}, {bytes} {bytes === 1 ? "byte" : "bytes"}
         </span>
-        <a href={url} download={`receipt-${String(job.id)}.html`} className="hover:text-ink">
-          Download HTML
-        </a>
+        <span className="flex gap-3">
+          <a href={png} download={`receipt-${String(job.id)}.png`} className="hover:text-ink">
+            Download PNG
+          </a>
+          <a href={url} download={`receipt-${String(job.id)}.html`} className="hover:text-ink">
+            Download HTML
+          </a>
+        </span>
       </figcaption>
       <details className="w-full max-w-md text-xs">
         <summary className="cursor-pointer text-muted hover:text-ink">Raw bytes</summary>

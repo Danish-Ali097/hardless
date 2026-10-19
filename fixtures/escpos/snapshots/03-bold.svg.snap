@@ -1,0 +1,12 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="84" viewBox="0 0 612 84" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="84" fill="#fff"/>
+<g fill="#111">
+<text transform="translate(18.00 42) scale(1 1)" y="-7" font-size="20.00" textLength="48.00" lengthAdjust="spacingAndGlyphs" font-weight="bold">Bold</text>
+<text transform="translate(66.00 42) scale(1 1)" y="-7" font-size="20.00" textLength="72.00" lengthAdjust="spacingAndGlyphs"> plain</text>
+<text transform="translate(18.00 72) scale(1 1)" y="-7" font-size="20.00" textLength="60.00" lengthAdjust="spacingAndGlyphs" font-weight="bold">odd n</text>
+</g>
+</svg>

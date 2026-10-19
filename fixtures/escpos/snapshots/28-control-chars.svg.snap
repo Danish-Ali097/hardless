@@ -1,0 +1,16 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="84" viewBox="0 0 612 84" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="84" fill="#fff"/>
+<g fill="#111">
+<text transform="translate(18.00 42) scale(1 1)" y="-7" font-size="20.00" textLength="12.00" lengthAdjust="spacingAndGlyphs">a</text>
+<text transform="translate(18.00 72) scale(1 1)" y="-7" font-size="20.00" textLength="108.00" lengthAdjust="spacingAndGlyphs">b       c</text>
+<g>
+<title>control byte 0x07 is not emulated (07)</title>
+<rect x="126.00" y="50" width="15.00" height="18" rx="3" fill="#fde68a"/>
+<text x="130.00" y="63" font-size="11" fill="#78350f">?</text>
+</g>
+</g>
+</svg>

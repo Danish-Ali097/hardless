@@ -1,0 +1,12 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="198" viewBox="0 0 612 198" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="198" fill="#fff"/>
+<g fill="#111">
+<svg x="18" y="18" width="285" height="162" class="hl-barcode" viewBox="0 0 95 1" preserveAspectRatio="none" shape-rendering="crispEdges" role="img" aria-label="barcode">
+<path d="M0 0h1v1h-1zM2 0h1v1h-1zM6 0h2v1h-2zM9 0h1v1h-1zM11 0h1v1h-1zM14 0h3v1h-3zM18 0h1v1h-1zM20 0h4v1h-4zM25 0h4v1h-4zM30 0h1v1h-1zM34 0h1v1h-1zM37 0h1v1h-1zM39 0h2v1h-2zM43 0h2v1h-2zM46 0h1v1h-1zM48 0h1v1h-1zM50 0h1v1h-1zM55 0h1v1h-1zM57 0h1v1h-1zM62 0h1v1h-1zM64 0h1v1h-1zM69 0h1v1h-1zM71 0h3v1h-3zM75 0h1v1h-1zM78 0h1v1h-1zM83 0h1v1h-1zM85 0h2v1h-2zM89 0h2v1h-2zM92 0h1v1h-1zM94 0h1v1h-1z"/>
+</svg>
+</g>
+</svg>

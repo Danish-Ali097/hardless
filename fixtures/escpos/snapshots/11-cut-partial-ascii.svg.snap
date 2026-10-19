@@ -1,0 +1,10 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="54" viewBox="0 0 612 54" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="54" fill="#fff"/>
+<g fill="#111">
+<line x1="0" y1="27" x2="612" y2="27" stroke="#999" stroke-width="2" stroke-dasharray="2 4" aria-label="partial cut"/>
+</g>
+</svg>

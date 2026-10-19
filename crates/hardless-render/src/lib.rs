@@ -5,12 +5,22 @@
 mod codes;
 mod html;
 mod layout;
+#[cfg(feature = "png")]
+mod png;
+mod svg;
 mod text;
 
 use serde::{Deserialize, Serialize};
 
 pub use html::{render_html, render_html_document, STYLESHEET};
+#[cfg(feature = "png")]
+pub use png::{render_png, PngError, MAX_PNG_HEIGHT};
+pub use svg::render_svg;
 pub use text::{to_text, to_text_with};
+
+/// Licence of the bundled Go Mono font (BSD-3-Clause), which the PNG output embeds. Ship it
+/// with any binary built with the `png` feature.
+pub const FONT_LICENSE: &str = include_str!("../fonts/LICENSE");
 
 /// Paper roll width.
 ///
@@ -44,6 +54,11 @@ impl PaperWidth {
             PaperWidth::Mm58 => 58,
             PaperWidth::Mm80 => 80,
         }
+    }
+
+    /// The printable width in dots: 576 for 80 mm, 384 for 58 mm (12 dots per Font A column).
+    pub fn dots(self) -> u32 {
+        self.columns().0 * layout::DOTS_PER_COLUMN
     }
 }
 

@@ -14,8 +14,13 @@ readme = "README.md"
 barcoders = { version = "2.0.0", default-features = false }
 hardless-escpos.workspace = true
 qrcode = { version = "0.14.1", default-features = false }
+resvg = { version = "0.48.1", default-features = false, features = ["text"], optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 
+[features]
+# PNG output (FR-11) with resvg and the bundled Go Mono font. Off by default so the engine
+# stays small for WebAssembly.
+png = ["dep:resvg"]
 
 [lints]
 workspace = true

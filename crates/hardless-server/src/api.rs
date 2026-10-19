@@ -11,7 +11,7 @@ use hardless_core::{
     ControlCommand, DeviceId, DeviceSummary, EventRecord, FaultId, FaultOptions, Job, JobId,
 };
 use hardless_escpos::Node;
-use hardless_render::{render_html_document, PaperWidth, RenderOptions};
+use hardless_render::{render_html_document, render_png, render_svg, PaperWidth, RenderOptions};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -189,20 +189,31 @@ async fn render_job(
     let nodes: Vec<Node> = serde_json::from_value(job.ast.clone()).map_err(|e| {
         ApiError::bad_request("not_escpos", format!("job is not an ESC/POS job: {e}"))
     })?;
+    let options = RenderOptions {
+        paper,
+        show_unknown: !matches!(query.unknown.as_deref(), Some("0" | "false")),
+    };
     match query.format.as_deref().unwrap_or("html") {
         "html" => {
-            let html = render_html_document(
-                &nodes,
-                &RenderOptions {
-                    paper,
-                    show_unknown: !matches!(query.unknown.as_deref(), Some("0" | "false")),
-                },
-            );
+            let html = render_html_document(&nodes, &options);
             Ok(([(header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response())
         }
-        "svg" | "png" => Err(ApiError::not_implemented(
-            "SVG and PNG rendering arrive in milestone M2 (FR-11); use format=html",
-        )),
+        "svg" => {
+            let svg = render_svg(&nodes, &options);
+            Ok((
+                [(header::CONTENT_TYPE, "image/svg+xml; charset=utf-8")],
+                svg,
+            )
+                .into_response())
+        }
+        "png" => {
+            // Rasterising takes milliseconds of CPU; keep it off the async workers.
+            let png = tokio::task::spawn_blocking(move || render_png(&nodes, &options))
+                .await
+                .map_err(|e| ApiError::internal(format!("PNG rendering stopped: {e}")))?
+                .map_err(|e| ApiError::bad_request("receipt_too_long", e.to_string()))?;
+            Ok(([(header::CONTENT_TYPE, "image/png")], png).into_response())
+        }
         other => Err(ApiError::bad_request(
             "bad_format",
             format!("format must be html, svg or png, not `{other}`"),

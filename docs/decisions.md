@@ -4,6 +4,47 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## M2 — Cross-browser paths
+
+### Maintainer decisions taken before starting
+
+- **Receipt font: Go Mono** (BSD-3-Clause, Bigelow & Holmes for the Go project). PNG output
+  needs a bundled font because containers have none, and most free monospace fonts are SIL
+  OFL-1.1, which is not on the NFR-14 list. Go Mono and Go Mono Bold (about 350 KB) live in
+  `crates/hardless-render/fonts/` with their licence. Rejected: a hand-drawn pixel font (more
+  work, pixelated) and adding OFL-1.1 to the policy.
+- **New libraries approved:** `resvg` (Apache-2.0 OR MIT; PRD section 6 already names it) for
+  PNG, `roxmltree` (MIT OR Apache-2.0) for the HTTP dialects' XML, and `rustls` with the
+  `ring` crypto provider (`ring` is Apache-2.0 AND ISC) for HTTPS. rustls's default provider,
+  `aws-lc-rs`, includes OpenSSL-licensed code, which is not on the NFR-14 list.
+- **Pushing:** after each M2 piece passes the local checks, commit, push to `main` and watch
+  CI, then carry on.
+- **Docker image is built and tested in CI but not pushed** until the first release (v0.1.0);
+  npm packages are likewise published only at release. The names are already reserved.
+
+### Renderer (FR-11)
+
+- **"Identical layout" means the same layout pass, not identical pixels.** HTML, SVG, PNG and
+  `to_text` all come from one `layout()` step, so line breaks, columns, alignment, character
+  sizes, codes and cuts match. Fonts differ between a browser and the bundled Go Mono, so
+  pixels cannot.
+- **SVG is in printer dots**: 576 printable dots across 80 mm and 384 across 58 mm, 18-dot
+  side margins, 30-dot line pitch (the ESC/POS default line spacing). Each text run uses
+  `textLength` with `lengthAdjust="spacingAndGlyphs"`, so runs fill exactly their columns in
+  any monospace font. The SVG names Go Mono first but does not embed it (it would add 350 KB
+  to every receipt).
+- **PNG is behind the `png` feature** of `hardless-render`, so the WebAssembly engine stays
+  small; the server enables it. One pixel per dot, white paper, Go Mono only (no system
+  fonts, so PNGs are the same on every OS and in Docker).
+- **PNG height limit: 20,000 dots** (about 2.5 m of paper). Longer receipts get a 400
+  `receipt_too_long` from `/render?format=png` instead of a multi-hundred-megabyte bitmap.
+  SVG and HTML have no limit.
+- **`/render?format=png` rasterises on a blocking thread** (`spawn_blocking`) so a large
+  receipt does not stall the async workers.
+- **Notices:** `hardless_render::FONT_LICENSE` exports the font licence. The v0.1.0 notices
+  step (see M0, Licences) must include it, alongside the Rust dependencies' notices.
+- **Dashboard (FR-24):** "Download PNG" sits next to "Download HTML" on every receipt.
+
 ## Between M1 and M2
 
 - **Names secured (PRD section 16).** On 19 Oct 2026 the maintainer registered the npm

@@ -133,12 +133,44 @@ async fn fr_20_jobs_last_job_and_render() {
         .any(|(k, v)| k == "content-type" && v.starts_with("text/html")));
     assert!(html.contains("hl-paper-58") && html.contains("Total: 1,250"));
 
-    let (status, body) = get_json(
+    let content_type = |headers: &[(String, String)]| {
+        headers
+            .iter()
+            .find(|(k, _)| k == "content-type")
+            .map(|(_, v)| v.clone())
+            .unwrap_or_default()
+    };
+    let (status, headers, svg) = http(
         &server,
-        "/api/v1/devices/printer-1/jobs/1/render?format=png",
+        "GET",
+        "/api/v1/devices/printer-1/jobs/1/render?format=svg",
+        None,
+        &[],
     )
     .await;
-    assert_eq!(status, 501, "PNG arrives in M2: {body}");
+    assert_eq!(status, 200, "FR-11 SVG: {svg}");
+    assert!(content_type(&headers).starts_with("image/svg+xml"));
+    assert!(svg.starts_with("<svg") && svg.contains("Total: 1,250"));
+
+    let (status, headers, png) = http(
+        &server,
+        "GET",
+        "/api/v1/devices/printer-1/jobs/1/render?format=png&width=58",
+        None,
+        &[],
+    )
+    .await;
+    assert_eq!(status, 200, "FR-11 PNG");
+    assert_eq!(content_type(&headers), "image/png");
+    assert!(png.contains("PNG"), "PNG signature");
+
+    let (status, body) = get_json(
+        &server,
+        "/api/v1/devices/printer-1/jobs/1/render?format=pdf",
+    )
+    .await;
+    assert_eq!(status, 400, "{body}");
+    assert_eq!(body["error"]["code"], "bad_format");
     let (status, _) = get_json(&server, "/api/v1/devices/printer-1/jobs/99/render").await;
     assert_eq!(status, 404);
 }

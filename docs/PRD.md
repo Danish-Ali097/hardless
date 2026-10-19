@@ -561,7 +561,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 
 - [ ] HTTP printer endpoints, both dialects, CORS, HTTPS on 8443 (FR-31–FR-35)
 - [ ] Keyboard-wedge scanner device, dashboard panel, presets, sequences (FR-26, section 8.4)
-- [ ] Renderer SVG/PNG output (FR-11) and `/render` endpoint
+- [x] Renderer SVG/PNG output (FR-11) and `/render` endpoint
 - [ ] Scenario runner (FR-04) and `/scenarios/run`
 - [ ] CLI (FR-30)
 - [ ] Docker image `hardless/hardless` multi-arch (NFR-12)

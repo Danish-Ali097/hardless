@@ -1,0 +1,14 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="54" viewBox="0 0 612 54" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="54" fill="#fff"/>
+<g fill="#111">
+<g>
+<title>GS v 0 data is too large to keep; it was skipped (1d 76 30 00 ff ff ff ff)</title>
+<rect x="18.00" y="20" width="50.00" height="18" rx="3" fill="#fde68a"/>
+<text x="22.00" y="33" font-size="11" fill="#78350f">GS v 0</text>
+</g>
+</g>
+</svg>

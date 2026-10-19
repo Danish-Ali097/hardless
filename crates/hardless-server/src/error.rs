@@ -36,6 +36,15 @@ impl ApiError {
         }
     }
 
+    /// A 500 error.
+    pub fn internal(message: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::INTERNAL_SERVER_ERROR,
+            code: "internal",
+            message: message.into(),
+        }
+    }
+
     /// A 501 error for something a later milestone adds.
     pub fn not_implemented(message: impl Into<String>) -> Self {
         Self {

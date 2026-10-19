@@ -1,0 +1,15 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="54" viewBox="0 0 612 54" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="54" fill="#fff"/>
+<g fill="#111">
+<g>
+<title>ESC * is not emulated (1b 2a 21 02 00 01 02 03 04 05 06)</title>
+<rect x="18.00" y="20" width="43.00" height="18" rx="3" fill="#fde68a"/>
+<text x="22.00" y="33" font-size="11" fill="#78350f">ESC *</text>
+</g>
+<text transform="translate(65.00 42) scale(1 1)" y="-7" font-size="20.00" textLength="60.00" lengthAdjust="spacingAndGlyphs">after</text>
+</g>
+</svg>

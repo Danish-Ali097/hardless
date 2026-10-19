@@ -1,0 +1,15 @@
+---
+source: crates/hardless-render/tests/golden.rs
+expression: svg
+---
+<svg xmlns="http://www.w3.org/2000/svg" width="612" height="372" viewBox="0 0 612 372" xml:space="preserve" font-family="'Go Mono', ui-monospace, Menlo, Consolas, monospace" role="img" aria-label="Receipt">
+<rect width="612" height="372" fill="#fff"/>
+<g fill="#111">
+<svg x="18" y="18" width="387" height="162" class="hl-barcode" viewBox="0 0 129 1" preserveAspectRatio="none" shape-rendering="crispEdges" role="img" aria-label="barcode">
+<path d="M0 0h1v1h-1zM3 0h1v1h-1zM5 0h2v1h-2zM8 0h2v1h-2zM11 0h1v1h-1zM13 0h2v1h-2zM16 0h1v1h-1zM18 0h1v1h-1zM21 0h2v1h-2zM24 0h1v1h-1zM26 0h2v1h-2zM29 0h1v1h-1zM31 0h1v1h-1zM34 0h1v1h-1zM36 0h2v1h-2zM39 0h2v1h-2zM42 0h1v1h-1zM44 0h1v1h-1zM46 0h2v1h-2zM50 0h1v1h-1zM52 0h1v1h-1zM54 0h1v1h-1zM56 0h2v1h-2zM60 0h1v1h-1zM62 0h2v1h-2zM65 0h1v1h-1zM67 0h2v1h-2zM70 0h1v1h-1zM72 0h1v1h-1zM75 0h2v1h-2zM78 0h2v1h-2zM81 0h1v1h-1zM83 0h2v1h-2zM87 0h1v1h-1zM89 0h1v1h-1zM91 0h1v1h-1zM93 0h2v1h-2zM96 0h1v1h-1zM98 0h2v1h-2zM102 0h1v1h-1zM104 0h1v1h-1zM106 0h2v1h-2zM109 0h1v1h-1zM111 0h2v1h-2zM115 0h1v1h-1zM117 0h1v1h-1zM120 0h1v1h-1zM122 0h2v1h-2zM125 0h2v1h-2zM128 0h1v1h-1z"/>
+</svg>
+<svg x="18" y="192" width="231" height="162" class="hl-barcode" viewBox="0 0 77 1" preserveAspectRatio="none" shape-rendering="crispEdges" role="img" aria-label="barcode">
+<path d="M0 0h1v1h-1zM3 0h1v1h-1zM5 0h2v1h-2zM8 0h2v1h-2zM11 0h1v1h-1zM13 0h2v1h-2zM16 0h2v1h-2zM19 0h1v1h-1zM21 0h1v1h-1zM24 0h1v1h-1zM26 0h2v1h-2zM29 0h1v1h-1zM32 0h1v1h-1zM34 0h1v1h-1zM36 0h2v1h-2zM39 0h1v1h-1zM42 0h1v1h-1zM44 0h1v1h-1zM46 0h2v1h-2zM49 0h2v1h-2zM52 0h1v1h-1zM54 0h2v1h-2zM58 0h1v1h-1zM60 0h1v1h-1zM62 0h2v1h-2zM65 0h1v1h-1zM68 0h1v1h-1zM70 0h2v1h-2zM73 0h2v1h-2zM76 0h1v1h-1z"/>
+</svg>
+</g>
+</svg>

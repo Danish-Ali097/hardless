@@ -1,12 +1,12 @@
-//! Golden fixtures: HTML and text snapshots for every `fixtures/escpos/*.bin`
-//! (FR-10, FR-12, FR-13).
+//! Golden fixtures: HTML, SVG and text snapshots for every `fixtures/escpos/*.bin`
+//! (FR-10, FR-11, FR-12, FR-13).
 #![allow(clippy::unwrap_used, clippy::expect_used, missing_docs)]
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use hardless_escpos::parse;
-use hardless_render::{render_html, to_text, RenderOptions};
+use hardless_render::{render_html, render_svg, to_text, RenderOptions};
 
 fn fixtures_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/escpos")
@@ -30,6 +30,8 @@ fn fr_12_golden_fixtures_render_to_their_snapshots() {
             let html = render_html(&ast, &RenderOptions::default()).replace("><", ">\n<");
             insta::assert_snapshot!(format!("{name}.html"), html);
             insta::assert_snapshot!(format!("{name}.text"), to_text(&ast));
+            let svg = render_svg(&ast, &RenderOptions::default()).replace("><", ">\n<");
+            insta::assert_snapshot!(format!("{name}.svg"), svg);
         }
     });
 }
