@@ -13,6 +13,7 @@ reads no clock: devices are pure state machines that receive bytes, control comm
 | Device registry and event bus | FR-02       | `Registry`, `BusEvent`, `DeviceSummary`, `RegistryError`         |
 | Event log                     | FR-03       | `EventLog`, `EventRecord`, `EventKind`                           |
 | Faults                        | section 10  | `FaultId`, `FaultOptions`, `FaultSpec`, `catalogue()`            |
+| Scenario runner               | FR-04       | `Scenario`, `Step`, `ScenarioRun`, `ScenarioReport`              |
 | Deterministic clock           | FR-05       | `Clock`, `FakeClock`, `Millis`                                   |
 
 ## Usage
@@ -70,6 +71,18 @@ assert_eq!(log.last().unwrap().at, Millis(5));
 let bus = registry.drain_bus();
 assert_eq!(bus.len(), 1); // device:added
 ```
+
+## Scenarios (FR-04)
+
+A `Scenario` is a JSON list of steps: `scan`, `tap`, `wait` (`ms`), `setFault`, `clearFault`
+and `expect`. An `expect` checks a device: `state` (a subset match), `receiptContains` and
+`jobs`, optionally waiting up to `withinMs` for them to become true. A run stops at the first
+failing step; the rest are reported as skipped.
+
+`ScenarioRun::advance` runs every step it can at the registry's time and returns either
+`Progress::WaitUntil(t)` or `Progress::Done(report)`, plus device events the caller should
+deliver (wedge scans, bytes for the app). It never sleeps: the server waits in real time,
+tests move a `FakeClock`.
 
 ## Design notes
 

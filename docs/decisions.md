@@ -84,6 +84,27 @@ decision from the maintainer.
   `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
   one.
 
+### Scenario runner (FR-04)
+
+- **JSON shape:** `{ "name"?, "steps": [ { "type": "scan" | "tap" | "wait" | "setFault" |
+"clearFault" | "expect", ... } ] }`, with the PRD's step names. Device steps name their
+  device with `device`. Unknown step types and fields are rejected.
+- **`expect`** was not specified beyond its name. It checks `state` (a subset match, so
+  `{ "state": "open" }` checks a drawer without listing every field), `receiptContains` (the
+  latest job's text) and `jobs` (how many jobs the device holds). `withinMs` lets it wait for
+  something the app does in response, polling every 20 ms; without it, the check is immediate.
+- **A run stops at the first failing step**, like a test; later steps are reported as
+  `skipped`. A device that refuses a step (a scan with no code, a tap on a non-NFC device)
+  fails it.
+- **Sans-IO in the core** (`ScenarioRun::advance`), so the WebAssembly engine can run
+  scenarios too (the M3 Playwright fixture). The server's `POST /api/v1/scenarios/run` runs
+  in real time and answers with the report when the run ends; scans reach the shim during the
+  run, as with `POST /scan`.
+- **Limits:** at most 10,000 steps and 10 minutes of `wait` plus `withinMs` in total, checked
+  before the run starts (`400 scenario_too_long`), so a request cannot hold the server forever.
+- **`POST /devices/:id/tap`** (PRD section 11.1) is added now for the CLI's `tap`; NFC devices
+  arrive in M3, until then a tap is refused in the device's event log.
+
 ### HTTP printer endpoints and HTTPS (FR-19, FR-22, FR-32 to FR-35)
 
 - **Default `local_printer`** (maintainer decision): a fourth default device, an HTTP

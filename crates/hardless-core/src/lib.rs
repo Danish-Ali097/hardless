@@ -10,6 +10,7 @@ mod hex;
 mod ids;
 mod log;
 mod registry;
+mod scenario;
 mod time;
 
 pub use bytes::Bytes;
@@ -24,5 +25,9 @@ pub use log::{Direction, EventKind, EventLog, EventRecord, DEFAULT_LOG_CAPACITY}
 pub use registry::{
     ActiveFault, BusEvent, DeviceSummary, Registry, RegistryConfig, RegistryError,
     DEFAULT_BUS_CAPACITY, DEFAULT_JOB_CAPACITY, MAX_PERIPHERAL_DEPTH,
+};
+pub use scenario::{
+    Progress, Scenario, ScenarioReport, ScenarioRun, Step, StepResult, StepStatus, EXPECT_POLL_MS,
+    MAX_SCENARIO_STEPS,
 };
 pub use time::{Clock, FakeClock, Millis};

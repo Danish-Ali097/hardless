@@ -73,6 +73,8 @@ fn export_all(dir: &Path) -> Result<(), String> {
         core::LogEntry,
         core::Direction,
         core::PeripheralSignal,
+        core::Scenario,
+        core::ScenarioReport,
         escpos::Node,
         core::bridge::ClientFrame,
         core::bridge::ServerFrame,

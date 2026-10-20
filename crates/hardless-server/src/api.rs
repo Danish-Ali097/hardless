@@ -9,7 +9,7 @@ use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use hardless_core::{
     ControlCommand, DeviceId, DeviceSummary, EventRecord, FaultId, FaultOptions, Job, JobId,
-    Terminator,
+    Progress, Scenario, ScenarioReport, ScenarioRun, Step, Terminator, MAX_SCENARIO_STEPS,
 };
 use hardless_escpos::Node;
 use hardless_render::{render_html_document, render_png, render_svg, PaperWidth, RenderOptions};
@@ -28,6 +28,8 @@ pub fn routes() -> Router<AppState> {
         .route("/devices/{id}/reset", post(reset_device))
         .route("/devices/{id}/close", post(close_drawer))
         .route("/devices/{id}/scan", post(scan))
+        .route("/devices/{id}/tap", post(tap))
+        .route("/scenarios/run", post(run_scenario))
         .route("/devices/{id}/jobs", get(list_jobs))
         .route("/devices/{id}/jobs/last", get(last_job))
         .route("/devices/{id}/jobs/{job_id}/render", get(render_job))
@@ -147,6 +149,78 @@ async fn scan(
     };
     state.engine.drive(&id, |r| r.control(&id, command))?;
     summary(&state, &id)
+}
+
+/// `POST /devices/:id/tap` body.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TapBody {
+    uid: String,
+    #[serde(default)]
+    records: Vec<Value>,
+}
+
+/// Taps an NFC card on a reader (NFC devices arrive in M3; other devices refuse it).
+async fn tap(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    body: Result<Json<TapBody>, axum::extract::rejection::JsonRejection>,
+) -> Result<Json<DeviceSummary>, ApiError> {
+    let id = device_id(&id)?;
+    let Json(body) = body.map_err(|e| ApiError::bad_request("bad_request", e.body_text()))?;
+    let command = ControlCommand::Tap {
+        uid: body.uid,
+        records: body.records,
+    };
+    state.engine.drive(&id, |r| r.control(&id, command))?;
+    summary(&state, &id)
+}
+
+/// Longest scenario accepted, counting its waits and `withinMs`, in milliseconds.
+const MAX_SCENARIO_MS: u64 = 10 * 60 * 1000;
+
+/// `POST /scenarios/run` (FR-04): runs the scenario on the server's devices, in real time, and
+/// answers with the report when it ends.
+async fn run_scenario(
+    State(state): State<AppState>,
+    body: Result<Json<Scenario>, axum::extract::rejection::JsonRejection>,
+) -> Result<Json<ScenarioReport>, ApiError> {
+    let Json(scenario) = body.map_err(|e| ApiError::bad_request("bad_request", e.body_text()))?;
+    if scenario.steps.len() > MAX_SCENARIO_STEPS {
+        return Err(ApiError::bad_request(
+            "scenario_too_long",
+            format!("a scenario has at most {MAX_SCENARIO_STEPS} steps"),
+        ));
+    }
+    let planned: u64 = scenario
+        .steps
+        .iter()
+        .map(|step| match step {
+            Step::Wait { ms } => *ms,
+            Step::Expect { within_ms, .. } => within_ms.unwrap_or(0),
+            _ => 0,
+        })
+        .fold(0, u64::saturating_add);
+    if planned > MAX_SCENARIO_MS {
+        return Err(ApiError::bad_request(
+            "scenario_too_long",
+            format!("a scenario may wait at most {MAX_SCENARIO_MS} ms in total"),
+        ));
+    }
+    let mut run = ScenarioRun::new(scenario);
+    loop {
+        let (progress, events, now) = state.engine.with(|r| {
+            let (progress, events) = run.advance(r);
+            (progress, events, r.now())
+        });
+        state.engine.broadcast(&events);
+        match progress {
+            Progress::Done(report) => return Ok(Json(report)),
+            Progress::WaitUntil(until) => {
+                tokio::time::sleep(std::time::Duration::from_millis(until.since(now))).await;
+            }
+        }
+    }
 }
 
 fn summary(state: &AppState, id: &DeviceId) -> Result<Json<DeviceSummary>, ApiError> {

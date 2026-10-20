@@ -136,6 +136,13 @@ impl Engine {
         }
     }
 
+    /// Delivers device events produced outside [`Engine::drive`], e.g. by a scenario run.
+    pub fn broadcast(&self, events: &[(DeviceId, DeviceEvent)]) {
+        for (device_id, event) in events {
+            self.broadcast_device_events(device_id, std::slice::from_ref(event), None);
+        }
+    }
+
     /// Subscribes to everything that happens.
     pub fn subscribe(&self) -> broadcast::Receiver<Arc<Event>> {
         self.events.subscribe()
