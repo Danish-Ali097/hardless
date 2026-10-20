@@ -37,11 +37,14 @@ export const FAULTS: Record<string, FaultInfo> = {
   stall: { name: "Stall", effect: "USB transfers return a stall." },
   "interface-busy": { name: "Interface busy", effect: "Claiming the USB interface fails." },
   "picker-cancel": {
-    name: "Cancel the port picker",
-    effect: "The next port request fails as if the user pressed Cancel.",
+    name: "Cancel the next prompt",
+    effect: "The next port picker or NFC permission prompt is cancelled by the user.",
   },
-  "permission-denied": { name: "Permission denied", effect: "NFC scanning is refused." },
-  "read-error": { name: "Read error", effect: "The next tap fails to read." },
+  "permission-denied": {
+    name: "Permission denied",
+    effect: "NFC scanning and writing are refused.",
+  },
+  "read-error": { name: "Read error", effect: "The next tap fails to read, then this turns off." },
   jammed: { name: "Jammed", effect: "Kicks are counted but the drawer stays shut." },
   "not-connected": {
     name: "Not connected",

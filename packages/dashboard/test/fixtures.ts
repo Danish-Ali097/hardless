@@ -68,3 +68,29 @@ export function scanner(state: object = {}, overrides: Partial<DeviceSummary> = 
     ...overrides,
   };
 }
+
+export function nfcReader(
+  state: object = {},
+  overrides: Partial<DeviceSummary> = {},
+): DeviceSummary {
+  return {
+    id: "nfc-1",
+    kind: "nfc-reader",
+    state: {
+      presenceMs: 2000,
+      card: null,
+      taps: 0,
+      writes: 0,
+      lastWritten: null,
+      cards: [],
+      pickerCancel: false,
+      permissionDenied: false,
+      readError: false,
+      ...state,
+    },
+    faults: [],
+    supportedFaults: ["picker-cancel", "permission-denied", "read-error"],
+    attachedTo: null,
+    ...overrides,
+  };
+}

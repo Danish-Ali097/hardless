@@ -1,4 +1,4 @@
-import type { BusEvent, DeviceSummary, Job } from "@hardless/types";
+import type { BusEvent, DeviceSummary, Job, NdefRecord } from "@hardless/types";
 
 /**
  * Talks to the Hardless REST API and event stream on the same origin as the dashboard.
@@ -96,6 +96,12 @@ export const api = {
   closeDrawer: (id: string) => request<DeviceSummary>("POST", `/devices/${enc(id)}/close`),
   scan: (id: string, code: string) =>
     request<DeviceSummary>("POST", `/devices/${enc(id)}/scan`, { code }),
+  tap: (id: string, uid: string, records?: NdefRecord[]) =>
+    request<DeviceSummary>(
+      "POST",
+      `/devices/${enc(id)}/tap`,
+      records === undefined ? { uid } : { uid, records },
+    ),
   jobs: (id: string, limit = 30) =>
     request<Job[]>("GET", `/devices/${enc(id)}/jobs?limit=${String(limit)}`),
   setFault: (id: string, fault: string, active: boolean, options?: Record<string, number>) =>

@@ -115,6 +115,7 @@ function AddDevice({ printers }: { printers: DeviceSummary[] }) {
           <option value="printer-http">Receipt printer (HTTP)</option>
           <option value="cash-drawer">Cash drawer</option>
           <option value="scanner-wedge">Barcode scanner</option>
+          <option value="nfc-reader">NFC reader</option>
         </select>
       </label>
       <label className="text-xs text-muted">
@@ -129,7 +130,9 @@ function AddDevice({ printers }: { printers: DeviceSummary[] }) {
               ? "drawer-2"
               : kind === "scanner-wedge"
                 ? "scanner-2"
-                : "printer-2"
+                : kind === "nfc-reader"
+                  ? "nfc-2"
+                  : "printer-2"
           }
           className={input}
         />

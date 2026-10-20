@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Dashboard } from "../src/App.js";
-import { drawer, job, printer, scanner, stateWith } from "./fixtures.js";
+import { drawer, job, nfcReader, printer, scanner, stateWith } from "./fixtures.js";
 
 /** Server-rendered markup without React's text separators (`<!-- -->`). */
 const html = (state: Parameters<typeof Dashboard>[0]["state"]) =>
@@ -55,6 +55,36 @@ describe("dashboard", () => {
     expect(page).toContain("Sequence");
     expect(page).toContain("Double scan");
     expect(page).toContain("Barcode scanner, ready");
+  });
+
+  it("FR-27: the NFC panel lists cards, shows the last write and has a card editor", () => {
+    const page = html(
+      stateWith([
+        nfcReader({
+          card: "04:a2:b3:c4",
+          taps: 2,
+          cards: [
+            {
+              uid: "04:a2:b3:c4",
+              records: [{ recordType: "text", data: "Visit 2", lang: "en" }],
+              readOnly: true,
+            },
+          ],
+          lastWritten: { uid: "04:a2:b3:c4", records: [{ recordType: "text", data: "Visit 2" }] },
+        }),
+      ]),
+    );
+    expect(page).toContain("NFC reader, a tapped card stays on it for 2 s");
+    expect(page).toContain("2 taps, card");
+    expect(page).toContain("on the reader");
+    expect(page).toContain("read-only");
+    expect(page).toContain("Text &quot;Visit 2&quot; (en)");
+    expect(page).toContain("Last written by the app to");
+    expect(page).toContain("Tap this card");
+    expect(page).toContain("Add record");
+    expect(page).toContain("Read error");
+    expect(page).toContain("NFC reader, card on the reader");
+    expect(html(stateWith([nfcReader()]))).toContain("No cards yet.");
   });
 
   it("FR-33: an HTTP printer shows its addresses, the mixed-content help and the certificate", () => {

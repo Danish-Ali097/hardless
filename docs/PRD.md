@@ -577,7 +577,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 ### M3 — WebUSB, Web NFC, agent interface and delivery
 
 - [ ] `shim-web` WebUSB with printer-class device (section 8.2)
-- [ ] `hardless-devices::nfc` + `NDEFReader` shim (section 8.3) + NFC dashboard panel (FR-27)
+- [x] `hardless-devices::nfc` + `NDEFReader` shim (section 8.3) + NFC dashboard panel (FR-27)
 - [ ] Chrome MV3 extension with per-origin enable (FR-17, NFR-03)
 - [ ] `@hardless/playwright` fixture and matchers (FR-40–FR-42)
 - [ ] `hardless-mcp` with stdio and `/mcp` transports, all tools and resources in section 11.4 (FR-43–FR-50)

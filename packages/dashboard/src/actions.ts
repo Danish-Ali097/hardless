@@ -1,4 +1,4 @@
-import type { DeviceSummary } from "@hardless/types";
+import type { DeviceSummary, NdefRecord } from "@hardless/types";
 import { api, ApiError, subscribe } from "./api.js";
 import { applyEvent, firstDevice, needsRefresh, useDashboard } from "./store.js";
 
@@ -98,6 +98,17 @@ export async function closeDrawer(id: string): Promise<void> {
 export async function scan(id: string, code: string): Promise<boolean> {
   try {
     putDevice(await api.scan(id, code));
+    return true;
+  } catch (error) {
+    report(error);
+    return false;
+  }
+}
+
+/** Taps a card on an NFC reader (FR-27). Returns whether the server took it. */
+export async function tap(id: string, uid: string, records?: NdefRecord[]): Promise<boolean> {
+  try {
+    putDevice(await api.tap(id, uid, records));
     return true;
   } catch (error) {
     report(error);

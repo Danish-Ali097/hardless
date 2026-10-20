@@ -9,6 +9,8 @@ export function kindName(kind: string): string {
       return "Cash drawer";
     case "scanner-wedge":
       return "Barcode scanner";
+    case "nfc-reader":
+      return "NFC reader";
     default:
       return kind;
   }
@@ -52,6 +54,11 @@ export function status(device: DeviceSummary): { text: string; tone: "ok" | "att
     return { text: "Closed", tone: "ok" };
   }
   if (device.kind === "scanner-wedge") return { text: "Ready", tone: "ok" };
+  if (device.kind === "nfc-reader") {
+    return stateOf.string(device, "card")
+      ? { text: "Card on the reader", tone: "ok" }
+      : { text: "Ready", tone: "ok" };
+  }
   return { text: "", tone: "ok" };
 }
 
