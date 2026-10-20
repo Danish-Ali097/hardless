@@ -22,6 +22,8 @@ RUN mkdir -p /data/certs
 FROM gcr.io/distroless/static-debian12:nonroot
 ARG TARGETARCH
 COPY --chmod=0755 docker/bin/${TARGETARCH}/hardless /hardless
+# Third-party notices (NFR-14); the binary also prints them with `hardless licenses`.
+COPY LICENSE crates/hardless-cli/THIRD_PARTY_LICENSES.txt /licenses/
 COPY --from=data --chown=65532:65532 /data /data
 # Listen on every interface so `-p` works. The local certificate authority is made on first
 # run in /data/certs (NFR-05: never in the image); keep /data in a volume so devices that

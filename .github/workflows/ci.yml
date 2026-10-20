@@ -75,6 +75,28 @@ jobs:
         with:
           command: check advisories bans licenses sources
 
+  notices:
+    name: Licence notices
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Its notices are part of the file.
+      - run: pnpm --filter @hardless/dashboard build
+      # cargo-about runs offline (--frozen); fetch every platform's crates first.
+      - run: cargo fetch --locked
+      - name: crates/hardless-cli/THIRD_PARTY_LICENSES.txt is up to date (NFR-14)
+        run: cargo xtask licenses --check
+
   browser:
     name: Browser packages (${{ matrix.os }})
     strategy:

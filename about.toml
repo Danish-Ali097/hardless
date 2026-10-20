@@ -1,0 +1,28 @@
+# cargo-about settings for the Rust part of crates/hardless-cli/THIRD_PARTY_LICENSES.txt
+# (NFR-14: notices ship with the binary). Run `cargo xtask licenses`, never cargo-about alone:
+# it runs `cargo about generate --frozen`, offline, so the output depends only on Cargo.lock.
+#
+# Keep `accepted` in sync with license-policy.json "shipped" and deny.toml.
+accepted = [
+  "Apache-2.0",
+  "MIT",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "Unicode-3.0",
+  "BlueOak-1.0.0",
+]
+# Every platform the binary is built for, so platform-specific crates are listed too.
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "x86_64-unknown-linux-musl",
+  "aarch64-unknown-linux-musl",
+  "x86_64-pc-windows-msvc",
+  "aarch64-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+]
+# Only what is compiled into the binary.
+ignore-build-dependencies = true
+ignore-dev-dependencies = true

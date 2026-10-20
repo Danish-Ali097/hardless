@@ -21,6 +21,7 @@ hardless receipts printer-1 --last                      # the latest receipt as 
 hardless receipts printer-1 --limit 5                   # the five newest
 hardless receipts printer-1 --format json
 hardless receipts printer-1 --format png --out receipt.png [--width 58]
+hardless licenses                                       # third-party notices for this binary
 ```
 
 `scan`, `tap`, `fault` and `receipts` talk to `http://127.0.0.1:8080` by default; set another

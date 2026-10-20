@@ -1,3 +1,5 @@
-# The image only needs the prebuilt binaries (see Dockerfile).
+# The image only needs the prebuilt binaries and the licence files (see Dockerfile).
 *
 !docker/bin/
+!LICENSE
+!crates/hardless-cli/THIRD_PARTY_LICENSES.txt

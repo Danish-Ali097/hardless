@@ -12,3 +12,5 @@ docs/PRD.md
 packages/shim-web/wasm/
 test-results/
 playwright-report/
+# The cargo-about template; whitespace is part of the generated notices.
+about.hbs

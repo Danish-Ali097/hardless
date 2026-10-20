@@ -64,10 +64,15 @@ One package: `pnpm --filter @hardless/dashboard test`.
 
 ```sh
 cargo xtask gen-types     # Rust wire types -> packages/types/src (ts-rs). Never edit those files.
+cargo xtask licenses      # Rust crates + Go Mono font + dashboard -> crates/hardless-cli/THIRD_PARTY_LICENSES.txt
 ```
 
 Run it after changing any type that derives `ts_rs::TS` in `crates/hardless-core`, and commit
 the result. CI fails if `packages/types` is stale.
+
+Run `cargo xtask licenses` after changing Rust dependencies or the dashboard's bundled
+packages (build the dashboard first), and commit the result; CI fails if it is stale. It needs
+`cargo install cargo-about --version 0.9.2 --locked --features cli`.
 
 ### WebAssembly engine and browser tests
 

@@ -108,6 +108,15 @@ jobs:
             --data '<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print"><text>docker</text></epos-print>' \
             'http://127.0.0.1:8080/cgi-bin/epos/service.cgi?devid=local_printer' | grep -q 'success="true"'
           curl -fsS http://127.0.0.1:8080/api/v1/devices/local_printer/jobs/last | grep -q 'docker'
+      - name: The image ships the licence notices (NFR-14)
+        run: |
+          docker run --rm hardless/hardless:test licenses | grep -q "Part 3: The dashboard"
+          id=$(docker create hardless/hardless:test)
+          docker cp "$id:/licenses/THIRD_PARTY_LICENSES.txt" notices.txt
+          docker cp "$id:/licenses/LICENSE" license.txt
+          docker rm "$id"
+          grep -q "Bigelow & Holmes" notices.txt
+          grep -q "Apache License" license.txt
       - name: Server output
         if: always()
         run: docker logs hardless || true

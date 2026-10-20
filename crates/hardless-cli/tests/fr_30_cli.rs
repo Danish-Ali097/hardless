@@ -173,3 +173,22 @@ fn fr_30_an_unreachable_server_says_how_to_fix_it() {
         stderr(&out)
     );
 }
+
+#[test]
+fn nfr_14_licenses_prints_the_third_party_notices() {
+    let out = Command::new(env!("CARGO_BIN_EXE_hardless"))
+        .arg("licenses")
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let text = stdout(&out);
+    for part in [
+        "Part 1: Rust crates compiled into the binary",
+        "Part 2: Go Mono font",
+        "Bigelow & Holmes",
+        "Part 3: The dashboard",
+        "react 18.",
+    ] {
+        assert!(text.contains(part), "missing {part}");
+    }
+}

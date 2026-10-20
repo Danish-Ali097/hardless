@@ -6,6 +6,24 @@ decision from the maintainer.
 
 ## M2 — Cross-browser paths
 
+### Licence notices (NFR-14)
+
+- **One file, embedded in the binary** (maintainer decision, after M2):
+  `crates/hardless-cli/THIRD_PARTY_LICENSES.txt` holds the licence texts of everything
+  compiled into `hardless`: the Rust crates (175, from cargo-about), the Go Mono font and the
+  dashboard's bundled packages (the file its build already writes). `hardless licenses` prints
+  it, so the notices travel with the binary however it is copied. The Docker image also has
+  it, with Hardless's own `LICENSE`, in `/licenses/`.
+- **`cargo xtask licenses`** writes the file; `--check` fails if it is stale. A new CI job
+  runs the check, so a dependency change cannot ship without its notice. cargo-about runs
+  offline (`--frozen`): licence texts come from the crates' own files, so the output depends
+  only on `Cargo.lock`. It lists crates for every platform the binary is built for and leaves
+  out build-only and dev-only crates. Its accepted licences match `license-policy.json`.
+- **cargo-about** (MIT OR Apache-2.0) is a build tool and never ships. Version 0.9.2, installed
+  with `cargo install cargo-about --version 0.9.2 --locked --features cli`.
+- **When to regenerate:** after changing Rust dependencies (`Cargo.lock`) or the dashboard's
+  bundled packages; build the dashboard first, since its notices are part of the file.
+
 ### Maintainer decisions taken before starting
 
 - **Receipt font: Go Mono** (BSD-3-Clause, Bigelow & Holmes for the Go project). PNG output
@@ -41,8 +59,8 @@ decision from the maintainer.
   SVG and HTML have no limit.
 - **`/render?format=png` rasterises on a blocking thread** (`spawn_blocking`) so a large
   receipt does not stall the async workers.
-- **Notices:** `hardless_render::FONT_LICENSE` exports the font licence. The v0.1.0 notices
-  step (see M0, Licences) must include it, alongside the Rust dependencies' notices.
+- **Notices:** `hardless_render::FONT_LICENSE` exports the font licence, and the binary's
+  third-party notices include it (see "Licence notices" below).
 - **Dashboard (FR-24):** "Download PNG" sits next to "Download HTML" on every receipt.
 
 ### HTTP dialects (FR-31, FR-34)
@@ -130,8 +148,8 @@ decision from the maintainer.
   is the container's own, so for phones pass `-e HARDLESS_CERT_HOSTS=<host LAN address>`.
 - **No `HEALTHCHECK`:** distroless has no shell or curl; use `GET /api/v1/health`.
 - **Start-up output** shows `localhost` instead of `0.0.0.0` when listening on every interface.
-- **Open for v0.1.0:** the image must carry the licence notices of the Rust dependencies and
-  the Go Mono font (see M0, Licences, and Renderer above).
+- **Licence notices** are in the image at `/licenses/` and printed by
+  `docker run hardless/hardless licenses` (see "Licence notices" below).
 
 ### CLI (FR-30)
 
@@ -466,9 +484,8 @@ check:licenses`) checks runtime `dependencies` against `shipped` and everything 
   copies. The dashboard build writes `THIRD_PARTY_LICENSES.txt` (full licence texts) and
   `third-party-licenses.json` into `dist/`. Today that is React, react-dom, scheduler,
   Tailwind's generated base CSS, and small Vite and rolldown runtime helpers, all MIT.
-- **Follow-up for v0.1.0**: the `hardless` binary must also ship notices for its Rust
-  dependencies (e.g. generated with `cargo-about` in the release workflow), and npm packages
-  that bundle code must include theirs.
+- **Binary notices** were added in M2 (see M2, "Licence notices"). Still to do at release: npm
+  packages that bundle code must include their notices.
 
 ### Not in M0
 
