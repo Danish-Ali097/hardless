@@ -1,7 +1,8 @@
 import type { DeviceSummary } from "@hardless/types";
-import { removeDevice, dismissError } from "./actions.js";
+import { removeDevice, dismissError, showView } from "./actions.js";
 import { DeviceList } from "./components/DeviceList.js";
 import { DrawerPanel } from "./components/DrawerPanel.js";
+import { EventLog } from "./components/EventLog.js";
 import { FaultPanel } from "./components/FaultPanel.js";
 import { NfcPanel } from "./components/NfcPanel.js";
 import { PrinterPanel } from "./components/PrinterPanel.js";
@@ -9,7 +10,7 @@ import { ScannerPanel } from "./components/ScannerPanel.js";
 import { kindName, stateOf } from "./devices.js";
 import { type DashboardState, useDashboard, visibleJobs } from "./store.js";
 
-/** The dashboard, from a store snapshot (FR-23 to FR-28). */
+/** The dashboard, from a store snapshot (FR-23 to FR-29). */
 export function Dashboard({ state }: { state: DashboardState }) {
   const devices = Object.values(state.devices).sort((a, b) => a.id.localeCompare(b.id));
   const selected = state.selected ? state.devices[state.selected] : undefined;
@@ -17,7 +18,33 @@ export function Dashboard({ state }: { state: DashboardState }) {
   return (
     <div className="flex min-h-full flex-col">
       <header className="flex items-center justify-between border-b border-line px-5 py-3">
-        <span className="text-lg font-semibold tracking-tight">Hardless</span>
+        <span className="flex items-center gap-6">
+          <span className="text-lg font-semibold tracking-tight">Hardless</span>
+          <nav aria-label="Views" className="flex gap-1 text-sm">
+            {(
+              [
+                ["devices", "Devices"],
+                ["log", "Event log"],
+              ] as const
+            ).map(([view, label]) => (
+              <button
+                key={view}
+                type="button"
+                aria-pressed={state.view === view}
+                onClick={() => {
+                  showView(view);
+                }}
+                className={`rounded-md px-3 py-1 ${
+                  state.view === view
+                    ? "bg-raised font-medium shadow-sm"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </span>
         <span className="flex items-center gap-2 text-xs text-muted" role="status">
           <span
             aria-hidden="true"
@@ -39,25 +66,31 @@ export function Dashboard({ state }: { state: DashboardState }) {
         </div>
       )}
 
-      <div className="grid flex-1 grid-cols-1 gap-6 p-5 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_19rem]">
-        <aside>
-          <DeviceList devices={devices} selected={state.selected} />
-        </aside>
-        <main className="min-w-0">
-          {selected ? (
-            <Selected state={state} device={selected} />
-          ) : (
-            <p className="py-16 text-center text-muted">
-              No devices yet. Add a receipt printer to start.
-            </p>
-          )}
+      {state.view === "log" ? (
+        <main className="flex-1 p-5">
+          <EventLog devices={devices} />
         </main>
-        {selected && (
-          <aside className="flex flex-col gap-8 md:col-start-2 xl:col-start-auto">
-            <Rail state={state} device={selected} devices={devices} />
+      ) : (
+        <div className="grid flex-1 grid-cols-1 gap-6 p-5 md:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_19rem]">
+          <aside>
+            <DeviceList devices={devices} selected={state.selected} />
           </aside>
-        )}
-      </div>
+          <main className="min-w-0">
+            {selected ? (
+              <Selected state={state} device={selected} />
+            ) : (
+              <p className="py-16 text-center text-muted">
+                No devices yet. Add a receipt printer to start.
+              </p>
+            )}
+          </main>
+          {selected && (
+            <aside className="flex flex-col gap-8 md:col-start-2 xl:col-start-auto">
+              <Rail state={state} device={selected} devices={devices} />
+            </aside>
+          )}
+        </div>
+      )}
     </div>
   );
 }

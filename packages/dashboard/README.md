@@ -11,6 +11,7 @@ the event log. React 18 + Vite + Tailwind. `hardless-server` serves the built fi
 | Barcode scanner (FR-26) | Scan box, saved presets, sequence runner                                                          |
 | NFC reader (FR-27)      | Remembered cards with Tap and Edit, a card editor (UID and records), the app's last write         |
 | Faults (FR-28)          | A toggle for every fault the device supports, with its options                                    |
+| Event log (FR-29)       | Every device's log, newest first and live, filtered by device and direction                       |
 
 ```sh
 pnpm --filter @hardless/dashboard dev     # dev server

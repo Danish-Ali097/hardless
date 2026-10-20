@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Dashboard } from "../src/App.js";
+import { EventLogView } from "../src/components/EventLog.js";
 import { drawer, job, nfcReader, printer, scanner, stateWith } from "./fixtures.js";
 
 /** Server-rendered markup without React's text separators (`<!-- -->`). */
@@ -85,6 +86,30 @@ describe("dashboard", () => {
     expect(page).toContain("Read error");
     expect(page).toContain("NFC reader, card on the reader");
     expect(html(stateWith([nfcReader()]))).toContain("No cards yet.");
+  });
+
+  it("FR-29: the event log view lists records newest first with filters", () => {
+    const page = html(stateWith([printer(), scanner()], { view: "log" }));
+    expect(page).toContain('aria-pressed="true"');
+    expect(page).toContain("Event log");
+    expect(page).toContain("Nothing logged yet.");
+
+    const log = renderToString(
+      <EventLogView
+        devices={[printer(), scanner()]}
+        records={[
+          { seq: 1, at: 10, deviceId: "printer-1", type: "bytes-in", dataHex: "1b40" },
+          { seq: 2, at: 20, deviceId: "printer-1", type: "bytes-out", dataHex: "12" },
+        ]}
+        filter={{ device: null, direction: null }}
+        onFilter={() => undefined}
+      />,
+    ).replaceAll("<!-- -->", "");
+    expect(log.indexOf("Device replied with 1 byte")).toBeLessThan(log.indexOf("App sent 2 bytes"));
+    expect(log).toContain('aria-label="app to device"');
+    expect(log).toContain("All devices");
+    expect(log).toContain("Device to app");
+    expect(log).toContain("0.010 s");
   });
 
   it("FR-33: an HTTP printer shows its addresses, the mixed-content help and the certificate", () => {

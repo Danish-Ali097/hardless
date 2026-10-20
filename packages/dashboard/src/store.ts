@@ -21,6 +21,8 @@ export interface DashboardState {
   error: string | null;
   /** Where the server listens, once loaded. */
   info: ServerInfo | null;
+  /** The device panels, or the event log (FR-29). */
+  view: "devices" | "log";
 }
 
 export const initialState: DashboardState = {
@@ -33,6 +35,7 @@ export const initialState: DashboardState = {
   showUnknown: true,
   error: null,
   info: null,
+  view: "devices",
 };
 
 /** Applies one event bus event. Pure, so it can be tested without a server. */

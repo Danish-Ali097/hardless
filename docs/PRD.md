@@ -582,7 +582,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 - [ ] `@hardless/playwright` fixture and matchers (FR-40–FR-42)
 - [ ] `hardless-mcp` with stdio and `/mcp` transports, all tools and resources in section 11.4 (FR-43–FR-50)
 - [ ] `AGENTS.md` and `llms.txt` at repo root with a CI sync check (FR-51)
-- [ ] Event log view (FR-29)
+- [x] Event log view (FR-29)
 - [ ] Docs site in `docs/`: quickstart, device reference, fault reference, writing a device plugin, using Hardless from an AI agent
 
 **Accept:** The example app's Playwright suite covers print, drawer, scan, NFC read/write and three fault cases, and runs green headless in CI with no server (standalone mode) and with the Docker server. The extension lets an unmodified copy of the example app print via the shim. Shim conformance tests for sections 8.2 and 8.3 pass. An MCP integration test (using the SDK's client) calls every tool against a live server, checks output schemas, and confirms `get_last_receipt` returns a PNG image block; `--read-only` exposes only read tools.

@@ -1,4 +1,4 @@
-import type { BusEvent, DeviceSummary, Job, NdefRecord } from "@hardless/types";
+import type { BusEvent, DeviceSummary, EventRecord, Job, NdefRecord } from "@hardless/types";
 
 /**
  * Talks to the Hardless REST API and event stream on the same origin as the dashboard.
@@ -102,6 +102,14 @@ export const api = {
       `/devices/${enc(id)}/tap`,
       records === undefined ? { uid } : { uid, records },
     ),
+  /** A device's event log after `since` (a record's `seq`), oldest first; the last `limit`. */
+  events: (id: string, since?: number, limit?: number) => {
+    const query = new URLSearchParams();
+    if (since !== undefined) query.set("since", String(since));
+    if (limit !== undefined) query.set("limit", String(limit));
+    const qs = query.toString();
+    return request<EventRecord[]>("GET", `/devices/${enc(id)}/events${qs ? `?${qs}` : ""}`);
+  },
   jobs: (id: string, limit = 30) =>
     request<Job[]>("GET", `/devices/${enc(id)}/jobs?limit=${String(limit)}`),
   setFault: (id: string, fault: string, active: boolean, options?: Record<string, number>) =>

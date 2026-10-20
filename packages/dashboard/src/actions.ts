@@ -70,7 +70,12 @@ export function connect(): () => void {
 }
 
 export function select(id: string): void {
-  set({ selected: id });
+  set({ selected: id, view: "devices" });
+}
+
+/** Shows the device panels or the event log (FR-29). */
+export function showView(view: "devices" | "log"): void {
+  set({ view });
 }
 
 export async function setFault(
