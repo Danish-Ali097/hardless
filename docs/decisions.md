@@ -77,9 +77,11 @@ decision from the maintainer.
   switch is status 1 bit 2, offline bit 3, cover bit 5; paper near end status 4 bit 2, paper
   end bit 3. `code` is `0`, `1100` (offline or error, also used for a bad document) or `2001`
   (busy, used for the `timeout` fault).
-- **Open, deviation from the PRD:** section 9.1 says the WebPRNT response has a `TraceID`.
-  Star's public response reference documents only `success`, `code` and `status`, so no
-  `TraceID` is sent. Following the vendor reference, as section 8 does for browser specs.
+- **No WebPRNT `TraceID`** (maintainer decision, 20 Oct 2026; changes PRD section 9.1). The
+  PRD said the WebPRNT response has a `TraceID`, but Star's public response reference documents
+  only `success`, `code` and `status`. Hardless follows the vendor reference, and the PRD's
+  table now describes the response as a success flag, a result code and the Star Automatic
+  Status bytes.
 - **Safety:** documents over 8 MB and documents with a DTD are refused. Both parsers have a
   `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
   one.

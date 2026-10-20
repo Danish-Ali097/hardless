@@ -319,7 +319,7 @@ HTTP printing is the only route that works from iOS Safari PWAs, so its realism 
 | Dialect               | Endpoint (on 8080 and 8443)                              | Request                                                                                                          | Response                                                                                                                 |
 | --------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | ePOS-Print-compatible | `POST /cgi-bin/epos/service.cgi?devid=<id>&timeout=<ms>` | SOAP envelope containing an `epos-print` XML document (text, feed, align, barcode, symbol/QR, image, cut, pulse) | SOAP `response` element with `success`, `code` and a `status` bitmask (online, cover open, paper end, drawer open, etc.) |
-| WebPRNT-compatible    | `POST /StarWebPRNT/SendMessage`                          | XML request document (text, alignment, emphasis, barcode, QR, image, cut, peripheral/drawer)                     | XML response with `TraceID`, success flag and printer status bytes                                                       |
+| WebPRNT-compatible    | `POST /StarWebPRNT/SendMessage`                          | XML request document (text, alignment, emphasis, barcode, QR, image, cut, peripheral/drawer)                     | XML response with a success flag, a result code and the printer status bytes (Star Automatic Status)                       |
 
 Requirements:
 
