@@ -152,3 +152,66 @@ fn printer_state_reports_usb_ids_and_auto_select_for_the_shim() {
     assert_eq!(state["autoSelect"], true);
     assert_eq!(state["transport"], "serial");
 }
+
+#[test]
+fn fr_35_http_printers_have_http_faults() {
+    let rig = Rig::with(
+        json!({ "transport": "http" }),
+        json!({ "attachedTo": PRINTER }),
+    );
+    let summary = rig.registry.summary(&id(PRINTER)).unwrap();
+    let faults: Vec<&str> = summary
+        .supported_faults
+        .iter()
+        .map(|f| f.as_str())
+        .collect();
+    assert!(faults.contains(&"timeout") && faults.contains(&"cors-blocked"));
+    assert!(!faults.contains(&"baud-mismatch") && !faults.contains(&"slow-write"));
+    assert_eq!(summary.state["transport"], "http");
+
+    let serial = Rig::new();
+    let faults = serial
+        .registry
+        .summary(&id(PRINTER))
+        .unwrap()
+        .supported_faults;
+    assert!(!faults.iter().any(|f| f.as_str() == "timeout"));
+}
+
+#[test]
+fn fr_31_close_job_ends_an_http_print_without_waiting() {
+    let mut rig = Rig::with(
+        json!({ "transport": "http" }),
+        json!({ "attachedTo": PRINTER }),
+    );
+    rig.print(b"\x1b@Hello\n");
+    let events = rig
+        .registry
+        .control(
+            &id(PRINTER),
+            hardless_core::ControlCommand::Custom {
+                name: hardless_devices::printer::CLOSE_JOB.into(),
+                payload: json!(null),
+            },
+        )
+        .unwrap();
+    assert!(events
+        .iter()
+        .any(|e| matches!(e, DeviceEvent::JobCompleted(_))));
+    assert_eq!(rig.jobs(), ["Hello\n"]);
+    assert_eq!(rig.registry.next_deadline(), None);
+}
+
+#[test]
+fn fr_34_state_carries_the_dle_eot_status_bytes() {
+    let mut rig = Rig::new();
+    assert_eq!(
+        rig.state(PRINTER)["statusBytes"],
+        json!([0x12, 0x12, 0x12, 0x12])
+    );
+    rig.fault(PRINTER, hardless_core::FaultId::PAPER_OUT, true);
+    assert_eq!(
+        rig.state(PRINTER)["statusBytes"],
+        json!([0x1A, 0x32, 0x12, 0x7E])
+    );
+}

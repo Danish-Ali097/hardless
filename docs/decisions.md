@@ -67,10 +67,12 @@ decision from the maintainer.
 - **Strictness:** elements and attribute values the manuals do not define are a schema error
   (`SchemaError` in ePOS). Known quirks are accepted: WebPRNT's `poistion` typo and both
   `bitimage` and `bitImage`.
-- **Status comes from the printer itself:** after printing, the endpoint sends `DLE EOT 1`,
-  `2` and `4` to the printer and builds the response from the replies, so faults and the
-  `drawerOpenLevel` setting behave the same over HTTP as over Web Serial. Paper end and an open
-  cover mean the print did not happen (`success="false"`).
+- **Status comes from the printer itself:** after printing, the endpoint reads the printer's
+  `DLE EOT 1` to `4` reply values (the printer state's new `statusBytes` field) and builds the
+  response from them, so faults and the `drawerOpenLevel` setting behave the same over HTTP as
+  over Web Serial. Reading them from the state rather than sending `DLE EOT` over the line keeps
+  `garbled` from eating the status requests and keeps the event log free of extra traffic.
+  Paper end and an open cover mean the print did not happen (`success="false"`).
 - **WebPRNT status:** 11 bytes as hex, starting `23 86` as in the manual's example; drawer
   switch is status 1 bit 2, offline bit 3, cover bit 5; paper near end status 4 bit 2, paper
   end bit 3. `code` is `0`, `1100` (offline or error, also used for a bad document) or `2001`
@@ -81,6 +83,58 @@ decision from the maintainer.
 - **Safety:** documents over 8 MB and documents with a DTD are refused. Both parsers have a
   `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
   one.
+
+### HTTP printer endpoints and HTTPS (FR-19, FR-22, FR-32 to FR-35)
+
+- **Default `local_printer`** (maintainer decision): a fourth default device, an HTTP
+  printer. `local_printer` is the ePOS-Print default device ID, so Epson-style apps work with
+  no setup. With no device of that ID, `devid=local_printer` reaches the first HTTP printer.
+  `/StarWebPRNT/SendMessage` without `/p/<id>` also reaches the first HTTP printer by ID.
+- **Printers are on one route:** `printer-escpos` gets `"transport": "http"`. An HTTP printer
+  is not offered by the Web Serial picker, and a Web Serial printer does not answer HTTP. HTTP
+  printers support `paper-out`, `paper-near-end`, `cover-open`, `offline`, `garbled`,
+  `timeout` and `cors-blocked` (section 10); the serial-only faults are rejected.
+- **A request is one job:** after the translated bytes, the endpoint sends the printer a
+  `close-job` control command (`ControlCommand::Custom`), so the receipt appears at once
+  instead of after the 300 ms idle time.
+- **CORS (FR-32):** any origin is echoed (a printer on the network does not know the app's
+  origin), with methods `POST, OPTIONS` and headers `Content-Type`, `SOAPAction` and
+  `If-Modified-Since`. The last is not in the PRD but the ePOS samples send it and it is not a
+  safelisted header, so without it browsers would block those apps. Chrome's Private Network
+  Access preflight is answered too. The printer endpoints need no token, like real printers.
+- **`offline` over HTTP** closes the connection without an answer. "Connection refused" is not
+  possible per device on a shared port; the browser sees the same network error.
+- **`timeout`** prints, then holds the answer until 500 ms after the client's timeout: the
+  ePOS `timeout` (default 10 s when the request gives none), or 90 s for WebPRNT, whose SDK
+  waits 90 s by default. The answer then says `EX_TIMEOUT` (ePOS) or busy (`2001`, WebPRNT).
+- **Rejected documents** are answered as schema errors and logged in the printer's event log,
+  through a new `Registry::log` (core) for transports. Translation warnings (buzzer, page mode,
+  logos) go to the event log the same way.
+- **HTTPS: a local certificate authority** (maintainer decision), as mkcert does. iOS only
+  offers full trust for a CA, and trusting a CA once covers every later server certificate.
+  The CA (10 years) lives in the per-user data folder, never in the repo or the Docker image
+  (NFR-05); the server certificate (397 days, Apple's limit) is made fresh at each start.
+  The key file is readable by the owner only on Unix.
+- **Certificate names:** `localhost`, `127.0.0.1`, `::1`, the `--host` address, and with
+  `--host 0.0.0.0` the LAN address of the default route, found by asking the OS which source
+  address a UDP socket would use. That sends no packets (NFR-04). Extra names come from
+  `certHosts` / `HARDLESS_CERT_HOSTS`.
+- **TLS stack:** rustls with the `ring` provider (approved before M2), `rcgen` for the
+  certificates (PRD section 6) and `tokio-rustls` to serve them (MIT OR Apache-2.0). HTTP/1.1
+  only, so WebSocket upgrades (the bridge over `wss://`) work as on port 8080.
+- **HTTPS failing is not fatal:** HTTP keeps running, startup prints a warning, and
+  `GET /api/v1/info` carries the error for the dashboard. Settings: `https`, `httpsPort`,
+  `certDir`, `certHosts` and matching `HARDLESS_*` variables. Tests run with HTTPS off and
+  their own certificate folders, so they never touch a user's CA.
+- **New `GET /api/v1/info`** (maintainer decision): version, HTTP port, and HTTPS state, port,
+  certificate link and hosts, for the dashboard's HTTPS help. `/health` stays minimal for
+  Docker. The CA certificate is served at `/hardless-ca.crt`, outside the API, so a phone can
+  fetch it without a token; it is public, the key never leaves the machine.
+- **Dashboard (FR-33):** an HTTP printer shows its ePOS and WebPRNT addresses (HTTPS when
+  running), explains mixed content and the untrusted-certificate case, offers the certificate
+  and lists the trust steps for iPhone and iPad, Android, macOS and Windows. It warns when the
+  address the dashboard is open on is not in the certificate. "Add device" can add an HTTP
+  receipt printer.
 
 ### Printer faults (section 10)
 

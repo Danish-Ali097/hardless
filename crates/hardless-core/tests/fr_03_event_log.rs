@@ -206,3 +206,15 @@ proptest! {
         prop_assert_eq!(log.len(), pushes.len().min(cap));
     }
 }
+
+#[test]
+fn fr_03_transports_can_log_on_behalf_of_a_device() {
+    let (_, mut registry) = registry_with(DEFAULT_LOG_CAPACITY);
+    let entry = hardless_core::LogEntry::new(hardless_core::LogLevel::Warn, "<sound>: no buzzer");
+    registry.log(&id("p1"), entry.clone()).unwrap();
+    let events = registry.events(&id("p1"), None).unwrap();
+    assert!(events.iter().any(
+        |r| matches!(&r.kind, EventKind::Log { message, .. } if message == "<sound>: no buzzer")
+    ));
+    assert!(registry.log(&id("nope"), entry).is_err());
+}

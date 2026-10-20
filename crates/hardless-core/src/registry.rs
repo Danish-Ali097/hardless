@@ -7,7 +7,8 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::device::{
-    ConfigError, ControlCommand, Device, DeviceEvent, DevicePlugin, Job, LogLevel, PeripheralSignal,
+    ConfigError, ControlCommand, Device, DeviceEvent, DevicePlugin, Job, LogEntry, LogLevel,
+    PeripheralSignal,
 };
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::DeviceId;
@@ -435,6 +436,19 @@ impl Registry {
         let events = self.slot_mut(id)?.device.on_control(command, now);
         self.absorb(id, now, &events);
         Ok(events)
+    }
+
+    /// Records a diagnostic in a device's event log on behalf of a transport, e.g. a part of
+    /// an HTTP print request the device cannot reproduce.
+    pub fn log(&mut self, id: &DeviceId, entry: LogEntry) -> Result<(), RegistryError> {
+        let now = self.now();
+        self.slot(id)?;
+        let kind = EventKind::Log {
+            level: entry.level,
+            message: entry.message,
+        };
+        self.record(id, now, kind);
+        Ok(())
     }
 
     /// Turns a fault on or off, returns the device's events (e.g. `Disconnected` for

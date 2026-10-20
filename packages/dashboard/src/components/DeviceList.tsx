@@ -84,8 +84,13 @@ function AddDevice({ printers }: { printers: DeviceSummary[] }) {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const config: Record<string, unknown> =
-      kind === "cash-drawer" ? { attachedTo: attachedTo || printers[0]?.id, pin: Number(pin) } : {};
-    if (await createDevice(kind, id.trim() || undefined, config)) {
+      kind === "cash-drawer"
+        ? { attachedTo: attachedTo || printers[0]?.id, pin: Number(pin) }
+        : kind === "printer-http"
+          ? { transport: "http" }
+          : {};
+    const deviceKind = kind === "printer-http" ? "printer-escpos" : kind;
+    if (await createDevice(deviceKind, id.trim() || undefined, config)) {
       setOpen(false);
       setId("");
     }
@@ -106,7 +111,8 @@ function AddDevice({ printers }: { printers: DeviceSummary[] }) {
           }}
           className={input}
         >
-          <option value="printer-escpos">Receipt printer</option>
+          <option value="printer-escpos">Receipt printer (Web Serial)</option>
+          <option value="printer-http">Receipt printer (HTTP)</option>
           <option value="cash-drawer">Cash drawer</option>
           <option value="scanner-wedge">Barcode scanner</option>
         </select>

@@ -57,6 +57,36 @@ describe("dashboard", () => {
     expect(page).toContain("Barcode scanner, ready");
   });
 
+  it("FR-33: an HTTP printer shows its addresses, the mixed-content help and the certificate", () => {
+    const http = printer({ id: "local_printer" }, { transport: "http" });
+    const info = {
+      version: "0.0.0",
+      httpPort: 8080,
+      https: { enabled: true, port: 8443, certificate: "/hardless-ca.crt", hosts: ["localhost"] },
+    };
+    const page = html(stateWith([http], { info }));
+    expect(page).toContain("HTTP receipt printer");
+    expect(page).toContain(
+      "https://localhost:8443/cgi-bin/epos/service.cgi?devid=local_printer&amp;timeout=10000",
+    );
+    expect(page).toContain("https://localhost:8443/StarWebPRNT/SendMessage");
+    expect(page).toContain("Mixed content.");
+    expect(page).toContain('href="http://localhost:8080/hardless-ca.crt"');
+    expect(page).toContain("Certificate Trust Settings");
+
+    const off = html(
+      stateWith([http], {
+        info: {
+          ...info,
+          https: { enabled: false, hosts: [], error: "cannot listen on port 8443" },
+        },
+      }),
+    );
+    expect(off).toContain("http://localhost:8080/cgi-bin/epos/service.cgi");
+    expect(off).toContain("HTTPS is off: cannot listen on port 8443.");
+    expect(html(stateWith([printer()]))).not.toContain("Printing over HTTP");
+  });
+
   it("FR-25: shows the attached drawer opening, its kick count and a close button", () => {
     const open = html(stateWith([printer(), drawer({ state: "open", kicks: 3 })]));
     expect(open).toContain(">Open<");

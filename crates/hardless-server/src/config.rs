@@ -33,8 +33,14 @@ pub struct ConfigFile {
     pub host: Option<IpAddr>,
     /// HTTP port.
     pub port: Option<u16>,
-    /// HTTPS port (milestone M2).
+    /// HTTPS port.
     pub https_port: Option<u16>,
+    /// Serve HTTPS (default on).
+    pub https: Option<bool>,
+    /// Folder for the local certificate authority (default: the per-user data folder).
+    pub cert_dir: Option<PathBuf>,
+    /// Extra host names or addresses for the HTTPS certificate.
+    pub cert_hosts: Option<Vec<String>>,
     /// Bearer token required by the API and bridge.
     pub token: Option<String>,
     /// Devices to create at start-up. Omitted: one printer and one drawer.
@@ -63,8 +69,15 @@ pub struct ServerConfig {
     pub host: IpAddr,
     /// HTTP port for the dashboard, API and bridge (default 8080, FR-22).
     pub port: u16,
-    /// HTTPS port (default 8443; served from milestone M2).
+    /// HTTPS port (default 8443, FR-22).
     pub https_port: u16,
+    /// Serve HTTPS on `https_port` (default on; FR-33).
+    pub https: bool,
+    /// Folder for the local certificate authority; `None` is the per-user data folder
+    /// (see [`crate::tls::default_cert_dir`]).
+    pub cert_dir: Option<PathBuf>,
+    /// Extra host names or addresses for the HTTPS certificate, e.g. a LAN host name.
+    pub cert_hosts: Vec<String>,
     /// Bearer token (NFR-02).
     pub token: Option<String>,
     /// Devices to create at start-up.
@@ -77,14 +90,18 @@ impl Default for ServerConfig {
             host: IpAddr::V4(Ipv4Addr::LOCALHOST),
             port: 8080,
             https_port: 8443,
+            https: true,
+            cert_dir: None,
+            cert_hosts: Vec::new(),
             token: None,
             devices: default_devices(),
         }
     }
 }
 
-/// `printer-1` (ESC/POS over Web Serial) with `drawer-1` attached on pin 2, and `scanner-1`
-/// (keyboard wedge): enough to print a first receipt and scan without writing any config.
+/// `printer-1` (ESC/POS over Web Serial) with `drawer-1` attached on pin 2, `scanner-1`
+/// (keyboard wedge) and `local_printer` (HTTP, the ePOS-Print default device ID): enough to
+/// print a first receipt by either route and scan without writing any config.
 pub fn default_devices() -> Vec<DeviceSpec> {
     let id = |s: &str| s.parse::<DeviceId>().ok();
     vec![
@@ -102,6 +119,11 @@ pub fn default_devices() -> Vec<DeviceSpec> {
             kind: "scanner-wedge".into(),
             id: id("scanner-1"),
             config: json!({}),
+        },
+        DeviceSpec {
+            kind: "printer-escpos".into(),
+            id: id("local_printer"),
+            config: json!({ "transport": "http" }),
         },
     ]
 }
@@ -121,7 +143,8 @@ impl std::error::Error for LoadError {}
 impl ServerConfig {
     /// Resolves the configuration: defaults, then the config file (`--config`,
     /// `HARDLESS_CONFIG`, or `hardless.config.json` if it exists), then `HARDLESS_HOST`,
-    /// `HARDLESS_PORT`, `HARDLESS_HTTPS_PORT` and `HARDLESS_TOKEN`, then CLI flags.
+    /// `HARDLESS_PORT`, `HARDLESS_HTTPS_PORT`, `HARDLESS_HTTPS`, `HARDLESS_CERT_DIR`,
+    /// `HARDLESS_CERT_HOSTS` and `HARDLESS_TOKEN`, then CLI flags.
     ///
     /// `env` looks up an environment variable; pass `|k| std::env::var(k).ok()`.
     ///
@@ -165,6 +188,23 @@ impl ServerConfig {
                 .parse()
                 .map_err(|_| LoadError(format!("HARDLESS_HTTPS_PORT is not a port: {v}")))?;
         }
+        if let Some(v) = env("HARDLESS_HTTPS") {
+            config.https = !matches!(
+                v.to_ascii_lowercase().as_str(),
+                "0" | "false" | "off" | "no"
+            );
+        }
+        if let Some(v) = env("HARDLESS_CERT_DIR") {
+            config.cert_dir = Some(PathBuf::from(v)).filter(|p| !p.as_os_str().is_empty());
+        }
+        if let Some(v) = env("HARDLESS_CERT_HOSTS") {
+            config.cert_hosts = v
+                .split(',')
+                .map(str::trim)
+                .filter(|h| !h.is_empty())
+                .map(str::to_owned)
+                .collect();
+        }
         if let Some(v) = env("HARDLESS_TOKEN") {
             config.token = Some(v).filter(|t| !t.is_empty());
         }
@@ -193,6 +233,15 @@ impl ServerConfig {
         }
         if let Some(port) = file.https_port {
             self.https_port = port;
+        }
+        if let Some(https) = file.https {
+            self.https = https;
+        }
+        if let Some(dir) = &file.cert_dir {
+            self.cert_dir = Some(dir.clone());
+        }
+        if let Some(hosts) = &file.cert_hosts {
+            self.cert_hosts = hosts.clone();
         }
         if let Some(token) = &file.token {
             self.token = Some(token.clone()).filter(|t| !t.is_empty());

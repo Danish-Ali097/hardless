@@ -382,6 +382,7 @@ Every fault can be toggled from the dashboard, REST API, CLI, scenario runner an
 | GET    | `/devices/:id/events?since=`                                         | Event log                                                   |
 | POST   | `/scenarios/run`                                                     | Run a scenario JSON; returns step results                   |
 | GET    | `/health`                                                            | Liveness for Docker/CI                                      |
+| GET    | `/info` | Version, HTTP and HTTPS ports, certificate link and hosts (for the dashboard's HTTPS help, FR-33) |
 | GET    | `/stream` (WebSocket) | Event bus for the dashboard: `device:added`, `device:removed`, `device:state`, `device:output` |
 
 Errors use `{ error: { code, message, details? } }` with 400/404/409/500.
@@ -560,7 +561,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 
 ### M2 — Cross-browser paths
 
-- [ ] HTTP printer endpoints, both dialects, CORS, HTTPS on 8443 (FR-31–FR-35)
+- [x] HTTP printer endpoints, both dialects, CORS, HTTPS on 8443 (FR-31–FR-35)
 - [x] Keyboard-wedge scanner device, dashboard panel, presets, sequences (FR-26, section 8.4)
 - [x] Renderer SVG/PNG output (FR-11) and `/render` endpoint
 - [ ] Scenario runner (FR-04) and `/scenarios/run`

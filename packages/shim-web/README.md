@@ -45,15 +45,15 @@ await writer.write(new TextEncoder().encode("Total: 1,250\n\x1dV\x00"));
 
 ## Options
 
-| Option                          | Mode       | Meaning                                                                    |
-| ------------------------------- | ---------- | -------------------------------------------------------------------------- |
-| `mode`                          | both       | `"server"` or `"standalone"` (FR-15)                                       |
-| `url`                           | server     | Bridge URL, default `ws://localhost:8080/bridge`                           |
-| `token`                         | server     | Token if the server was started with `--token` (NFR-02)                    |
-| `devices`                       | standalone | Devices to emulate, as `{ kind, id, ...config }` or `{ kind, id, config }` |
-| `wasmUrl`                       | standalone | Where to load the engine from, default `../wasm/hardless_wasm.js`          |
-| `serial`, `usb`, `nfc`, `wedge` | both       | Turn individual shims off (FR-14); all default to on                       |
-| `allowAnyOrigin`                | both       | Silence the warning on non-localhost origins (NFR-03)                      |
+| Option                          | Mode       | Meaning                                                                                                |
+| ------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------ |
+| `mode`                          | both       | `"server"` or `"standalone"` (FR-15)                                                                   |
+| `url`                           | server     | Bridge URL, default `ws://localhost:8080/bridge`; from an https:// page use `wss://<host>:8443/bridge` |
+| `token`                         | server     | Token if the server was started with `--token` (NFR-02)                                                |
+| `devices`                       | standalone | Devices to emulate, as `{ kind, id, ...config }` or `{ kind, id, config }`                             |
+| `wasmUrl`                       | standalone | Where to load the engine from, default `../wasm/hardless_wasm.js`                                      |
+| `serial`, `usb`, `nfc`, `wedge` | both       | Turn individual shims off (FR-14); all default to on                                                   |
+| `allowAnyOrigin`                | both       | Silence the warning on non-localhost origins (NFR-03)                                                  |
 
 `install()` is idempotent (FR-17); `uninstall()` restores the browser's own APIs.
 

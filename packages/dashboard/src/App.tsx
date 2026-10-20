@@ -61,11 +61,21 @@ export function Dashboard({ state }: { state: DashboardState }) {
   );
 }
 
+/** The HTTP printer that answers /StarWebPRNT/SendMessage: the first by ID. */
+function firstHttpPrinter(state: DashboardState): string | undefined {
+  return Object.values(state.devices)
+    .filter((d) => d.kind === "printer-escpos" && stateOf.string(d, "transport") === "http")
+    .map((d) => d.id)
+    .sort()[0];
+}
+
 function Selected({ state, device }: { state: DashboardState; device: DeviceSummary }) {
   if (device.kind === "printer-escpos") {
     const own = stateOf.number(device, "paperWidth") === 58 ? 58 : 80;
     return (
       <PrinterPanel
+        info={state.info}
+        isDefaultHttp={firstHttpPrinter(state) === device.id}
         printer={device}
         jobs={visibleJobs(state, device.id)}
         width={state.widths[device.id] ?? own}

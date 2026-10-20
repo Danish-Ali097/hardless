@@ -1,5 +1,6 @@
 import type { BusEvent, DeviceSummary, Job } from "@hardless/types";
 import { create } from "zustand";
+import type { ServerInfo } from "./api.js";
 
 /** How many receipts the dashboard keeps per printer. */
 export const MAX_JOBS = 50;
@@ -18,6 +19,8 @@ export interface DashboardState {
   widths: Record<string, 58 | 80>;
   showUnknown: boolean;
   error: string | null;
+  /** Where the server listens, once loaded. */
+  info: ServerInfo | null;
 }
 
 export const initialState: DashboardState = {
@@ -29,6 +32,7 @@ export const initialState: DashboardState = {
   widths: {},
   showUnknown: true,
   error: null,
+  info: null,
 };
 
 /** Applies one event bus event. Pure, so it can be tested without a server. */
@@ -69,11 +73,16 @@ export function needsRefresh(event: BusEvent): string | null {
   return event.type === "device:added" || event.type === "device:state" ? event.deviceId : null;
 }
 
-/** The first device by id, printers first, for the initial selection. */
+/** How early a device comes in the initial selection: Web Serial printers, then HTTP printers. */
+function rank(device: DeviceSummary): number {
+  if (device.kind !== "printer-escpos") return 2;
+  const state = device.state as { transport?: unknown } | null;
+  return state?.transport === "http" ? 1 : 0;
+}
+
+/** The first device for the initial selection: printers first (Web Serial before HTTP), then by id. */
 export function firstDevice(devices: Record<string, DeviceSummary>): string | null {
-  const list = Object.values(devices).sort((a, b) =>
-    a.kind === b.kind ? a.id.localeCompare(b.id) : a.kind === "printer-escpos" ? -1 : 1,
-  );
+  const list = Object.values(devices).sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id));
   return list[0]?.id ?? null;
 }
 

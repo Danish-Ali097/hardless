@@ -63,6 +63,9 @@ describe("dashboard store", () => {
 
   it("selects printers before other devices", () => {
     expect(firstDevice(stateWith([drawer(), printer()]).devices)).toBe("printer-1");
+    const http = printer({ id: "local_printer" }, { transport: "http" });
+    expect(firstDevice(stateWith([http, drawer(), printer()]).devices)).toBe("printer-1");
+    expect(firstDevice(stateWith([http, drawer()]).devices)).toBe("local_printer");
     expect(firstDevice({})).toBeNull();
   });
 });

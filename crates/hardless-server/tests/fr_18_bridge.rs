@@ -16,7 +16,7 @@ async fn fr_18_hello_returns_the_device_list() {
     let devices = recv(&mut ws).await;
     assert_eq!(devices["v"], 1);
     assert_eq!(devices["type"], "devices");
-    assert_eq!(devices["devices"].as_array().unwrap().len(), 3);
+    assert_eq!(devices["devices"].as_array().unwrap().len(), 4);
     assert_eq!(
         recv(&mut ws).await,
         json!({ "v": 1, "type": "ack", "replyTo": "1" })

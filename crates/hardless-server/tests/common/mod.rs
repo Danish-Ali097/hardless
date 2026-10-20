@@ -15,6 +15,7 @@ pub type Ws = WebSocketStream<MaybeTlsStream<TcpStream>>;
 pub async fn server() -> RunningServer {
     server_with(ServerConfig {
         port: 0,
+        https: false,
         ..ServerConfig::default()
     })
     .await
@@ -32,25 +33,52 @@ pub async fn http(
     body: Option<Value>,
     headers: &[(&str, &str)],
 ) -> (u16, Vec<(String, String)>, String) {
+    let body = body.map(|b| b.to_string()).unwrap_or_default();
+    let content_type = (!body.is_empty()).then_some("application/json");
+    http_text(server, method, path, &body, content_type, headers).await
+}
+
+/// The raw bytes a request gets back before the server closes the connection.
+pub async fn raw_response(
+    server: &RunningServer,
+    method: &str,
+    path: &str,
+    body: &str,
+    content_type: Option<&str>,
+    headers: &[(&str, &str)],
+) -> Vec<u8> {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let mut stream = TcpStream::connect(server.addr).await.unwrap();
-    let body = body.map(|b| b.to_string()).unwrap_or_default();
     let mut request = format!(
         "{method} {path} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: {}\r\n",
         server.addr,
         body.len()
     );
-    if !body.is_empty() {
-        request.push_str("Content-Type: application/json\r\n");
+    if let Some(content_type) = content_type {
+        request.push_str(&format!("Content-Type: {content_type}\r\n"));
     }
     for (name, value) in headers {
         request.push_str(&format!("{name}: {value}\r\n"));
     }
     request.push_str("\r\n");
-    request.push_str(&body);
+    request.push_str(body);
     stream.write_all(request.as_bytes()).await.unwrap();
     let mut raw = Vec::new();
-    stream.read_to_end(&mut raw).await.unwrap();
+    // A dropped connection is the answer some tests expect.
+    let _ = stream.read_to_end(&mut raw).await;
+    raw
+}
+
+/// [`http`] with any body and content type.
+pub async fn http_text(
+    server: &RunningServer,
+    method: &str,
+    path: &str,
+    body: &str,
+    content_type: Option<&str>,
+    headers: &[(&str, &str)],
+) -> (u16, Vec<(String, String)>, String) {
+    let raw = raw_response(server, method, path, body, content_type, headers).await;
     let text = String::from_utf8_lossy(&raw).into_owned();
     let (head, body) = text.split_once("\r\n\r\n").unwrap_or((&text, ""));
     let mut lines = head.lines();

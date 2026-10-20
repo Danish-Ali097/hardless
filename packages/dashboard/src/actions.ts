@@ -18,7 +18,7 @@ function putDevice(device: DeviceSummary): void {
 /** Loads every device and each printer's recent receipts. */
 export async function load(): Promise<void> {
   try {
-    const list = await api.devices();
+    const [list, info] = await Promise.all([api.devices(), api.info().catch(() => null)]);
     const devices = Object.fromEntries(list.map((d) => [d.id, d]));
     const printers = list.filter((d) => d.kind === "printer-escpos");
     const jobs = Object.fromEntries(
@@ -27,6 +27,7 @@ export async function load(): Promise<void> {
     set((s) => ({
       devices,
       jobs,
+      info,
       error: null,
       selected: s.selected && devices[s.selected] ? s.selected : firstDevice(devices),
     }));

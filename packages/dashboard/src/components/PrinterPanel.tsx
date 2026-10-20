@@ -1,6 +1,8 @@
 import type { DeviceSummary, Job } from "@hardless/types";
 import { clearReceipts, resetDevice, setShowUnknown, setWidth } from "../actions.js";
 import { status, stateOf } from "../devices.js";
+import type { ServerInfo } from "../api.js";
+import { HttpPrinterHelp } from "./HttpPrinterHelp.js";
 import { Receipt } from "./Receipt.js";
 
 /**
@@ -12,14 +14,19 @@ export function PrinterPanel({
   jobs,
   width,
   showUnknown,
+  info = null,
+  isDefaultHttp = false,
 }: {
   printer: DeviceSummary;
+  info?: ServerInfo | null;
+  isDefaultHttp?: boolean;
   jobs: Job[];
   width: 58 | 80;
   showUnknown: boolean;
 }) {
   const s = status(printer);
   const connected = stateOf.bool(printer, "connected");
+  const http = stateOf.string(printer, "transport") === "http";
   return (
     <section aria-labelledby="printer-title" className="flex min-h-0 flex-col">
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line pb-4">
@@ -28,7 +35,8 @@ export function PrinterPanel({
             {printer.id}
           </h1>
           <p className="text-sm text-muted">
-            Receipt printer on Web Serial, {stateOf.number(printer, "paperWidth")} mm paper,{" "}
+            {http ? "HTTP receipt printer" : "Receipt printer on Web Serial"},{" "}
+            {stateOf.number(printer, "paperWidth")} mm paper,{" "}
             <span className={s.tone === "ok" ? "text-ok" : connected ? "text-brass-ink" : ""}>
               {s.text.toLowerCase()}
             </span>
@@ -84,9 +92,11 @@ export function PrinterPanel({
         </div>
       </header>
 
+      {http && <HttpPrinterHelp printer={printer} info={info} isDefault={isDefaultHttp} />}
+
       <div className="flex flex-col items-center gap-8 py-8" aria-live="polite">
         {jobs.length === 0 ? (
-          <EmptyTray id={printer.id} />
+          <EmptyTray id={printer.id} http={http} />
         ) : (
           jobs.map((job) => (
             <Receipt
@@ -103,13 +113,15 @@ export function PrinterPanel({
   );
 }
 
-function EmptyTray({ id }: { id: string }) {
+function EmptyTray({ id, http }: { id: string; http: boolean }) {
   return (
     <div className="max-w-sm py-16 text-center text-muted">
       <p className="text-base text-ink">Nothing printed yet.</p>
       <p className="mt-1">
-        Receipts from your app appear here as they print. Connect to {id} from the Web Serial port
-        picker and print.
+        Receipts from your app appear here as they print.{" "}
+        {http
+          ? "Send a print to one of the addresses above."
+          : `Connect to ${id} from the Web Serial port picker and print.`}
       </p>
     </div>
   );

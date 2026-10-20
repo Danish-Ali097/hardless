@@ -23,7 +23,11 @@ test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
   test.skip(!existsSync(binary), "build the server first: cargo build -p hardless-cli");
-  server = spawn(binary, ["start", "--port", String(PORT)], { stdio: "ignore" });
+  server = spawn(binary, ["start", "--port", String(PORT)], {
+    stdio: "ignore",
+    // No HTTPS in tests: it would use port 8443 and the user's certificate folder.
+    env: { ...process.env, HARDLESS_HTTPS: "0" },
+  });
   for (let i = 0; i < 100; i++) {
     try {
       if ((await fetch(`${API}/health`)).ok) return;
@@ -128,7 +132,11 @@ test("FR-15: a dropped bridge is reported as a disconnect", async ({ page }) => 
   await page.waitForFunction(() => window.result !== null);
   expect(await page.evaluate(() => window.result)).toEqual({ ok: true, value: "disconnect" });
   // Restart for any later tests.
-  server = spawn(binary, ["start", "--port", String(PORT)], { stdio: "ignore" });
+  server = spawn(binary, ["start", "--port", String(PORT)], {
+    stdio: "ignore",
+    // No HTTPS in tests: it would use port 8443 and the user's certificate folder.
+    env: { ...process.env, HARDLESS_HTTPS: "0" },
+  });
   await expect
     .poll(async () => {
       try {

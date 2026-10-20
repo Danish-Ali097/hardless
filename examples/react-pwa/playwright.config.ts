@@ -22,6 +22,8 @@ export default defineConfig({
       command: `"${hardless}" start --port ${String(SERVER_PORT)}`,
       url: `http://127.0.0.1:${String(SERVER_PORT)}/api/v1/health`,
       reuseExistingServer: false,
+      // No HTTPS in tests: it would use port 8443 and the user's certificate folder.
+      env: { HARDLESS_HTTPS: "0" },
     },
     {
       command: "pnpm exec vite --port 5173 --strictPort",

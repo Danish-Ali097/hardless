@@ -25,7 +25,14 @@ pub enum Transport {
     /// Web Serial (and, from phase 2, virtual serial ports).
     #[default]
     Serial,
+    /// The HTTP printer endpoints: ePOS-Print-compatible and WebPRNT-compatible (FR-31 to
+    /// FR-35).
+    Http,
 }
+
+/// The control command that ends the job being received, as a printer does at the end of an
+/// HTTP print request: `ControlCommand::Custom { name: "close-job", .. }`.
+pub const CLOSE_JOB: &str = "close-job";
 
 /// What the drawer-open sensor (connector pin 3) reads while the drawer is open.
 ///
@@ -90,7 +97,7 @@ impl Default for PrinterConfig {
 const DEFAULT_GARBLE_RATE: f64 = 0.05;
 
 /// Faults a serial printer supports (PRD section 10).
-const FAULTS: [FaultId; 9] = [
+const SERIAL_FAULTS: [FaultId; 9] = [
     FaultId::PAPER_OUT,
     FaultId::PAPER_NEAR_END,
     FaultId::COVER_OPEN,
@@ -100,6 +107,17 @@ const FAULTS: [FaultId; 9] = [
     FaultId::BAUD_MISMATCH,
     FaultId::GARBLED,
     FaultId::PICKER_CANCEL,
+];
+
+/// Faults an HTTP printer supports (PRD section 10).
+const HTTP_FAULTS: [FaultId; 7] = [
+    FaultId::PAPER_OUT,
+    FaultId::PAPER_NEAR_END,
+    FaultId::COVER_OPEN,
+    FaultId::OFFLINE,
+    FaultId::GARBLED,
+    FaultId::TIMEOUT,
+    FaultId::CORS_BLOCKED,
 ];
 
 /// `garbled`: flips one random bit in a byte with probability `rate`. The generator is
@@ -162,7 +180,9 @@ impl DevicePlugin for PrinterPlugin {
     }
 
     fn faults(&self) -> Vec<FaultId> {
-        FAULTS.to_vec()
+        let mut all = SERIAL_FAULTS.to_vec();
+        all.extend([FaultId::TIMEOUT, FaultId::CORS_BLOCKED]);
+        all
     }
 
     fn create(&self, id: DeviceId, config: Value) -> Result<Box<dyn Device>, ConfigError> {
@@ -211,6 +231,10 @@ pub struct Printer {
     baud_mismatch: bool,
     garbled: Option<Garble>,
     picker_cancel: bool,
+    /// HTTP: `timeout` (applied by the endpoint).
+    http_timeout: bool,
+    /// HTTP: `cors-blocked` (applied by the endpoint).
+    cors_blocked: bool,
 }
 
 impl Printer {
@@ -239,6 +263,8 @@ impl Printer {
             baud_mismatch: false,
             garbled: None,
             picker_cancel: false,
+            http_timeout: false,
+            cors_blocked: false,
         }
     }
 
@@ -421,6 +447,16 @@ impl Device for Printer {
             "baudMismatch": self.baud_mismatch,
             "garbleRate": self.garbled.map(|g| g.rate),
             "pickerCancel": self.picker_cancel,
+            "timeout": self.http_timeout,
+            "corsBlocked": self.cors_blocked,
+            "drawerOpenLevel": self.config.drawer_open_level,
+            // Replies to DLE EOT 1 to 4, for the HTTP endpoints' status reports.
+            "statusBytes": [
+                self.status_byte(StatusKind::Printer),
+                self.status_byte(StatusKind::OfflineCause),
+                self.status_byte(StatusKind::ErrorCause),
+                self.status_byte(StatusKind::PaperSensor),
+            ],
         })
     }
 
@@ -485,7 +521,24 @@ impl Device for Printer {
         events
     }
 
-    fn on_control(&mut self, cmd: ControlCommand, _now: Millis) -> Vec<DeviceEvent> {
+    fn on_control(&mut self, cmd: ControlCommand, now: Millis) -> Vec<DeviceEvent> {
+        if let ControlCommand::Custom { name, .. } = &cmd {
+            if name == CLOSE_JOB {
+                self.last_now = now;
+                let mut events = Vec::new();
+                for node in self.parser.finish() {
+                    self.handle(node, &mut events);
+                }
+                let jobs_before = self.jobs;
+                self.close_job(&mut events);
+                self.job_bytes.clear();
+                self.job_nodes.clear();
+                if self.jobs == jobs_before {
+                    events.push(DeviceEvent::StateChanged);
+                }
+                return events;
+            }
+        }
         vec![warn(format!(
             "{} does not support control command {:?}",
             KIND,
@@ -520,7 +573,10 @@ impl Device for Printer {
     }
 
     fn faults(&self) -> Vec<FaultId> {
-        FAULTS.to_vec()
+        match self.config.transport {
+            Transport::Serial => SERIAL_FAULTS.to_vec(),
+            Transport::Http => HTTP_FAULTS.to_vec(),
+        }
     }
 
     fn set_fault(
@@ -578,6 +634,8 @@ impl Device for Printer {
                 };
             }
             "picker-cancel" => self.picker_cancel = active,
+            "timeout" => self.http_timeout = active,
+            "cors-blocked" => self.cors_blocked = active,
             _ => {}
         }
         events.push(DeviceEvent::StateChanged);

@@ -21,7 +21,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Start the server: dashboard, REST API and the bridge for the browser shim.
+    /// Start the server: dashboard, REST API, the bridge for the browser shim and the HTTP
+    /// printers, on HTTP and HTTPS.
     Start(StartArgs),
 }
 
@@ -37,7 +38,9 @@ struct StartArgs {
     /// HTTP port for the dashboard, API and bridge. Env: HARDLESS_PORT. [default: 8080]
     #[arg(long)]
     port: Option<u16>,
-    /// HTTPS port (served from milestone M2). Env: HARDLESS_HTTPS_PORT. [default: 8443]
+    /// HTTPS port: the same dashboard, API, bridge and HTTP printers over TLS, with a local
+    /// CA to trust once per device. Env: HARDLESS_HTTPS_PORT (HARDLESS_HTTPS=0 turns it off).
+    /// [default: 8443]
     #[arg(long)]
     https_port: Option<u16>,
     /// Require this bearer token for the API and bridge. Env: HARDLESS_TOKEN.

@@ -102,6 +102,7 @@ async fn fr_21_serves_the_dashboard_at_root() {
 async fn nfr_02_token_protects_the_api_and_bridge() {
     let server = server_with(ServerConfig {
         port: 0,
+        https: false,
         token: Some("s3cret".into()),
         ..ServerConfig::default()
     })

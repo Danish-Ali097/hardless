@@ -34,6 +34,19 @@ export function withToken(url: string): string {
   return `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(t)}`;
 }
 
+/** `GET /api/v1/info`: where the server listens, for the HTTPS help (FR-33). */
+export interface ServerInfo {
+  version: string;
+  httpPort: number;
+  https: {
+    enabled: boolean;
+    port?: number;
+    certificate?: string;
+    hosts: string[];
+    error?: string;
+  };
+}
+
 /** An error response from the API: `{ error: { code, message } }`. */
 export class ApiError extends Error {
   constructor(
@@ -73,6 +86,7 @@ const enc = encodeURIComponent;
 
 /** The REST calls the dashboard uses (PRD section 11.1). */
 export const api = {
+  info: () => request<ServerInfo>("GET", "/info"),
   devices: () => request<DeviceSummary[]>("GET", "/devices"),
   device: (id: string) => request<DeviceSummary>("GET", `/devices/${enc(id)}`),
   createDevice: (kind: string, id: string | undefined, config: Record<string, unknown>) =>
