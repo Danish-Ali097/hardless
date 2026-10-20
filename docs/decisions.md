@@ -84,6 +84,21 @@ decision from the maintainer.
   `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
   one.
 
+### CLI (FR-30)
+
+- **The commands are REST clients.** `scan`, `tap`, `fault` and `receipts` call a running
+  server's `/api/v1`, chosen with `--server` / `HARDLESS_SERVER` (default
+  `http://127.0.0.1:8080`) and `--token` / `HARDLESS_TOKEN`. They take the server's `http://`
+  address only; the HTTPS port is for browsers and phones.
+- **No new HTTP client crate:** hyper and hyper-util (already used by the server) provide the
+  client. Their client features add two small crates, `want` and `try-lock` (both MIT).
+- **Beyond the PRD's list,** which these extend without changing: `scan --terminator` and
+  `--delay-ms` (the REST body's fields), `tap --records`, `fault --option KEY=VALUE`, and
+  `receipts --limit`, `--format text|json|html|svg|png`, `--width` and `--out`. PNG needs
+  `--out` so binary data never goes to a terminal.
+- **Output:** one plain line on success; on failure the server's own error message and exit
+  status 1 (2 for usage errors, from clap). An unreachable server says how to fix it.
+
 ### Scenario runner (FR-04)
 
 - **JSON shape:** `{ "name"?, "steps": [ { "type": "scan" | "tap" | "wait" | "setFault" |

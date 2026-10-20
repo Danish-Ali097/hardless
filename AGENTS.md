@@ -85,7 +85,9 @@ pnpm --filter @hardless/example-react-pwa test:acceptance  # M1 acceptance, exam
 
 ```sh
 pnpm --filter @hardless/dashboard build   # embed the dashboard (rebuild the server after)
-cargo run -p hardless-cli -- start        # http://localhost:8080
+cargo run -p hardless-cli -- start        # http://localhost:8080 and https://localhost:8443
+cargo run -p hardless-cli -- scan scanner-1 4006381333931     # drive devices from the CLI
+cargo run -p hardless-cli -- receipts printer-1 --last
 node scripts/print-sample.mjs             # print fixtures/escpos/33-full-receipt.bin to printer-1
 pnpm --filter @hardless/example-react-pwa dev   # example POS app on http://localhost:5173
 ```
