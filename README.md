@@ -73,7 +73,8 @@ cargo run -p hardless-cli -- start
 
 The dashboard opens at <http://localhost:8080> (and <https://localhost:8443>). Without a
 config file you get `printer-1`, an ESC/POS receipt printer on Web Serial; `drawer-1`, a cash
-drawer plugged into it; `local_printer`, an HTTP printer; and `scanner-1`, a barcode scanner.
+drawer plugged into it; `local_printer`, an HTTP printer; `scanner-1`, a barcode scanner; and
+`nfc-1`, an NFC reader.
 
 ### 4. Print something
 

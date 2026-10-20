@@ -206,6 +206,7 @@ pub enum DeviceEvent {
     Log(LogEntry),
     Peripheral(PeripheralSignal), // delivered by the registry to attached devices
     Wedge(WedgeScan),         // keys a keyboard-wedge scanner types: { code, delayMs, terminator }
+    Nfc(NfcEvent),            // card read, read error, or the answer to an NFC write from the app
 }
 
 pub enum PeripheralSignal {
@@ -400,6 +401,8 @@ JSON messages, one per frame, with binary payloads base64-encoded. Every message
 | client → server | `signals` | `{ deviceId, signals: { dataTerminalReady?, requestToSend?, break? } }`; recorded in the event log, server replies `ack` |
 | server → client | `data`                      | `{ deviceId, data }` (device → host bytes)                      |
 | server → client | `connect` / `disconnect`    | `{ deviceId }`                                                  |
+| client → server | `nfc-write` | `{ deviceId, records, overwrite? }`; server replies `ack` once written, or `error` (`invalid_state`: no card on the reader; `not_allowed`: read-only card, or data present and `overwrite: false`) |
+| client → server | `nfc-make-read-only` | `{ deviceId }`; replies as `nfc-write` |
 | server → client | `nfc-reading` / `nfc-error` | `{ deviceId, serialNumber, records }`                           |
 | server → client | `wedge-scan`                | `{ code, delayMs, terminator }`                                 |
 | both            | `error`                     | `{ code, message, replyTo? }`                                   |

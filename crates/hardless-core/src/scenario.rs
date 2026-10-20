@@ -11,6 +11,7 @@ use serde_json::Value;
 use crate::device::{ControlCommand, DeviceEvent, Terminator};
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::DeviceId;
+use crate::nfc::NdefRecord;
 use crate::registry::Registry;
 use crate::time::Millis;
 
@@ -73,9 +74,10 @@ pub enum Step {
         device: DeviceId,
         /// Card UID as hex.
         uid: String,
-        /// NDEF records.
-        #[serde(default)]
-        records: Vec<Value>,
+        /// NDEF records; without them the reader uses what it remembers of the card.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        records: Option<Vec<NdefRecord>>,
     },
     /// Wait.
     Wait {
@@ -361,6 +363,7 @@ fn for_transport(event: &DeviceEvent) -> bool {
         event,
         DeviceEvent::ToHost(_)
             | DeviceEvent::Wedge(_)
+            | DeviceEvent::Nfc(_)
             | DeviceEvent::Connected
             | DeviceEvent::Disconnected
     )

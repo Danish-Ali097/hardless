@@ -4,6 +4,59 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## M3 — WebUSB, Web NFC, agent interface and delivery
+
+### Maintainer decisions taken before starting
+
+- **Two new bridge messages for NFC writes** (a PRD change, approved): `nfc-write`
+  `{ deviceId, records, overwrite? }` and `nfc-make-read-only` `{ deviceId }`, plus the error
+  code `not_allowed` (the shim's `NotAllowedError`). The PRD's message table only covered card
+  reads, but the server holds the virtual card, so the page must tell it about writes. They
+  are additions, so the protocol stays at `v: 1`. PRD section 11.2 is updated.
+- **New device event `DeviceEvent::Nfc(NfcEvent)`** (a PRD change to FR-01, approved, like
+  `Wedge` in M2). `NfcEvent` has the two cases the maintainer approved, `Reading` and
+  `ReadError` (the bridge's `nfc-reading` and `nfc-error`), and three that answer the app's
+  writes so the bridge can reply: `Written`, `MadeReadOnly` and `Rejected` (with a reason:
+  `no-card`, `read-only` or `not-empty`).
+- **Docs site:** a separate private repository, published through the maintainer's Vercel or
+  Netlify account (GitHub Pages needs a paid plan for private repositories). Built last in M3.
+- **Pushing:** as in M2, each piece is pushed to `main` after the local checks pass, then CI is
+  watched.
+
+### NFC reader (FR-27, PRD section 8.3)
+
+- **Device kind `nfc-reader`** (the PRD names the device but not its kind), feature `nfc` of
+  `hardless-devices`. The server creates `nfc-1` by default, next to the other default devices.
+- **A tapped card stays on the reader for `presenceMs` (default 2000 ms)**, like a card held
+  against a phone for a second or two. Writes and locks go to the card on the reader; without
+  one they are refused with `no-card` and the shim waits for the next tap, as Web NFC's
+  `write()` waits for the next tag.
+- **The reader remembers cards** (up to 256), so a card the app wrote to reads back what was
+  written the next time it is tapped. A tap without `records` reads the remembered card (or an
+  empty one); a tap with `records` is a card holding exactly those records, writable again.
+  Cards can also be listed in the config (`cards: [{ uid, records, readOnly }]`); reset
+  restores them. `ControlCommand::Tap.records` is now optional (`Option<Vec<NdefRecord>>`) to
+  tell "no records given" from "an empty card"; the JSON is unchanged.
+- **Records use Web NFC's `NDEFRecordInit` field names** (`recordType`, `mediaType`, `id`,
+  `encoding`, `lang`), with the payload as text in `data` or as base64 in `dataBase64`, so
+  people can type text records in the dashboard and CLI while binary payloads still work.
+  Records are checked like Web NFC checks them (e.g. a `url` record needs data, `empty` has
+  none). Nested messages (`smart-poster`, local types) are not supported in phase 1. Limits
+  against runaway input: 64 records and 32 KiB per message.
+- **UIDs** are accepted as 1 to 10 hex bytes, with or without `:`/`-` separators (ISO 14443
+  cards have 4, 7 or 10 bytes, ISO 15693 tags 8), and reported as Web NFC's `serialNumber`:
+  lowercase and colon-separated. `POST /devices/:id/tap` answers 400 `invalid_uid` or
+  `invalid_records` for bad input.
+- **`read-error` is one-shot**, as PRD section 10 says ("next tap"): the registry turns it off
+  after the failed read and logs that in the event log. `permission-denied` stays on until
+  turned off; `picker-cancel` on an NFC reader is a dismissed permission prompt, so it fails
+  only the next `scan()`, like the serial picker. Both are applied by the shim.
+- **Card reads go to every page whose shim lists `nfc`**, as a phone's reader serves whichever
+  page is scanning; the shim filters by its own `scan()` state.
+- **Event log:** reads and read errors are `nfc` records with direction device → host; the
+  app's writes are `control` records (`nfc-write`, `nfc-make-read-only`) with direction
+  host → device, followed by an `nfc` record with the outcome.
+
 ## M2 — Cross-browser paths
 
 ### Licence notices (NFR-14)

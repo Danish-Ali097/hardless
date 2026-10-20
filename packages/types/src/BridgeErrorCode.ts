@@ -2,4 +2,4 @@
 /**
  * Error codes in bridge `error` messages. The shim maps them to `DOMException` names.
  */
-export type BridgeErrorCode = "not_found" | "network" | "invalid_state" | "bad_message" | "unauthorized" | "internal";
+export type BridgeErrorCode = "not_found" | "network" | "invalid_state" | "not_allowed" | "bad_message" | "unauthorized" | "internal";

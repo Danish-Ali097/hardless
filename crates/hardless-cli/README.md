@@ -29,5 +29,8 @@ server with `--server` or `HARDLESS_SERVER`, and its token with `--token` or `HA
 They print one line on success, and on failure print the server's error and exit with status 1.
 `--format html`, `svg` and `png` render the latest receipt; PNG needs `--out`.
 
-NFC readers arrive in milestone M3; until then `tap` reaches the device but no device accepts
-it. `hardless mcp` also arrives in M3.
+`tap` puts a card on an NFC reader (`nfc-1` by default) and reads it: pages using the
+`NDEFReader` shim get a `reading` event. Without `--records` the reader uses what it
+remembers of the card, including anything the app wrote to it. Records use Web NFC's field
+names, e.g. `'[{"recordType":"text","data":"Member 1234","lang":"en"}]'`. `hardless mcp`
+arrives later in M3.

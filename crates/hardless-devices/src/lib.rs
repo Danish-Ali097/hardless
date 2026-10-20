@@ -4,6 +4,8 @@
 
 #[cfg(feature = "drawer")]
 pub mod drawer;
+#[cfg(feature = "nfc")]
+pub mod nfc;
 #[cfg(feature = "printer")]
 pub mod printer;
 #[cfg(feature = "scanner")]
@@ -19,6 +21,7 @@ use hardless_core::{Registry, RegistryError};
 /// assert!(registry.plugin("printer-escpos").is_some());
 /// assert!(registry.plugin("cash-drawer").is_some());
 /// assert!(registry.plugin("scanner-wedge").is_some());
+/// assert!(registry.plugin("nfc-reader").is_some());
 /// ```
 pub fn register_all(registry: &mut Registry) -> Result<(), RegistryError> {
     #[cfg(feature = "printer")]
@@ -27,6 +30,8 @@ pub fn register_all(registry: &mut Registry) -> Result<(), RegistryError> {
     registry.register(drawer::DrawerPlugin)?;
     #[cfg(feature = "scanner")]
     registry.register(scanner::ScannerPlugin)?;
+    #[cfg(feature = "nfc")]
+    registry.register(nfc::NfcPlugin)?;
     let _ = &registry;
     Ok(())
 }

@@ -2,6 +2,7 @@
 import type { BridgeErrorCode } from "./BridgeErrorCode.js";
 import type { DeviceId } from "./DeviceId.js";
 import type { DeviceSummary } from "./DeviceSummary.js";
+import type { NdefRecord } from "./NdefRecord.js";
 import type { Terminator } from "./Terminator.js";
 
 /**
@@ -51,7 +52,31 @@ delayMs: number,
 /**
  * The key pressed after the characters.
  */
-terminator: Terminator, } | { "type": "error", 
+terminator: Terminator, } | { "type": "nfc-reading", 
+/**
+ * The NFC reader.
+ */
+deviceId: DeviceId, 
+/**
+ * The card UID, lowercase colon-separated hex (see [`serial_number`]).
+ */
+serialNumber: string, 
+/**
+ * The card's NDEF records.
+ */
+records: Array<NdefRecord>, } | { "type": "nfc-error", 
+/**
+ * The NFC reader.
+ */
+deviceId: DeviceId, 
+/**
+ * The card UID, lowercase colon-separated hex (see [`serial_number`]).
+ */
+serialNumber: string, 
+/**
+ * The card's NDEF records.
+ */
+records: Array<NdefRecord>, } | { "type": "error", 
 /**
  * A machine-readable code, see [`BridgeErrorCode`].
  */

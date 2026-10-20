@@ -180,3 +180,46 @@ fn fr_26_scanner_scans_reach_the_shim_like_on_the_server() {
     assert_eq!(engine.next_deadline(), Some(154.0));
     assert_eq!(parse(&engine.tick(154.0).unwrap()), json!([expected]));
 }
+
+#[test]
+fn fr_27_nfc_taps_and_writes_reach_the_shim_like_on_the_server() {
+    let mut engine =
+        Engine::new(&json!([{ "kind": "nfc-reader", "id": "nfc-1" }]).to_string()).unwrap();
+    let write = r#"{ "type": "nfc-write", "records": [{ "recordType": "text", "data": "new" }] }"#;
+    assert_eq!(
+        parse(&engine.control(0.0, "nfc-1", write).unwrap()),
+        json!([{ "type": "nfc-rejected", "deviceId": "nfc-1", "reason": "no-card", "message": "no card is on the reader" }])
+    );
+    let tap = r#"{ "type": "tap", "uid": "04a2b3c4", "records": [{ "recordType": "text", "data": "old" }] }"#;
+    assert_eq!(
+        parse(&engine.control(10.0, "nfc-1", tap).unwrap()),
+        json!([{ "type": "nfc-reading", "deviceId": "nfc-1", "serialNumber": "04:a2:b3:c4",
+                 "records": [{ "recordType": "text", "data": "old" }] }])
+    );
+    assert_eq!(
+        parse(&engine.control(20.0, "nfc-1", write).unwrap()),
+        json!([{ "type": "nfc-done", "deviceId": "nfc-1" }])
+    );
+    // The card leaves the reader after presenceMs (2000 ms by default).
+    assert_eq!(engine.next_deadline(), Some(2010.0));
+
+    engine
+        .set_fault(3000.0, "nfc-1", "read-error", true, "")
+        .unwrap();
+    assert_eq!(
+        parse(
+            &engine
+                .control(3000.0, "nfc-1", r#"{ "type": "tap", "uid": "04a2b3c4" }"#)
+                .unwrap()
+        ),
+        json!([{ "type": "nfc-error", "deviceId": "nfc-1", "serialNumber": "04:a2:b3:c4", "records": [] }])
+    );
+    assert_eq!(
+        parse(
+            &engine
+                .control(3100.0, "nfc-1", r#"{ "type": "tap", "uid": "04a2b3c4" }"#)
+                .unwrap()
+        )[0]["records"][0]["data"],
+        "new"
+    );
+}

@@ -7,7 +7,7 @@
 
 use hardless_core::{
     base64, ControlCommand, DeviceEvent, DeviceId, FakeClock, FaultId, FaultOptions, Millis,
-    Registry, WedgeScan,
+    NfcEvent, NfcReading, NfcRejection, Registry, WedgeScan,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -51,6 +51,30 @@ enum EventOut {
         #[serde(flatten)]
         scan: WedgeScan,
     },
+    /// A card read, like the bridge `nfc-reading` message.
+    #[serde(rename_all = "camelCase")]
+    NfcReading {
+        device_id: String,
+        #[serde(flatten)]
+        reading: NfcReading,
+    },
+    /// A failed card read, like the bridge `nfc-error` message.
+    #[serde(rename_all = "camelCase")]
+    NfcError {
+        device_id: String,
+        #[serde(flatten)]
+        reading: NfcReading,
+    },
+    /// An `nfc-write` or `nfc-make-read-only` command succeeded (the bridge's `ack`).
+    #[serde(rename_all = "camelCase")]
+    NfcDone { device_id: String },
+    /// An `nfc-write` or `nfc-make-read-only` command was refused (the bridge's `error`).
+    #[serde(rename_all = "camelCase")]
+    NfcRejected {
+        device_id: String,
+        reason: NfcRejection,
+        message: String,
+    },
 }
 
 fn out(device_id: &DeviceId, event: &DeviceEvent) -> Option<EventOut> {
@@ -65,6 +89,25 @@ fn out(device_id: &DeviceId, event: &DeviceEvent) -> Option<EventOut> {
         DeviceEvent::Wedge(scan) => Some(EventOut::Wedge {
             device_id,
             scan: scan.clone(),
+        }),
+        DeviceEvent::Nfc(NfcEvent::Reading(reading)) => Some(EventOut::NfcReading {
+            device_id,
+            reading: reading.clone(),
+        }),
+        DeviceEvent::Nfc(NfcEvent::ReadError { serial_number }) => Some(EventOut::NfcError {
+            device_id,
+            reading: NfcReading {
+                serial_number: serial_number.clone(),
+                records: Vec::new(),
+            },
+        }),
+        DeviceEvent::Nfc(NfcEvent::Written { .. } | NfcEvent::MadeReadOnly { .. }) => {
+            Some(EventOut::NfcDone { device_id })
+        }
+        DeviceEvent::Nfc(NfcEvent::Rejected { reason, message }) => Some(EventOut::NfcRejected {
+            device_id,
+            reason: *reason,
+            message: message.clone(),
         }),
         _ => None,
     }

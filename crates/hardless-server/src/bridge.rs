@@ -9,7 +9,9 @@ use axum::extract::ws::{Message, WebSocket};
 use hardless_core::bridge::{
     BridgeErrorCode, ClientFrame, ClientMessage, ServerFrame, ServerMessage, BRIDGE_VERSION,
 };
-use hardless_core::{DeviceEvent, DeviceId, FaultId};
+use hardless_core::{
+    ControlCommand, DeviceEvent, DeviceId, FaultId, LogLevel, NfcEvent, NfcReading, NfcRejection,
+};
 use serde_json::Value;
 use tokio::sync::broadcast::error::RecvError;
 
@@ -24,6 +26,8 @@ struct Session {
     open: HashSet<DeviceId>,
     /// Whether the shim's `hello` listed `wedge`: only then does it get scans.
     wedge: bool,
+    /// Whether the shim's `hello` listed `nfc`: only then does it get card reads.
+    nfc: bool,
 }
 
 /// Runs one bridge connection until it closes.
@@ -34,6 +38,7 @@ pub async fn run(socket: WebSocket, engine: Arc<Engine>) {
         engine: engine.clone(),
         open: HashSet::new(),
         wedge: false,
+        nfc: false,
     };
     let mut events = engine.subscribe();
     let (mut tx, mut rx) = futures_util::StreamExt::split(socket);
@@ -117,6 +122,7 @@ impl Session {
         match frame.message {
             ClientMessage::Hello { apis, .. } => {
                 self.wedge = apis.iter().any(|api| api == "wedge");
+                self.nfc = apis.iter().any(|api| api == "nfc");
                 let mut out = vec![devices(&self.engine)];
                 out.extend(ack(reply_to));
                 out
@@ -150,7 +156,63 @@ impl Session {
             ClientMessage::Write { device_id, data } => {
                 self.write(device_id, &data, reply_to).await
             }
+            ClientMessage::NfcWrite {
+                device_id,
+                records,
+                overwrite,
+            } => self.nfc_command(
+                &device_id,
+                ControlCommand::NfcWrite {
+                    records,
+                    overwrite: overwrite.unwrap_or(true),
+                },
+                reply_to,
+            ),
+            ClientMessage::NfcMakeReadOnly { device_id } => {
+                self.nfc_command(&device_id, ControlCommand::NfcMakeReadOnly, reply_to)
+            }
         }
+    }
+
+    /// `nfc-write` and `nfc-make-read-only`: acknowledged once the card has changed.
+    fn nfc_command(
+        &mut self,
+        device_id: &DeviceId,
+        command: ControlCommand,
+        reply_to: Option<String>,
+    ) -> Vec<ServerMessage> {
+        let events = match self
+            .engine
+            .drive_from(device_id, Some(self.id), |r| r.control(device_id, command))
+        {
+            Ok(events) => events,
+            Err(e) => return vec![error(BridgeErrorCode::NotFound, e.to_string(), reply_to)],
+        };
+        for event in events {
+            match event {
+                DeviceEvent::Nfc(NfcEvent::Written { .. } | NfcEvent::MadeReadOnly { .. }) => {
+                    return ack(reply_to)
+                }
+                DeviceEvent::Nfc(NfcEvent::Rejected { reason, message }) => {
+                    let code = match reason {
+                        NfcRejection::NoCard => BridgeErrorCode::InvalidState,
+                        NfcRejection::ReadOnly | NfcRejection::NotEmpty => {
+                            BridgeErrorCode::NotAllowed
+                        }
+                    };
+                    return vec![error(code, message, reply_to)];
+                }
+                // Invalid records, or a device that is not an NFC reader.
+                DeviceEvent::Log(entry) if entry.level >= LogLevel::Warn => {
+                    return vec![bad_message(entry.message, reply_to)]
+                }
+                _ => {}
+            }
+        }
+        vec![bad_message(
+            format!("device `{device_id}` did not answer the NFC request"),
+            reply_to,
+        )]
     }
 
     fn open(&mut self, device_id: DeviceId, reply_to: Option<String>) -> Vec<ServerMessage> {
@@ -264,6 +326,23 @@ impl Session {
                     device_id: device_id.clone(),
                     scan: scan.clone(),
                 }],
+                // Card reads reach every page that shims NFC, as a phone's reader serves
+                // whichever page is scanning.
+                DeviceEvent::Nfc(NfcEvent::Reading(reading)) if self.nfc => {
+                    vec![ServerMessage::NfcReading {
+                        device_id: device_id.clone(),
+                        reading: reading.clone(),
+                    }]
+                }
+                DeviceEvent::Nfc(NfcEvent::ReadError { serial_number }) if self.nfc => {
+                    vec![ServerMessage::NfcError {
+                        device_id: device_id.clone(),
+                        reading: NfcReading {
+                            serial_number: serial_number.clone(),
+                            records: Vec::new(),
+                        },
+                    }]
+                }
                 DeviceEvent::Connected => vec![ServerMessage::Connect {
                     device_id: device_id.clone(),
                 }],

@@ -124,6 +124,7 @@ impl Engine {
                 event,
                 DeviceEvent::ToHost(_)
                     | DeviceEvent::Wedge(_)
+                    | DeviceEvent::Nfc(_)
                     | DeviceEvent::Connected
                     | DeviceEvent::Disconnected
             ) {

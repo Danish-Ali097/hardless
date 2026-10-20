@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::device::WedgeScan;
 use crate::ids::DeviceId;
+use crate::nfc::{NdefRecord, NfcReading};
 use crate::registry::DeviceSummary;
 use crate::Bytes;
 
@@ -86,6 +87,26 @@ pub enum ClientMessage {
         #[serde(with = "crate::base64::serde_bytes")]
         #[cfg_attr(feature = "ts", ts(type = "string"))]
         data: Bytes,
+    },
+    /// `NDEFReader.write()`: write records to the card on an NFC reader. The server replies
+    /// `ack` once written, or `error` (`invalid_state` if no card is on the reader, so the
+    /// shim waits for the next tap; `not_allowed` if the card refuses).
+    #[serde(rename_all = "camelCase")]
+    NfcWrite {
+        /// The NFC reader.
+        device_id: DeviceId,
+        /// The records to write.
+        records: Vec<NdefRecord>,
+        /// Whether existing data may be replaced (default `true`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        overwrite: Option<bool>,
+    },
+    /// `NDEFReader.makeReadOnly()`: lock the card on an NFC reader; replies as `nfc-write`.
+    #[serde(rename_all = "camelCase")]
+    NfcMakeReadOnly {
+        /// The NFC reader.
+        device_id: DeviceId,
     },
 }
 
@@ -187,6 +208,28 @@ pub enum ServerMessage {
         #[cfg_attr(feature = "ts", ts(flatten))]
         scan: WedgeScan,
     },
+    /// An NFC reader read a card: the shim fires `reading` on scanning `NDEFReader`s. Sent
+    /// only to shims whose `hello` listed `nfc`.
+    #[serde(rename_all = "camelCase")]
+    NfcReading {
+        /// The NFC reader.
+        device_id: DeviceId,
+        /// `serialNumber` and `records`.
+        #[serde(flatten)]
+        #[cfg_attr(feature = "ts", ts(flatten))]
+        reading: NfcReading,
+    },
+    /// An NFC reader failed to read a card: the shim fires `readingerror`. `records` is
+    /// empty.
+    #[serde(rename_all = "camelCase")]
+    NfcError {
+        /// The NFC reader.
+        device_id: DeviceId,
+        /// `serialNumber` and (empty) `records`.
+        #[serde(flatten)]
+        #[cfg_attr(feature = "ts", ts(flatten))]
+        reading: NfcReading,
+    },
     /// Something failed; `replyTo` names the client message, if any.
     #[serde(rename_all = "camelCase")]
     Error {
@@ -212,6 +255,8 @@ pub enum BridgeErrorCode {
     Network,
     /// The port is not open, or already open (`InvalidStateError`).
     InvalidState,
+    /// The device refused, e.g. a read-only NFC card (`NotAllowedError`).
+    NotAllowed,
     /// The message could not be understood.
     BadMessage,
     /// The token is missing or wrong.

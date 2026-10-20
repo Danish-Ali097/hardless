@@ -8,8 +8,9 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use hardless_core::{
-    ControlCommand, DeviceId, DeviceSummary, EventRecord, FaultId, FaultOptions, Job, JobId,
-    Progress, Scenario, ScenarioReport, ScenarioRun, Step, Terminator, MAX_SCENARIO_STEPS,
+    serial_number, validate_ndef_message, ControlCommand, DeviceId, DeviceSummary, EventRecord,
+    FaultId, FaultOptions, Job, JobId, NdefRecord, Progress, Scenario, ScenarioReport, ScenarioRun,
+    Step, Terminator, MAX_SCENARIO_STEPS,
 };
 use hardless_escpos::Node;
 use hardless_render::{render_html_document, render_png, render_svg, PaperWidth, RenderOptions};
@@ -157,10 +158,12 @@ async fn scan(
 struct TapBody {
     uid: String,
     #[serde(default)]
-    records: Vec<Value>,
+    records: Option<Vec<NdefRecord>>,
 }
 
-/// Taps an NFC card on a reader (NFC devices arrive in M3; other devices refuse it).
+/// Taps an NFC card on a reader (FR-27): pages with the NFC shim fire `reading`. Without
+/// `records` the reader uses what it remembers of the card. Devices other than NFC readers
+/// refuse it in their event log.
 async fn tap(
     State(state): State<AppState>,
     Path(id): Path<String>,
@@ -168,6 +171,10 @@ async fn tap(
 ) -> Result<Json<DeviceSummary>, ApiError> {
     let id = device_id(&id)?;
     let Json(body) = body.map_err(|e| ApiError::bad_request("bad_request", e.body_text()))?;
+    serial_number(&body.uid).map_err(|e| ApiError::bad_request("invalid_uid", e))?;
+    if let Some(records) = &body.records {
+        validate_ndef_message(records).map_err(|e| ApiError::bad_request("invalid_records", e))?;
+    }
     let command = ControlCommand::Tap {
         uid: body.uid,
         records: body.records,

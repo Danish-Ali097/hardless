@@ -5,6 +5,7 @@ import type { FaultId } from "./FaultId.js";
 import type { JobId } from "./JobId.js";
 import type { LogLevel } from "./LogLevel.js";
 import type { Millis } from "./Millis.js";
+import type { NfcEvent } from "./NfcEvent.js";
 import type { PeripheralSignal } from "./PeripheralSignal.js";
 import type { SerialSignals } from "./SerialSignals.js";
 import type { WedgeScan } from "./WedgeScan.js";
@@ -92,4 +93,8 @@ signal: PeripheralSignal, } | { "type": "wedge",
 /**
  * What was typed.
  */
-scan: WedgeScan, });
+scan: WedgeScan, } | { "type": "nfc", 
+/**
+ * What happened.
+ */
+event: NfcEvent, });

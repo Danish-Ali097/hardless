@@ -9,6 +9,7 @@ use crate::bridge::SerialSignals;
 use crate::device::{ControlCommand, LogLevel, PeripheralSignal, WedgeScan};
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::{DeviceId, JobId};
+use crate::nfc::NfcEvent;
 use crate::time::Millis;
 
 /// Default number of records kept per device.
@@ -111,6 +112,11 @@ pub enum EventKind {
         /// What was typed.
         scan: WedgeScan,
     },
+    /// An NFC reader read a card, failed to, or answered a write from the app.
+    Nfc {
+        /// What happened.
+        event: NfcEvent,
+    },
 }
 
 impl EventKind {
@@ -131,6 +137,7 @@ impl EventKind {
             EventKind::Signals { .. } => "signals",
             EventKind::Peripheral { .. } => "peripheral",
             EventKind::Wedge { .. } => "wedge",
+            EventKind::Nfc { .. } => "nfc",
         }
     }
 }
@@ -156,12 +163,19 @@ pub struct EventRecord {
 }
 
 impl EventRecord {
-    /// The direction of a byte or keystroke record, `None` for everything else (used by the
-    /// log filter).
+    /// The direction of a byte, keystroke or NFC record, `None` for everything else (used by
+    /// the log filter).
     pub fn direction(&self) -> Option<Direction> {
-        match self.kind {
-            EventKind::BytesIn { .. } => Some(Direction::HostToDevice),
-            EventKind::BytesOut { .. } | EventKind::Wedge { .. } => Some(Direction::DeviceToHost),
+        match &self.kind {
+            EventKind::BytesIn { .. }
+            | EventKind::Control {
+                command: ControlCommand::NfcWrite { .. } | ControlCommand::NfcMakeReadOnly,
+            } => Some(Direction::HostToDevice),
+            EventKind::BytesOut { .. }
+            | EventKind::Wedge { .. }
+            | EventKind::Nfc {
+                event: NfcEvent::Reading(_) | NfcEvent::ReadError { .. },
+            } => Some(Direction::DeviceToHost),
             _ => None,
         }
     }

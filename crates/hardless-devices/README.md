@@ -9,6 +9,7 @@ and the current time, and returns what it did. Each device is a Cargo feature.
 | `printer-escpos` | `printer` | ESC/POS receipt printer: parses jobs, answers `DLE EOT` status requests, kicks an attached drawer |
 | `cash-drawer`    | `drawer`  | Cash drawer attached to a printer's drawer-kick connector (FR-36 to FR-39)                        |
 | `scanner-wedge`  | `scanner` | Keyboard-wedge barcode scanner: types each scan into the page through the shim (FR-26)            |
+| `nfc-reader`     | `nfc`     | NFC reader with virtual cards: taps are read by `NDEFReader`, and the app can write cards (FR-27) |
 
 ## Usage
 
@@ -105,6 +106,36 @@ Config (all optional):
 A scan can override `terminator` and `delayMs`. Empty codes and codes over 4,096 characters are
 ignored with a warning. Faults: `double-scan` repeats each scan `gapMs` (default 30) after its
 last key, and `partial-scan` drops the terminator.
+
+## NFC reader (`nfc-reader`)
+
+A phone's NFC reader sees a card while it is held against it. A tap (`ControlCommand::Tap`
+`{ uid, records? }`, from the dashboard, `POST /devices/:id/tap`, the CLI or a scenario) puts a
+card on the reader for `presenceMs` and reads it: the reader emits
+`DeviceEvent::Nfc(NfcEvent::Reading { serialNumber, records })`, which the shim fires as
+`NDEFReader`'s `reading` event. While the card is on the reader the app can write to it
+(`ControlCommand::NfcWrite`, from `NDEFReader.write()`) or lock it (`NfcMakeReadOnly`, from
+`makeReadOnly()`). Writes without a card are refused with `NfcRejection::NoCard` (the shim
+waits for the next tap, as the spec says); writes to a read-only card, or to a card with data
+when `overwrite` is false, are refused with `ReadOnly` / `NotEmpty` (`NotAllowedError`).
+
+The reader remembers every card it has seen (up to 256), so a tap without `records` reads the
+card as it was left, including what the app wrote. A tap with `records` is a card holding
+exactly those records.
+
+Records use Web NFC's `NDEFRecordInit` names: `recordType` (`empty`, `text`, `url`,
+`absolute-url`, `mime`, `unknown` or an external type such as `example.com:loyalty`),
+`mediaType`, `id`, `encoding`, `lang`, and the payload as text in `data` or as base64 in
+`dataBase64`. UIDs are hex (`04a2b3c4` or `04:a2:b3:c4`); readings carry them as Web NFC's
+`serialNumber` (`04:a2:b3:c4`).
+
+Config (all optional): `presenceMs` (how long a tapped card stays on the reader, default 2000) and `cards` (`[{ uid, records, readOnly }]`, known from the start and restored on
+reset).
+
+Faults: `read-error` makes the next tap fire `readingerror` instead of `reading` and then
+turns itself off; `permission-denied` and `picker-cancel` are applied by the shim
+(`scan()` rejects with `NotAllowedError`; `picker-cancel` only once, like a dismissed
+permission prompt).
 
 ## License
 

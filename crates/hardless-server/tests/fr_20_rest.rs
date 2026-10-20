@@ -16,7 +16,7 @@ async fn fr_20_health() {
 }
 
 #[tokio::test]
-async fn fr_20_default_devices_are_two_printers_a_drawer_and_a_scanner() {
+async fn fr_20_default_devices_are_two_printers_a_drawer_a_scanner_and_an_nfc_reader() {
     let server = server().await;
     let (status, body) = get_json(&server, "/api/v1/devices").await;
     assert_eq!(status, 200);
@@ -26,7 +26,16 @@ async fn fr_20_default_devices_are_two_printers_a_drawer_and_a_scanner() {
         .iter()
         .map(|d| d["id"].as_str().unwrap())
         .collect();
-    assert_eq!(ids, ["drawer-1", "local_printer", "printer-1", "scanner-1"]);
+    assert_eq!(
+        ids,
+        [
+            "drawer-1",
+            "local_printer",
+            "nfc-1",
+            "printer-1",
+            "scanner-1"
+        ]
+    );
     assert_eq!(body[0]["attachedTo"], "printer-1");
     assert!(body[1]["supportedFaults"]
         .as_array()
@@ -405,4 +414,40 @@ async fn fr_26_scan_endpoint_scans_and_validates_its_body() {
     )
     .await;
     assert_eq!(status, 404);
+}
+
+#[tokio::test]
+async fn fr_20_tap_rejects_a_bad_uid_or_bad_records() {
+    let server = server().await;
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "nope" }),
+    )
+    .await;
+    assert_eq!(
+        (status, body["error"]["code"].as_str()),
+        (400, Some("invalid_uid"))
+    );
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "04a2b3c4", "records": [{ "recordType": "url" }] }),
+    )
+    .await;
+    assert_eq!(
+        (status, body["error"]["code"].as_str()),
+        (400, Some("invalid_records"))
+    );
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "04a2b3c4", "records": [{ "recordType": "text", "data": "ok" }] }),
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(body["state"]["taps"], 1);
 }

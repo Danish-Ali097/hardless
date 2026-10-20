@@ -1,6 +1,6 @@
 [package]
 name = "hardless-devices"
-description = "Emulated POS devices for Hardless: ESC/POS receipt printer and cash drawer (sans-IO)."
+description = "Emulated POS devices for Hardless: receipt printer, cash drawer, barcode scanner and NFC reader (sans-IO)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -13,13 +13,15 @@ keywords = ["pos", "emulator", "escpos", "cash-drawer", "testing"]
 categories = ["emulators", "development-tools::testing"]
 
 [features]
-default = ["printer", "drawer", "scanner"]
+default = ["printer", "drawer", "scanner", "nfc"]
 # ESC/POS receipt printer (`printer-escpos`).
 printer = ["dep:hardless-escpos", "dep:hardless-render"]
 # Cash drawer attached to a printer (`cash-drawer`).
 drawer = []
 # Keyboard-wedge barcode scanner (`scanner-wedge`).
 scanner = []
+# NFC reader with virtual cards (`nfc-reader`).
+nfc = []
 
 [dependencies]
 hardless-core.workspace = true

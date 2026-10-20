@@ -100,8 +100,9 @@ impl Default for ServerConfig {
 }
 
 /// `printer-1` (ESC/POS over Web Serial) with `drawer-1` attached on pin 2, `scanner-1`
-/// (keyboard wedge) and `local_printer` (HTTP, the ePOS-Print default device ID): enough to
-/// print a first receipt by either route and scan without writing any config.
+/// (keyboard wedge), `local_printer` (HTTP, the ePOS-Print default device ID) and `nfc-1`
+/// (NFC reader): enough to print a first receipt by either route, scan and tap without
+/// writing any config.
 pub fn default_devices() -> Vec<DeviceSpec> {
     let id = |s: &str| s.parse::<DeviceId>().ok();
     vec![
@@ -124,6 +125,11 @@ pub fn default_devices() -> Vec<DeviceSpec> {
             kind: "printer-escpos".into(),
             id: id("local_printer"),
             config: json!({ "transport": "http" }),
+        },
+        DeviceSpec {
+            kind: "nfc-reader".into(),
+            id: id("nfc-1"),
+            config: json!({}),
         },
     ]
 }

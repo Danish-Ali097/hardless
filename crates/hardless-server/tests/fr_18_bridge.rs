@@ -16,7 +16,7 @@ async fn fr_18_hello_returns_the_device_list() {
     let devices = recv(&mut ws).await;
     assert_eq!(devices["v"], 1);
     assert_eq!(devices["type"], "devices");
-    assert_eq!(devices["devices"].as_array().unwrap().len(), 4);
+    assert_eq!(devices["devices"].as_array().unwrap().len(), 5);
     assert_eq!(
         recv(&mut ws).await,
         json!({ "v": 1, "type": "ack", "replyTo": "1" })
@@ -388,4 +388,132 @@ async fn fault_double_scan_repeat_arrives_over_the_bridge_on_time() {
         start.elapsed() >= Duration::from_millis(100),
         "the repeat waits for the gap"
     );
+}
+
+async fn nfc_shim(server: &hardless_server::RunningServer) -> common::Ws {
+    let mut ws = ws(server, "/bridge").await;
+    send(&mut ws, json!({ "v": 1, "type": "hello", "id": "h", "origin": "http://localhost", "shimVersion": "0.0.0", "apis": ["nfc"] })).await;
+    recv_type(&mut ws, "ack").await;
+    ws
+}
+
+#[tokio::test]
+async fn fr_27_taps_reach_only_shims_that_asked_for_nfc() {
+    let server = server().await;
+    let mut nfc = nfc_shim(&server).await;
+    let mut serial_only = bridge(&server).await;
+    let (status, body) = send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "04a2b3c4", "records": [{ "recordType": "text", "data": "Hi", "lang": "en" }] }),
+    )
+    .await;
+    assert_eq!(status, 200, "{body}");
+    assert_eq!(
+        recv_type(&mut nfc, "nfc-reading").await,
+        json!({ "v": 1, "type": "nfc-reading", "deviceId": "nfc-1", "serialNumber": "04:a2:b3:c4",
+                "records": [{ "recordType": "text", "data": "Hi", "lang": "en" }] })
+    );
+    let others = frames_within(&mut serial_only, 300).await;
+    assert!(
+        others.iter().all(|f| f["type"] != "nfc-reading"),
+        "{others:?}"
+    );
+}
+
+#[tokio::test]
+async fn spec_8_3_nfc_write_and_make_read_only_over_the_bridge() {
+    let server = server().await;
+    let mut ws = nfc_shim(&server).await;
+    let write = |id: &str| json!({ "v": 1, "type": "nfc-write", "id": id, "deviceId": "nfc-1", "records": [{ "recordType": "url", "data": "https://example.com" }] });
+
+    // No card on the reader: the shim waits for a tap.
+    send(&mut ws, write("w1")).await;
+    let err = recv_type(&mut ws, "error").await;
+    assert_eq!(
+        (err["code"].as_str(), err["replyTo"].as_str()),
+        (Some("invalid_state"), Some("w1"))
+    );
+
+    send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "04a2b3c4" }),
+    )
+    .await;
+    recv_type(&mut ws, "nfc-reading").await;
+    send(&mut ws, write("w2")).await;
+    assert_eq!(recv_type(&mut ws, "ack").await["replyTo"], "w2");
+    let (_, device) = common::get_json(&server, "/api/v1/devices").await;
+    let reader = device
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["id"] == "nfc-1")
+        .unwrap()
+        .clone();
+    assert_eq!(
+        reader["state"]["lastWritten"]["records"][0]["data"],
+        "https://example.com"
+    );
+
+    send(
+        &mut ws,
+        json!({ "v": 1, "type": "nfc-make-read-only", "id": "l1", "deviceId": "nfc-1" }),
+    )
+    .await;
+    assert_eq!(recv_type(&mut ws, "ack").await["replyTo"], "l1");
+    send(&mut ws, write("w3")).await;
+    let err = recv_type(&mut ws, "error").await;
+    assert_eq!(
+        (err["code"].as_str(), err["replyTo"].as_str()),
+        (Some("not_allowed"), Some("w3"))
+    );
+
+    // A device that is not an NFC reader cannot be written to.
+    send(
+        &mut ws,
+        json!({ "v": 1, "type": "nfc-write", "id": "w4", "deviceId": "printer-1", "records": [] }),
+    )
+    .await;
+    let err = recv_type(&mut ws, "error").await;
+    assert_eq!(
+        (err["code"].as_str(), err["replyTo"].as_str()),
+        (Some("bad_message"), Some("w4"))
+    );
+}
+
+#[tokio::test]
+async fn fault_read_error_sends_nfc_error_once() {
+    let server = server().await;
+    let mut ws = nfc_shim(&server).await;
+    let (status, _) = send_json(
+        &server,
+        "PUT",
+        "/api/v1/devices/nfc-1/faults/read-error",
+        json!({ "active": true }),
+    )
+    .await;
+    assert_eq!(status, 200);
+    send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "04a2b3c4" }),
+    )
+    .await;
+    assert_eq!(
+        recv_type(&mut ws, "nfc-error").await,
+        json!({ "v": 1, "type": "nfc-error", "deviceId": "nfc-1", "serialNumber": "04:a2:b3:c4", "records": [] })
+    );
+    send_json(
+        &server,
+        "POST",
+        "/api/v1/devices/nfc-1/tap",
+        json!({ "uid": "04a2b3c4" }),
+    )
+    .await;
+    recv_type(&mut ws, "nfc-reading").await;
 }

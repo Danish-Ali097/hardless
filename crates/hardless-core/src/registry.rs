@@ -13,6 +13,7 @@ use crate::device::{
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::DeviceId;
 use crate::log::{EventKind, EventLog, EventRecord, DEFAULT_LOG_CAPACITY};
+use crate::nfc::NfcEvent;
 use crate::time::{Clock, Millis};
 
 /// Default number of jobs kept per device.
@@ -621,6 +622,7 @@ impl Registry {
     fn absorb_at_depth(&mut self, id: &DeviceId, now: Millis, events: &[DeviceEvent], depth: u8) {
         let mut state_changed = false;
         let mut signals = Vec::new();
+        let mut spent = Vec::new();
         for event in events {
             match event {
                 DeviceEvent::ToHost(data) => {
@@ -660,7 +662,23 @@ impl Registry {
                 DeviceEvent::Wedge(scan) => {
                     self.record(id, now, EventKind::Wedge { scan: scan.clone() });
                 }
+                DeviceEvent::Nfc(event) => {
+                    if matches!(event, NfcEvent::ReadError { .. }) {
+                        // `read-error` fails the next tap only (PRD section 10).
+                        spent.push(FaultId::READ_ERROR);
+                    }
+                    self.record(
+                        id,
+                        now,
+                        EventKind::Nfc {
+                            event: event.clone(),
+                        },
+                    );
+                }
             }
+        }
+        for fault in spent {
+            state_changed |= self.spend_fault(id, now, fault);
         }
         if state_changed {
             if let Some(state) = self.devices.get(id).map(|slot| slot.device.state()) {
@@ -681,6 +699,31 @@ impl Registry {
         for signal in signals {
             self.deliver_peripheral(id, now, signal, depth);
         }
+    }
+
+    /// Turns off a one-shot fault that has had its effect, as if it had been switched off.
+    /// Returns whether it was on.
+    fn spend_fault(&mut self, id: &DeviceId, now: Millis, fault: FaultId) -> bool {
+        let Some(slot) = self.devices.get_mut(id) else {
+            return false;
+        };
+        if slot.faults.remove(&fault).is_none() {
+            return false;
+        }
+        // The device's own reaction (a state change) is reported by the caller.
+        let _ = slot
+            .device
+            .set_fault(fault.clone(), false, FaultOptions::new(), now);
+        self.record(
+            id,
+            now,
+            EventKind::Fault {
+                fault_id: fault,
+                active: false,
+                options: FaultOptions::new(),
+            },
+        );
+        true
     }
 
     /// Delivers a peripheral signal from `from` to the device it is attached to and to every

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::fault::{FaultId, FaultOptions};
 use crate::ids::{DeviceId, JobId};
+use crate::nfc::{NdefRecord, NfcEvent};
 use crate::time::Millis;
 
 /// A device type that can be instantiated from JSON config, e.g. `printer-escpos`.
@@ -148,6 +149,9 @@ pub enum DeviceEvent {
     /// Keystrokes a keyboard-wedge scanner types into the page (PRD section 8.4). The
     /// transport hands them to the shim, which presses the keys like a keyboard driver.
     Wedge(WedgeScan),
+    /// An NFC reader read a card, failed to read one, or answered a write from the app (PRD
+    /// section 8.3). The transport hands reads to the shim as `reading` / `readingerror`.
+    Nfc(NfcEvent),
 }
 
 /// What a keyboard-wedge scanner types for one scan: the characters, how fast, and the key
@@ -265,7 +269,8 @@ pub enum Terminator {
     None,
 }
 
-/// A control action sent to a device by a person, test or agent rather than by the app.
+/// A control action sent to a device: by a person, test or agent (scan, tap, close drawer),
+/// or by the app through a browser API that does not carry bytes (an NFC write).
 ///
 /// ```
 /// use hardless_core::ControlCommand;
@@ -291,12 +296,24 @@ pub enum ControlCommand {
     },
     /// Tap an NFC card (`POST /devices/:id/tap`).
     Tap {
-        /// Card UID as hex.
+        /// Card UID as hex, e.g. `04a2b3c4d5e6f7`.
         uid: String,
-        /// NDEF records; their shape is defined by the NFC device.
-        #[serde(default)]
-        records: Vec<serde_json::Value>,
+        /// The card's NDEF records. Without them the reader uses what it remembers of this
+        /// card (including anything the app wrote to it), or an empty card.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        records: Option<Vec<NdefRecord>>,
     },
+    /// The app writes records to the card on the reader (`NDEFReader.write()`).
+    NfcWrite {
+        /// The records to write.
+        records: Vec<NdefRecord>,
+        /// Whether existing data may be replaced (Web NFC's `overwrite`, default `true`).
+        #[serde(default = "yes")]
+        overwrite: bool,
+    },
+    /// The app makes the card on the reader read-only (`NDEFReader.makeReadOnly()`).
+    NfcMakeReadOnly,
     /// Close an open cash drawer by hand.
     CloseDrawer,
     /// A device-specific command for plugins.
@@ -307,6 +324,10 @@ pub enum ControlCommand {
         #[serde(default)]
         payload: serde_json::Value,
     },
+}
+
+fn yes() -> bool {
+    true
 }
 
 /// A device config was rejected by [`DevicePlugin::create`].
