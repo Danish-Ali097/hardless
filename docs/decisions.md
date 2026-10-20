@@ -84,6 +84,30 @@ decision from the maintainer.
   `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
   one.
 
+### Example app and M2 acceptance
+
+- **The example app gained the M2 routes** without knowing about Hardless: a network printer
+  that speaks ePOS-Print XML over `fetch` (`src/epos.ts`, the same receipt as over Web
+  Serial), chosen next to Web Serial with an editable address, and a barcode field that a
+  wedge scan fills and submits with Enter. The editable address is how the mixed-content case
+  is reproduced: from the app on https://, type the `http://` address and pay.
+- **HTTPS for the app itself:** the server now also writes its current server certificate
+  and key (`hardless-server.pem`, `hardless-server-key.pem`) next to the CA at each start, so
+  another dev server on the same machine can serve HTTPS that devices already trust. The
+  example's Vite config uses them with `HTTPS=1`. The key is a development key for local names
+  only and is owner-readable only on Unix. The shim's bridge address follows the page:
+  `wss://<host>:8443` from https://, `ws://<host>:8080` otherwise; the example passes
+  `allowAnyOrigin` because on a tablet it is opened at a LAN address.
+- **Automated acceptance** (`examples/react-pwa/e2e/m2.spec.ts`): printing over the
+  ePOS-Print-compatible endpoint, paper-out over HTTP, a server scan typed into the app, and
+  the 20-barcode sequence arriving in order with its delay. The HTTP and wedge tests also run in
+  Playwright's WebKit, the engine of Safari, which is as close as CI gets to the PRD's desktop
+  Safari check. Tests run one at a time, because the wedge types into every connected page.
+- **Manual, for the maintainer** (PRD M2 acceptance, to record in the M2 pull request or
+  report): the example app printing from desktop Safari and from iOS Safari over the HTTPS
+  endpoint after trusting the certificate, and the mixed-content case on iOS. Steps are in
+  `examples/react-pwa/README.md`.
+
 ### Docker image (NFR-09, NFR-12)
 
 - **Built from prebuilt static binaries.** CI compiles `hardless` for

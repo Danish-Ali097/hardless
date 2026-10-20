@@ -141,3 +141,103 @@ button:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
+
+.scan,
+.route {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.scan div {
+  display: flex;
+  gap: 8px;
+}
+
+.scan input,
+.route .address input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.route {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 16px 14px;
+}
+
+.route legend {
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.route .address {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.route .address input {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+}
+
+.scan,
+.route {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.scan div {
+  display: flex;
+  gap: 8px;
+}
+
+.scan input,
+.route .address input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.route {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 16px 14px;
+}
+
+.route legend {
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.route .address {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.route .address input {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+}

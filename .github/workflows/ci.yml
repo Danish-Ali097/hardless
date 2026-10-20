@@ -129,10 +129,10 @@ jobs:
           cargo build -p hardless-cli
           cargo xtask build-wasm
           pnpm --filter @hardless/shim-web build
-      - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium
+      - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium webkit
       - name: Web Serial shim conformance (PRD section 8.1)
         run: pnpm --filter @hardless/shim-web test:browser
-      - name: M1 acceptance (example app, server and dashboard)
+      - name: M1 and M2 acceptance (example app, server and dashboard; Chromium and WebKit)
         run: pnpm --filter @hardless/example-react-pwa test:acceptance
       - uses: actions/upload-artifact@v4
         if: failure()

@@ -21,6 +21,12 @@ use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
 pub const CA_CERT_FILE: &str = "hardless-ca.pem";
 /// The CA private key file in the certificate folder.
 pub const CA_KEY_FILE: &str = "hardless-ca-key.pem";
+/// The current server certificate (with the CA after it), written at each start so other
+/// development servers on this machine, such as an app's Vite server, can serve HTTPS that
+/// devices already trust.
+pub const SERVER_CERT_FILE: &str = "hardless-server.pem";
+/// The current server certificate's private key.
+pub const SERVER_KEY_FILE: &str = "hardless-server-key.pem";
 /// Where the dashboard and devices download the CA certificate.
 pub const CA_DOWNLOAD_PATH: &str = "/hardless-ca.crt";
 
@@ -197,6 +203,12 @@ pub fn setup(dir: &Path, hosts: Vec<String>) -> Result<Tls, TlsError> {
 
     let ca_der = rustls::pki_types::pem::PemObject::from_pem_slice(ca_pem.as_bytes())
         .map_err(|e: rustls::pki_types::pem::Error| TlsError(format!("bad CA certificate: {e}")))?;
+    // Shared with other local development servers (see SERVER_CERT_FILE).
+    let cert_path = dir.join(SERVER_CERT_FILE);
+    fs::write(&cert_path, format!("{}{ca_pem}", cert.pem()))
+        .map_err(|e| TlsError(format!("cannot write {}: {e}", cert_path.display())))?;
+    write_private(&dir.join(SERVER_KEY_FILE), &key.serialize_pem())?;
+
     let chain: Vec<CertificateDer<'static>> = vec![cert.der().clone(), ca_der];
     let private = PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(key.serialize_der()));
     let provider = Arc::new(rustls::crypto::ring::default_provider());

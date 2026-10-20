@@ -141,6 +141,10 @@ async fn nfr_05_the_ca_is_made_once_and_kept() {
     let second = https_server(&dir).await;
     assert_eq!(ca_pem(&second).await, pem, "the same CA, trusted once");
     assert!(dir.join("hardless-ca-key.pem").exists());
+    // The server certificate is shared with other local dev servers, e.g. Vite.
+    let shared = std::fs::read_to_string(dir.join("hardless-server.pem")).unwrap();
+    assert!(shared.ends_with(&pem), "the chain ends with the CA");
+    assert!(dir.join("hardless-server-key.pem").exists());
     std::fs::remove_dir_all(dir).ok();
 }
 

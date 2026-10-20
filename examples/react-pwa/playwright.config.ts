@@ -2,9 +2,10 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * PRD M1 acceptance: the example app prints through the Web Serial shim to the Hardless
- * server, and the dashboard shows the receipt and the drawer. Needs the server binary with the
- * dashboard built in: `pnpm --filter @hardless/dashboard build && cargo build -p hardless-cli`.
+ * PRD M1 and M2 acceptance: the example app prints through the Web Serial shim and the HTTP
+ * printer endpoint, scans through the keyboard wedge, and the dashboard shows the results.
+ * Needs the server binary with the dashboard built in:
+ * `pnpm --filter @hardless/dashboard build && cargo build -p hardless-cli`.
  */
 const exe = process.platform === "win32" ? ".exe" : "";
 const hardless = fileURLToPath(new URL(`../../target/debug/hardless${exe}`, import.meta.url));
@@ -13,10 +14,17 @@ export const SERVER_PORT = 18282;
 export default defineConfig({
   testDir: "e2e",
   forbidOnly: Boolean(process.env.CI),
+  // One test at a time: the wedge types into every connected page, so parallel tests would
+  // receive each other's scans.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: { trace: "retain-on-failure" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // Safari's engine, for the routes Safari has: HTTP printers and the keyboard wedge (M2).
+    { name: "webkit", use: { ...devices["Desktop Safari"] }, testMatch: "m2.spec.ts" },
+  ],
   webServer: [
     {
       command: `"${hardless}" start --port ${String(SERVER_PORT)}`,

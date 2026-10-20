@@ -8,8 +8,9 @@ in [docs/decisions.md](docs/decisions.md).
 
 ## Status
 
-Milestones **M0 (foundation)** and **M1 (printer and drawer over Web Serial)** are done. M2
-(HTTP printers, scanner, CLI, Docker) is next.
+Milestones **M0 (foundation)**, **M1 (printer and drawer over Web Serial)** and **M2
+(cross-browser paths: HTTP printers, HTTPS, scanner, scenarios, CLI, Docker)** are done. M3
+(WebUSB, Web NFC, extension, Playwright, MCP) is next, when the maintainer says so.
 Work one milestone at a time, in order (PRD section 13), and build bottom-up (PRD section 15).
 
 ## Prerequisites
