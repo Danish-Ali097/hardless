@@ -1,6 +1,8 @@
 import type {
   BridgeErrorCode,
   DeviceSummary,
+  NdefRecord,
+  NfcReading,
   SerialSignals,
   Terminator,
   WedgeScan,
@@ -24,6 +26,8 @@ export interface TransportListener {
   disconnect(deviceId: string): void;
   /** A keyboard-wedge scanner typed a scan (PRD section 8.4). */
   wedge(deviceId: string, scan: WedgeScan): void;
+  /** An NFC reader read a card, or failed to (`error`; PRD section 8.3). */
+  nfc(deviceId: string, reading: NfcReading, error: boolean): void;
 }
 
 /**
@@ -44,6 +48,18 @@ export interface Transport {
   clearFault(deviceId: string, fault: string): Promise<void>;
   /** Scans `code` on a keyboard-wedge scanner (FR-26); the wedge types it into the page. */
   scan(deviceId: string, code: string, options?: ScanOptions): Promise<void>;
+  /**
+   * Taps a card on an NFC reader (FR-27). Without `records` the reader uses what it remembers
+   * of the card.
+   */
+  tap(deviceId: string, uid: string, records?: NdefRecord[]): Promise<void>;
+  /**
+   * Writes records to the card on an NFC reader (`NDEFReader.write()`). Rejects with
+   * `invalid_state` if no card is on the reader and `not_allowed` if the card refuses.
+   */
+  nfcWrite(deviceId: string, records: NdefRecord[], overwrite: boolean): Promise<void>;
+  /** Makes the card on an NFC reader read-only (`NDEFReader.makeReadOnly()`), as `nfcWrite`. */
+  nfcMakeReadOnly(deviceId: string): Promise<void>;
   /** Disconnects and stops reconnecting. */
   stop(): void;
 }

@@ -2,8 +2,9 @@
  * `@hardless/shim-web` replaces browser hardware APIs with shims backed by Hardless emulated
  * devices, so an app's production code runs unchanged (FR-14 to FR-17).
  *
- * It shims `navigator.serial` (Web Serial, PRD section 8.1) and runs the keyboard-wedge
- * injector (section 8.4). `navigator.usb` and `NDEFReader` arrive in M3.
+ * It shims `navigator.serial` (Web Serial, PRD section 8.1) and `NDEFReader` (Web NFC,
+ * section 8.3), and runs the keyboard-wedge injector (section 8.4). `navigator.usb` arrives
+ * later in M3.
  *
  * @example
  * ```ts
@@ -14,6 +15,14 @@
  *
  * @packageDocumentation
  */
+import type { NdefRecord } from "@hardless/types";
+import {
+  HardlessNDEFMessage,
+  HardlessNDEFReader,
+  HardlessNDEFReadingEvent,
+  HardlessNDEFRecord,
+  NfcHub,
+} from "./nfc.js";
 import { HardlessSerial } from "./serial.js";
 import { ServerTransport } from "./server-transport.js";
 import { StandaloneTransport, type StandaloneDevice } from "./standalone-transport.js";
@@ -21,6 +30,13 @@ import type { ScanOptions, Transport, TransportListener } from "./transport.js";
 import { WedgeInjector } from "./wedge.js";
 
 export type { StandaloneDevice } from "./standalone-transport.js";
+export {
+  HardlessNDEFMessage,
+  HardlessNDEFReader,
+  HardlessNDEFReadingEvent,
+  HardlessNDEFRecord,
+  NfcHub,
+} from "./nfc.js";
 export { HardlessSerial, HardlessSerialPort } from "./serial.js";
 export type { ScanOptions } from "./transport.js";
 export { WedgeInjector } from "./wedge.js";
@@ -32,7 +48,7 @@ export type ShimApi = "serial" | "usb" | "nfc" | "wedge";
 export const SHIM_APIS: readonly ShimApi[] = ["serial", "usb", "nfc", "wedge"];
 
 /** The APIs this version implements; the others arrive in M3. */
-const IMPLEMENTED: ReadonlySet<ShimApi> = new Set(["serial", "wedge"]);
+const IMPLEMENTED: ReadonlySet<ShimApi> = new Set(["serial", "nfc", "wedge"]);
 
 /** The version of this package, sent as `shimVersion` in the bridge `hello` message. */
 export const SHIM_VERSION = "0.0.0";
@@ -79,13 +95,27 @@ export interface Installation {
   readonly serial: HardlessSerial | null;
   /** The keyboard-wedge injector, if installed. */
   readonly wedge: WedgeInjector | null;
+  /** What the `NDEFReader` replacement shares, if installed. */
+  readonly nfc: NfcHub | null;
   /**
    * Scans `code` on a keyboard-wedge scanner (FR-26). In standalone mode it resolves once
    * the keys have been typed; in server mode, once the server has taken the scan (the keys
    * follow over the bridge).
    */
   scan(deviceId: string, code: string, options?: ScanOptions): Promise<void>;
+  /**
+   * Taps a card on an NFC reader (FR-27): scanning `NDEFReader`s fire `reading`. Without
+   * `records` the reader uses what it remembers of the card. In standalone mode it resolves
+   * once the events have fired.
+   */
+  tap(deviceId: string, uid: string, records?: NdefRecord[]): Promise<void>;
 }
+
+/** The Web NFC globals the shim replaces. */
+const NFC_GLOBALS = ["NDEFReader", "NDEFReadingEvent", "NDEFMessage", "NDEFRecord"] as const;
+
+/** The page's own Web NFC globals, restored by {@link uninstall}. */
+const originalNfc = new Map<string, PropertyDescriptor | undefined>();
 
 const KEY = Symbol.for("hardless.shim");
 
@@ -125,6 +155,7 @@ export function install(options: InstallOptions): Installation {
   }
 
   let serial: HardlessSerial | null = null;
+  let nfc: NfcHub | null = null;
   const wedge = options.wedge === false ? null : new WedgeInjector(document);
   const listener: TransportListener = {
     devices: () => undefined,
@@ -132,6 +163,9 @@ export function install(options: InstallOptions): Installation {
     connect: (id) => serial?.handleConnect(id),
     disconnect: (id) => serial?.handleDisconnect(id),
     wedge: (_id, scan) => void wedge?.type(scan),
+    nfc: (id, reading, error) => {
+      nfc?.handleReading(id, reading, error);
+    },
   };
   const apis = SHIM_APIS.filter((api) => options[api] !== false && IMPLEMENTED.has(api));
   const transport: Transport =
@@ -163,15 +197,46 @@ export function install(options: InstallOptions): Installation {
     });
   }
 
+  if (options.nfc !== false) {
+    const hub = new NfcHub(transport);
+    nfc = hub;
+    // NDEFReader takes no arguments; each one shares the page's hub.
+    const NDEFReader = class NDEFReader extends HardlessNDEFReader {
+      constructor() {
+        super(hub);
+      }
+    };
+    const replacements: Record<(typeof NFC_GLOBALS)[number], unknown> = {
+      NDEFReader,
+      NDEFReadingEvent: HardlessNDEFReadingEvent,
+      NDEFMessage: HardlessNDEFMessage,
+      NDEFRecord: HardlessNDEFRecord,
+    };
+    for (const name of NFC_GLOBALS) {
+      originalNfc.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
+      Object.defineProperty(globalThis, name, {
+        configurable: true,
+        writable: true,
+        value: replacements[name],
+      });
+    }
+  }
+
   const installation: Installation = {
     options,
     transport,
     serial,
     wedge,
+    nfc,
     async scan(deviceId, code, scanOptions) {
       await transport.scan(deviceId, code, scanOptions);
       // Standalone: the engine's events are delivered in microtasks that have run by now.
       if (options.mode === "standalone") await wedge?.idle();
+    },
+    async tap(deviceId, uid, records) {
+      await transport.tap(deviceId, uid, records);
+      // Standalone: let the engine's events, delivered in microtasks, fire first.
+      if (options.mode === "standalone") await new Promise((resolve) => setTimeout(resolve, 0));
     },
   };
   global[KEY] = installation;
@@ -186,6 +251,14 @@ export function uninstall(): void {
   if (installation.serial) {
     // Removing the own property brings back the browser's getter on Navigator.prototype.
     delete (navigator as unknown as Record<string, unknown>).serial;
+  }
+  if (installation.nfc) {
+    for (const name of NFC_GLOBALS) {
+      const original = originalNfc.get(name);
+      if (original) Object.defineProperty(globalThis, name, original);
+      else Reflect.deleteProperty(globalThis, name);
+    }
+    originalNfc.clear();
   }
   installation.wedge?.stop();
   installation.transport.stop();

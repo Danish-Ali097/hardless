@@ -57,6 +57,28 @@ decision from the maintainer.
   app's writes are `control` records (`nfc-write`, `nfc-make-read-only`) with direction
   host → device, followed by an `nfc` record with the outcome.
 
+### `NDEFReader` shim (PRD section 8.3)
+
+- **The shim replaces four globals**: `NDEFReader`, `NDEFReadingEvent`, `NDEFMessage` and
+  `NDEFRecord`, so apps that build records with `new NDEFRecord()` work too. `uninstall()`
+  restores whatever the page had (nothing, outside Chrome on Android).
+- **Permission:** the first `scan()`, `write()` or `makeReadOnly()` of a page needs transient
+  user activation (`SecurityError` otherwise), as Chrome's permission prompt does; after that
+  the page counts as granted until reload. `permission-denied` rejects all three with
+  `NotAllowedError`; `picker-cancel` once.
+- **No emulated reader → `NotSupportedError`**, what the spec gives when there is no NFC
+  adapter.
+- **Every scanning `NDEFReader` hears every emulated reader**, since a phone has one antenna;
+  `write()` goes to whichever reader has a card on it, or the next one tapped.
+- **Text records:** a string is UTF-8 (the spec only allows UTF-8 for strings); byte payloads
+  can declare `utf-16`, `utf-16be` or `utf-16le`. Readings of `utf-16` text are big-endian.
+  Records read without a `lang` report the document's language (or `en`).
+- **Nested messages are not emulated** (smart posters, local types, external records with
+  `NDEFMessageInit` data): they reject with `NotSupportedError`, so a test fails loudly instead
+  of silently writing something else. `toRecords()` returns `null`.
+- **`installation.tap(deviceId, uid, records?)`** taps from the page (REST in server mode, the
+  engine in standalone mode), for tests and the Playwright fixture.
+
 ## M2 — Cross-browser paths
 
 ### Licence notices (NFR-14)

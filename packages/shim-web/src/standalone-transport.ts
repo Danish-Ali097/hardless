@@ -1,4 +1,11 @@
-import type { ControlCommand, DeviceSummary, SerialSignals, Terminator } from "@hardless/types";
+import type {
+  ControlCommand,
+  DeviceSummary,
+  NdefRecord,
+  NfcRejection,
+  SerialSignals,
+  Terminator,
+} from "@hardless/types";
 import {
   fromBase64,
   isConnected,
@@ -46,7 +53,15 @@ type EngineEvent =
   | { type: "data"; deviceId: string; data: string }
   | { type: "connect"; deviceId: string }
   | { type: "disconnect"; deviceId: string }
-  | { type: "wedge"; deviceId: string; code: string; delayMs: number; terminator: Terminator };
+  | { type: "wedge"; deviceId: string; code: string; delayMs: number; terminator: Terminator }
+  | {
+      type: "nfc-reading" | "nfc-error";
+      deviceId: string;
+      serialNumber: string;
+      records: NdefRecord[];
+    }
+  | { type: "nfc-done"; deviceId: string }
+  | { type: "nfc-rejected"; deviceId: string; reason: NfcRejection; message: string };
 
 /** Turns a fixture-style device into the engine's `{ kind, id, config }`. */
 export function normalizeDevice(device: StandaloneDevice): {
@@ -139,7 +154,10 @@ export class StandaloneTransport implements Transport {
         } else if (event.type === "wedge") {
           const { code, delayMs, terminator } = event;
           this.listener.wedge(event.deviceId, { code, delayMs, terminator });
-        } else {
+        } else if (event.type === "nfc-reading" || event.type === "nfc-error") {
+          const { serialNumber, records } = event;
+          this.listener.nfc(event.deviceId, { serialNumber, records }, event.type === "nfc-error");
+        } else if (event.type === "disconnect") {
           this.opened.delete(event.deviceId);
           this.listener.disconnect(event.deviceId);
         }
@@ -239,6 +257,37 @@ export class StandaloneTransport implements Transport {
 
   scan(deviceId: string, code: string, options: ScanOptions = {}): Promise<void> {
     return this.control(deviceId, { type: "scan", code, ...options });
+  }
+
+  tap(deviceId: string, uid: string, records?: NdefRecord[]): Promise<void> {
+    const command: ControlCommand =
+      records === undefined ? { type: "tap", uid } : { type: "tap", uid, records };
+    return this.control(deviceId, command);
+  }
+
+  nfcWrite(deviceId: string, records: NdefRecord[], overwrite: boolean): Promise<void> {
+    return this.nfcCommand(deviceId, { type: "nfc-write", records, overwrite });
+  }
+
+  nfcMakeReadOnly(deviceId: string): Promise<void> {
+    return this.nfcCommand(deviceId, { type: "nfc-make-read-only" });
+  }
+
+  /** An NFC write or lock, answered like the bridge: resolves, or rejects with its code. */
+  private async nfcCommand(deviceId: string, command: ControlCommand): Promise<void> {
+    await this.ready;
+    this.device(deviceId);
+    const json = this.call((e) => e.control(this.now(), deviceId, JSON.stringify(command)));
+    this.emit(json);
+    this.refresh();
+    for (const event of JSON.parse(json) as EngineEvent[]) {
+      if (event.type === "nfc-done") return;
+      if (event.type === "nfc-rejected") {
+        const code = event.reason === "no-card" ? "invalid_state" : "not_allowed";
+        throw new TransportError(code, event.message);
+      }
+    }
+    throw new TransportError("bad_message", `device ${deviceId} is not an NFC reader`);
   }
 
   stop(): void {

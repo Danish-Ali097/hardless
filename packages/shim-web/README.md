@@ -1,11 +1,11 @@
 # @hardless/shim-web
 
 Browser API shims backed by [Hardless](https://github.com/hardlessdev/hardless) emulated
-devices. Your app's own hardware code runs unchanged: it calls `navigator.serial` as usual and
-talks to an emulated receipt printer and cash drawer.
+devices. Your app's own hardware code runs unchanged: it calls `navigator.serial` or
+`NDEFReader` as usual and talks to an emulated receipt printer, cash drawer or NFC reader.
 
-> Status: milestone M2. `navigator.serial` (Web Serial) and the keyboard-wedge scanner work.
-> WebUSB and Web NFC arrive in M3.
+> Status: milestone M3. `navigator.serial` (Web Serial), `NDEFReader` (Web NFC) and the
+> keyboard-wedge scanner work. WebUSB arrives later in M3.
 
 ## Usage
 
@@ -98,6 +98,42 @@ await shim.scan("scanner-1", "4006381333931"); // standalone: resolves once type
 **Limitation:** the events are synthetic, so `event.isTrusted` is `false`. Apps that ignore
 untrusted key events cannot be tested with the wedge in phase 1; OS-level key injection comes
 in phase 2.
+
+## Web NFC (PRD section 8.3)
+
+With the NFC shim on (the default), `NDEFReader`, `NDEFReadingEvent`, `NDEFMessage` and
+`NDEFRecord` exist in every browser, backed by emulated `nfc-reader` devices:
+
+```ts
+const reader = new NDEFReader();
+await reader.scan(); // needs a user gesture the first time, like the permission prompt
+reader.onreading = ({ serialNumber, message }) => {
+  const text = new TextDecoder().decode(message.records[0].data); // "Member 1234"
+};
+await reader.write("Visit 2"); // writes to the card on the reader, or waits for the next tap
+```
+
+Tap cards from the dashboard, `POST /api/v1/devices/<id>/tap`, `hardless tap`, or the page:
+
+```ts
+await shim.tap("nfc-1", "04a2b3c4", [{ recordType: "text", data: "Member 1234" }]);
+```
+
+- `scan()` needs transient user activation until the page has been granted NFC
+  (`SecurityError`), rejects with `InvalidStateError` while that reader is already scanning,
+  and `NotSupportedError` when no `nfc-reader` is emulated. Its `signal` stops reading.
+- `reading` carries `serialNumber` (`04:a2:b3:c4`) and `NDEFRecord`s with `recordType`,
+  `mediaType`, `id`, `data` (a `DataView`), `encoding` and `lang`. Every scanning
+  `NDEFReader` on the page hears every reader, like a phone's single NFC antenna.
+- `write()` accepts a string, bytes or an `NDEFMessageInit`, checks records like the spec
+  (`TypeError`), and writes to the card on a reader, or waits for the next tap. A newer
+  `write()` aborts a pending one. `overwrite: false` on a card with data, or any write to a
+  read-only card, rejects with `NotAllowedError`. `makeReadOnly()` works the same way.
+- Faults: `permission-denied` makes `scan()`, `write()` and `makeReadOnly()` reject with
+  `NotAllowedError`; `picker-cancel` does so once (a dismissed prompt); `read-error` makes
+  the next tap fire `readingerror`.
+- Not emulated yet: nested messages (`smart-poster` records, local types). They reject with
+  `NotSupportedError`.
 
 ## Building
 

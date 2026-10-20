@@ -2,6 +2,7 @@ import type {
   ClientFrame,
   DeviceSummary,
   JsonValue,
+  NdefRecord,
   SerialSignals,
   ServerFrame,
 } from "@hardless/types";
@@ -171,6 +172,14 @@ export class ServerTransport implements Transport {
           terminator: frame.terminator,
         });
         break;
+      case "nfc-reading":
+      case "nfc-error":
+        this.listener.nfc(
+          frame.deviceId,
+          { serialNumber: frame.serialNumber, records: frame.records },
+          frame.type === "nfc-error",
+        );
+        break;
     }
   }
 
@@ -220,6 +229,23 @@ export class ServerTransport implements Transport {
       const code = response.status === 404 ? "not_found" : "bad_message";
       throw new TransportError(code, `scan failed (HTTP ${String(response.status)})`);
     }
+  }
+
+  async tap(deviceId: string, uid: string, records?: NdefRecord[]): Promise<void> {
+    const body = records === undefined ? { uid } : { uid, records };
+    const response = await this.rest("POST", "/tap", deviceId, body);
+    if (!response.ok) {
+      const code = response.status === 404 ? "not_found" : "bad_message";
+      throw new TransportError(code, `tap failed (HTTP ${String(response.status)})`);
+    }
+  }
+
+  nfcWrite(deviceId: string, records: NdefRecord[], overwrite: boolean): Promise<void> {
+    return this.request({ type: "nfc-write", deviceId, records, overwrite });
+  }
+
+  nfcMakeReadOnly(deviceId: string): Promise<void> {
+    return this.request({ type: "nfc-make-read-only", deviceId });
   }
 
   /** Calls the server's REST API for a device: `/api/v1/devices/<id><path>`. */

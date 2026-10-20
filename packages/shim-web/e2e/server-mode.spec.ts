@@ -44,7 +44,7 @@ test.afterAll(() => {
 });
 
 test.beforeEach(async () => {
-  for (const id of ["printer-1", "drawer-1", "scanner-1"]) {
+  for (const id of ["printer-1", "drawer-1", "scanner-1", "nfc-1"]) {
     await fetch(`${API}/devices/${id}/reset`, { method: "POST" });
   }
 });
@@ -174,4 +174,41 @@ test("FR-26: a scan on the server is typed into the page by the wedge", async ({
   // ...and from the page itself, which calls the same API.
   await page.evaluate(() => window.installation.scan("scanner-1", "ABC", { terminator: "none" }));
   await expect(page.locator("#field")).toHaveValue("4006381333931\nABC");
+});
+
+test("FR-27: a tap on the server fires reading, and write() changes the server's card", async ({
+  page,
+}) => {
+  await page.goto("/e2e/page.html");
+  await page.waitForFunction(() => window.ready === true);
+  await page.evaluate(async (port) => {
+    const installation = window.shim.install({
+      mode: "server",
+      url: `ws://127.0.0.1:${String(port)}/bridge`,
+    });
+    await installation.transport.ready;
+    window.readings = [];
+    window.ndef = new NDEFReader();
+    window.ndef.onreading = (event) => {
+      const e = event as InstanceType<typeof NDEFReadingEvent>;
+      window.readings.push({ serialNumber: e.serialNumber, records: [] });
+    };
+    await window.ndef.scan();
+    // Waits for a card: the tap below.
+    window.result = window.settle(window.ndef.write("Visit 2"));
+  }, PORT);
+  await fetch(`${API}/devices/nfc-1/tap`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid: "04a2b3c4" }),
+  });
+  await expect
+    .poll(() => page.evaluate(() => window.readings))
+    .toEqual([{ serialNumber: "04:a2:b3:c4", records: [] }]);
+  expect(await page.evaluate(() => window.result)).toEqual({ ok: true });
+  const devices = (await (await fetch(`${API}/devices`)).json()) as {
+    id: string;
+    state: { lastWritten: { records: { data: string }[] } };
+  }[];
+  expect(devices.find((d) => d.id === "nfc-1")?.state.lastWritten.records[0]?.data).toBe("Visit 2");
 });
