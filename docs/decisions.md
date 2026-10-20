@@ -84,6 +84,29 @@ decision from the maintainer.
   `cargo-fuzz` target (`crates/hardless-http-dialects/fuzz`), run nightly next to the ESC/POS
   one.
 
+### Docker image (NFR-09, NFR-12)
+
+- **Built from prebuilt static binaries.** CI compiles `hardless` for
+  `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl` on native x86 and arm64 GitHub
+  runners, then `docker buildx` packs each into `gcr.io/distroless/static-debian12:nonroot`.
+  No emulation is needed, so the arm64 build takes minutes, not an hour under QEMU.
+- **Built and tested in CI, not pushed** (maintainer decision): a separate `Docker`
+  workflow builds both platforms on every push and pull request, checks the sizes (binary under
+  25 MB, image under 40 MB), runs the amd64 image and checks the M2 acceptance: the dashboard,
+  `/api/v1/info`, HTTPS with the container's CA, and an ePOS print. Pushing to Docker Hub as
+  `hardless/hardless` waits for the v0.1.0 release. It is a separate workflow so the main CI
+  does not get slower.
+- **Measured locally (amd64):** a 9.3 MB binary, a 20 MB image.
+- **Container defaults:** `HARDLESS_HOST=0.0.0.0` so `-p` works (the start-up warnings about
+  0.0.0.0 and no token are expected); the CA is made on first run in `/data/certs`, owned by
+  the image's non-root user and declared a volume, so it is never in the image (NFR-05) and
+  survives restarts with `-v hardless-data:/data`. Inside a container the detected LAN address
+  is the container's own, so for phones pass `-e HARDLESS_CERT_HOSTS=<host LAN address>`.
+- **No `HEALTHCHECK`:** distroless has no shell or curl; use `GET /api/v1/health`.
+- **Start-up output** shows `localhost` instead of `0.0.0.0` when listening on every interface.
+- **Open for v0.1.0:** the image must carry the licence notices of the Rust dependencies and
+  the Go Mono font (see M0, Licences, and Renderer above).
+
 ### CLI (FR-30)
 
 - **The commands are REST clients.** `scan`, `tap`, `fault` and `receipts` call a running

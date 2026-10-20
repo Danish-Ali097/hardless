@@ -92,6 +92,22 @@ node scripts/print-sample.mjs             # print fixtures/escpos/33-full-receip
 pnpm --filter @hardless/example-react-pwa dev   # example POS app on http://localhost:5173
 ```
 
+### Docker image
+
+The image packs a static Linux binary (see `Dockerfile`). CI builds it for amd64 and arm64
+in `.github/workflows/docker.yml` and checks it serves a working dashboard; it is not pushed
+until the first release. To build and run it locally (amd64), with Docker running:
+
+```sh
+pnpm --filter @hardless/dashboard build
+mkdir -p docker/bin/amd64
+docker run --rm -v "$PWD:/src" -v hardless-musl-target:/target -w /src -e CARGO_TARGET_DIR=/target rust:1.99-alpine sh -c "apk add --no-cache musl-dev && cargo build --release --locked -p hardless-cli && cp /target/release/hardless docker/bin/amd64/"
+docker build --platform linux/amd64 -t hardless/hardless .
+docker run -p 8080:8080 -p 8443:8443 -v hardless-data:/data hardless/hardless
+```
+
+On Windows Git Bash, prefix `docker run` with `MSYS_NO_PATHCONV=1`.
+
 ### ESC/POS fixtures
 
 ```sh

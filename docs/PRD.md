@@ -566,7 +566,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 - [x] Renderer SVG/PNG output (FR-11) and `/render` endpoint
 - [x] Scenario runner (FR-04) and `/scenarios/run`
 - [x] CLI (FR-30)
-- [ ] Docker image `hardless/hardless` multi-arch (NFR-12)
+- [x] Docker image `hardless/hardless` multi-arch (NFR-12)
 - [ ] Remaining printer/HTTP/scanner faults from section 10
 
 **Accept:** The example app prints from desktop Safari and iOS Safari (manual check, recorded in the PR) via the HTTPS endpoint after trusting the cert; the mixed-content case is reproduced and explained in the dashboard. `docker run -p 8080:8080 -p 8443:8443 hardless/hardless` serves a working dashboard. A scripted 20-barcode sequence arrives in order with the configured delay.

@@ -310,7 +310,15 @@ pub async fn serve(config: ServerConfig) -> Result<(), StartError> {
         }
     }
     let server = spawn(config).await?;
-    let addr = server.addr;
+    // 0.0.0.0 is where it listens, not an address to open: show localhost instead.
+    let shown = |addr: SocketAddr| {
+        if addr.ip().is_unspecified() {
+            format!("localhost:{}", addr.port())
+        } else {
+            addr.to_string()
+        }
+    };
+    let addr = shown(server.addr);
     println!("Hardless {} is running", env!("CARGO_PKG_VERSION"));
     println!("  dashboard  http://{addr}/");
     println!("  REST API   http://{addr}/api/v1");
@@ -320,6 +328,7 @@ pub async fn serve(config: ServerConfig) -> Result<(), StartError> {
     );
     match (&server.https_addr, &server.info.https.error) {
         (Some(https), _) => {
+            let https = shown(*https);
             println!(
                 "  HTTPS      https://{https}/  (trust http://{addr}{} once per device)",
                 tls::CA_DOWNLOAD_PATH
