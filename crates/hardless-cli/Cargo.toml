@@ -34,3 +34,7 @@ tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "process"
 
 [lints]
 workspace = true
+
+# cargo-dist (dist-workspace.toml): ship the third-party notices next to the binary too.
+[package.metadata.dist]
+include = ["THIRD_PARTY_LICENSES.txt"]

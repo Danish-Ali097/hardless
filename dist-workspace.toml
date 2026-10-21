@@ -1,0 +1,47 @@
+# cargo-dist: the `hardless` binary on GitHub Releases, with shell and PowerShell installers
+# and a Homebrew formula (PRD section 6, "Distribution"). `dist generate` writes
+# .github/workflows/release.yml from this file; never edit that workflow by hand.
+# See https://axodotdev.github.io/cargo-dist/book/
+[workspace]
+members = ["cargo:."]
+
+[dist]
+cargo-dist-version = "0.32.0"
+ci = "github"
+installers = ["shell", "powershell", "homebrew"]
+# NFR-11: Windows, macOS and Linux (glibc and static musl), each on x86_64 and arm64.
+targets = [
+  "x86_64-pc-windows-msvc",
+  "aarch64-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-unknown-linux-musl",
+  "aarch64-unknown-linux-musl",
+]
+# Zip on Windows, gzipped tar elsewhere: the `npx hardless` wrapper unpacks both with Node's
+# own zlib (xz would need a dependency).
+windows-archive = ".zip"
+unix-archive = ".tar.gz"
+install-path = "CARGO_HOME"
+install-updater = false
+# The formula is `hardless` (the package is `hardless-cli`), in hardlessdev/homebrew-tap.
+tap = "hardlessdev/homebrew-tap"
+formula = "hardless"
+# Publish to crates.io, npm and Docker Hub before the release is announced; attach the
+# Chrome extension zip after (.github/workflows/publish-*.yml).
+publish-jobs = ["homebrew", "./publish-crates", "./publish-npm", "./publish-docker"]
+post-announce-jobs = ["./publish-extension"]
+# The dashboard is embedded in the binary at build time, so every build job builds it first.
+github-build-setup = "../build-setup.yml"
+# Every pull request builds all release artifacts without publishing anything (a dry run).
+pr-run-mode = "upload"
+
+[dist.github-custom-runners]
+# Native arm64 runners, so ring and the musl toolchain need no cross-compiling.
+aarch64-unknown-linux-gnu = "ubuntu-24.04-arm"
+aarch64-unknown-linux-musl = "ubuntu-24.04-arm"
+aarch64-pc-windows-msvc = "windows-11-arm"
+x86_64-apple-darwin = "macos-15-intel"
+aarch64-apple-darwin = "macos-15"

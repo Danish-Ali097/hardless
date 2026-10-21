@@ -4,6 +4,61 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## Release v0.1.0 — preparation
+
+The maintainer asked for everything up to publishing, with no publishing and a question before
+any step that needs their accounts. How to release is in [RELEASING.md](../RELEASING.md).
+
+- **One version for everything**, released together from one `vX.Y.Z` tag: crates, npm
+  packages, binary, image and extension. `scripts/set-version.mjs` sets it everywhere after
+  `pnpm changeset version` writes the npm changelogs.
+- **cargo-dist 0.32.0** (MIT OR Apache-2.0, a build tool that never ships) builds the binaries,
+  installers and Homebrew formula, as PRD section 6 says. Its config is `dist-workspace.toml`;
+  `.github/workflows/release.yml` is generated (`dist generate`) and kept out of Prettier.
+  Install it with `cargo install cargo-dist --version 0.32.0 --locked`.
+- **Eight targets** (NFR-11): Windows, macOS, Linux glibc and Linux static musl, each on x86_64
+  and arm64. arm64 builds run on GitHub's native arm64 runners, so `ring` and musl need no
+  cross-compiling.
+- **Names:** the crate stays `hardless-cli` (so `cargo install hardless-cli`, and archives are
+  `hardless-cli-<target>.zip`/`.tar.gz`); the binary and the Homebrew formula are `hardless`,
+  in the tap `hardlessdev/homebrew-tap`.
+- **Archives are zip on Windows and `.tar.gz` elsewhere** (cargo-dist's default is `.tar.xz`),
+  so the `npx hardless` wrapper unpacks them with Node's own `zlib`.
+- **`npx hardless` wrapper has no dependencies.** It downloads the archive for the platform from
+  the GitHub Release, checks it against the release's `.sha256` file, caches the binary per
+  version (`HARDLESS_CACHE_DIR`, or the platform's user cache folder) and runs it, passing on
+  arguments, signals and the exit code. `HARDLESS_BINARY` points it at a binary you already
+  have. Linux uses the musl build so it runs on any distribution.
+- **The server crate carries the dashboard when published.** crates.io has no `packages/`
+  folder, so the publish job copies the built dashboard into `crates/hardless-server/dashboard/`
+  (ignored by git, listed in the crate's `include`), and `build.rs` prefers that copy. Without
+  it, `cargo install hardless-cli` would serve only the placeholder page.
+- **Every published crate and npm package has its own `LICENSE`** (copies of the root file; the
+  CI dry run checks they match). cargo-about now also lists Hardless's own crates in the
+  notices, which is accurate and harmless.
+- **`@hardless/shim-web` ships `THIRD_PARTY_LICENSES.txt`** for the Rust crates compiled into
+  its WebAssembly engine; `cargo xtask licenses` writes it next to the binary's file and
+  `--check` covers both. The other npm packages and the extension zip bundle only Hardless's
+  own code (the extension uses server mode, without the engine), so they ship only `LICENSE`.
+- **Publishing authentication:** the first publish uses tokens the maintainer stores as secrets
+  of a `release` environment (crates.io and npm trusted publishing can only be set up for names
+  that already exist); after it, trusted publishing over OIDC replaces them and the tokens are
+  deleted. The publish workflows use whichever is there. npm packages are published with
+  provenance. Docker Hub and the Homebrew tap keep tokens.
+- **Release order:** cargo-dist creates the GitHub Release first, so `npx hardless` can
+  download as soon as it is on npm; then crates.io, npm, Docker Hub and Homebrew publish in
+  parallel; the extension zip is attached last.
+- **The Docker image is built from the release's own musl binaries**, started and checked, then
+  pushed as `<version>`, `<major>.<minor>` and `latest`.
+- **Dry runs:** every pull request makes cargo-dist build all eight targets
+  (`pr-run-mode = "upload"`), and CI's "Release dry run" job runs `cargo publish --dry-run`,
+  `scripts/pack-npm.mjs` with `npm publish --dry-run`, and the extension zip.
+- **release-plz no longer publishes, tags or creates releases** (`release-plz.toml`); cargo-dist
+  owns GitHub Releases and the publish jobs own the registries. Changesets still write the npm
+  changelogs; the root `CHANGELOG.md` is the release notes.
+- **New GitHub Actions in the release jobs:** `rust-lang/crates-io-auth-action` (the Rust
+  project's own, for trusted publishing) and `docker/login-action`.
+
 ## M3 — WebUSB, Web NFC, agent interface and delivery
 
 ### Maintainer decisions taken before starting

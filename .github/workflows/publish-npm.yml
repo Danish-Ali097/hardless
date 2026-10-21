@@ -1,0 +1,57 @@
+name: Publish npm packages
+
+# Called by release.yml (cargo-dist publish job) when a version tag is pushed: publishes
+# @hardless/types, @hardless/shim-web, @hardless/playwright and the `hardless` wrapper to npm
+# with provenance. The GitHub Release (with the binaries `npx hardless` downloads) already
+# exists at this point.
+#
+# Authentication: the NPM_TOKEN secret if it is set (needed for the very first publish,
+# because npm trusted publishing can only be set up for packages that exist); otherwise npm
+# trusted publishing over OIDC, with no stored token.
+on:
+  workflow_call:
+    inputs:
+      plan:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm:
+    name: npm
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - name: Build the packages and the WebAssembly engine
+        run: |
+          cargo xtask build-wasm
+          pnpm -r build
+      - name: Pack
+        env:
+          PLAN: ${{ inputs.plan }}
+        run: node scripts/pack-npm.mjs --tag "$(echo "$PLAN" | jq -r .announcement_tag)" --out npm-packs
+      # npm 11.5.1 or later publishes over OIDC (trusted publishing).
+      - run: npm install -g npm@11.21.0
+      - name: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          for pack in $(cat npm-packs/order.txt); do
+            npm publish "npm-packs/$pack" --access public --provenance
+          done

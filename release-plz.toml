@@ -1,10 +1,15 @@
-# release-plz: versions, changelogs and crates.io releases for the Rust crates.
-# Release notes come from Conventional Commits. See https://release-plz.dev/docs/config
+# release-plz: crate versions and changelogs from Conventional Commits.
+# See https://release-plz.dev/docs/config
+#
+# Releases are published by .github/workflows/release.yml (cargo-dist) when a vX.Y.Z tag is
+# pushed (RELEASING.md): it builds the binaries, creates the GitHub Release and publishes
+# the crates. So release-plz only updates versions and changelogs (`release-plz update`) and
+# never publishes, tags or creates releases itself.
 [workspace]
 changelog_update = true
-git_release_enable = true
-# Nothing is published until the v0.1.0 release (PRD section 13); flip with the release PR.
 publish = false
+git_tag_enable = false
+git_release_enable = false
 semver_check = true
 pr_labels = ["release"]
 
