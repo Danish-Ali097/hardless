@@ -36,7 +36,7 @@ Tokens go straight from each site into GitHub's secret settings. Never paste the
    enabled for automation. Save it as the `release` environment secret `NPM_TOKEN`.
 4. **Docker Hub.** In the `hardless` account: Account settings → Personal access tokens → a
    Read & Write token. Save it as the `release` environment secret `DOCKERHUB_TOKEN`, and the
-   account name `hardless` as `DOCKERHUB_USERNAME`.
+   account name `hardless` as the `release` environment variable `DOCKERHUB_USERNAME`.
 5. **Homebrew tap.** Create the public repository `hardlessdev/homebrew-tap` (a README is
    enough). Create a fine-grained personal access token with "Contents: read and write" on that
    repository only. Save it as the **repository** secret `HOMEBREW_TAP_TOKEN` (the generated
