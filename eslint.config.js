@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       "**/dist/**",
       "**/dist-extension-test/**",
+      "**/dist-m3/**",
       "**/node_modules/**",
       "**/coverage/**",
       "target/**",

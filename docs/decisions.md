@@ -89,6 +89,39 @@ decision from the maintainer.
 - **Grants** are kept apart from serial ones (`sessionStorage` key `hardless:usb-grants`). The
   picker is shared with Web Serial and titled like Chrome's ("… wants to connect").
 
+### Playwright fixture (FR-40 to FR-42) and M3 acceptance
+
+- **`test.use({ hardless: options })` as the PRD writes it.** A Playwright fixture cannot be
+  both an option and the object the test receives, so the options live in a fixture called
+  `hardlessOptions`, and the package's `test.use` passes `hardless` on as `hardlessOptions`.
+  In `playwright.config` (projects), set `hardlessOptions` directly
+  (`defineConfig<HardlessTestOptions>`).
+- **The shim is injected with `page.addInitScript`** (FR-40) as one classic script: a new
+  IIFE build of `@hardless/shim-web` (`@hardless/shim-web/iife`, defining `HardlessShim`),
+  followed by `install()` with the test's options. Playwright may run init scripts inside a
+  function, so the bootstrap sets `globalThis.HardlessShim` itself.
+- **Standalone mode loads the engine from the app's own origin** (`/__hardless__/…`), which the
+  fixture answers with `context.route` from `@hardless/shim-web/wasm`. Same-origin requests pass
+  the app's Content Security Policy where a `blob:` or inline engine might not, and context
+  routes also see service-worker requests. The devices live in the page, so they start fresh on
+  every navigation; the README says so.
+- **Device handles and matchers go through one backend interface**: `page.evaluate` into the
+  page's shim in standalone mode (not restricted by the page's CSP), the REST API in server
+  mode. `scan()` resolves once the keys are typed (the wedge's new `typed` counter); in
+  server mode scans and taps first wait for the page's bridge.
+- **Matchers poll** every 100 ms until they pass (or, with `.not`, fail) or the `expect`
+  timeout ends, and report what they last saw. `toHaveOpened({ times })` counts openings (the
+  drawer's `opened`), `toHaveCut()` looks for a cut in the latest receipt, and
+  `toHaveWrittenNdef(records)` compares the given fields of each record with the app's latest
+  write.
+- **Server mode** creates the listed devices if the server lacks them and resets them before
+  each test (`reset: false` to keep state), so tests start clean on a shared server.
+- **M3 acceptance**: the example app gained a loyalty card (Web NFC read and write). Its M3
+  suite runs a production build (no shim in it) with the fixture, as two Playwright projects:
+  `m3-standalone` (no server) and `m3-server`; CI's Docker workflow runs `m3-server` against
+  the image (`HARDLESS_SERVER`). It covers print, cut, drawer, scan, NFC read and write, and
+  the faults `paper-out`, `offline` and `read-error`.
+
 ### Chrome extension (FR-17, NFR-03)
 
 - **A popup turns Hardless on per site.** Nothing is requested at install; turning a site on

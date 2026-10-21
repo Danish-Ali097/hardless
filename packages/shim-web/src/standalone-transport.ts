@@ -1,6 +1,8 @@
 import type {
   ControlCommand,
   DeviceSummary,
+  EventRecord,
+  Job,
   NdefRecord,
   NfcRejection,
   SerialSignals,
@@ -42,6 +44,9 @@ interface WasmEngine {
   nextDeadline(): number | undefined;
   setFault(now: number, deviceId: string, fault: string, active: boolean, options: string): string;
   control(now: number, deviceId: string, command: string): string;
+  reset(now: number, deviceId: string): string;
+  jobs(deviceId: string): string;
+  events(deviceId: string): string;
 }
 
 interface WasmModule {
@@ -256,6 +261,25 @@ export class StandaloneTransport implements Transport {
     await this.ready;
     this.device(deviceId);
     this.emit(this.call((e) => e.control(this.now(), deviceId, JSON.stringify(command))));
+    this.refresh();
+  }
+
+  /** A device's print jobs, newest first (used by the Playwright fixture). */
+  async jobs(deviceId: string): Promise<Job[]> {
+    await this.ready;
+    return JSON.parse(this.call((e) => e.jobs(deviceId))) as Job[];
+  }
+
+  /** A device's event log, oldest first (used by the Playwright fixture). */
+  async events(deviceId: string): Promise<EventRecord[]> {
+    await this.ready;
+    return JSON.parse(this.call((e) => e.events(deviceId))) as EventRecord[];
+  }
+
+  /** Resets a device: clears its state, jobs and faults. */
+  async reset(deviceId: string): Promise<void> {
+    await this.ready;
+    this.emit(this.call((e) => e.reset(this.now(), deviceId)));
     this.refresh();
   }
 

@@ -155,7 +155,7 @@ jobs:
       - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium webkit
       - name: Web Serial shim conformance (PRD section 8.1)
         run: pnpm --filter @hardless/shim-web test:browser
-      - name: M1 and M2 acceptance (example app, server and dashboard; Chromium and WebKit)
+      - name: M1, M2 and M3 acceptance (example app, server, dashboard, fixture; Chromium and WebKit)
         run: pnpm --filter @hardless/example-react-pwa test:acceptance
       - name: Chrome extension (FR-17, NFR-03)
         run: pnpm --filter @hardless/extension test:e2e

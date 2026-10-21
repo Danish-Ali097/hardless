@@ -117,6 +117,23 @@ jobs:
           docker rm "$id"
           grep -q "Bigelow & Holmes" notices.txt
           grep -q "Apache License" license.txt
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @hardless/shim-web build
+      - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium
+      - name: M3 acceptance against the Docker server (example app, @hardless/playwright)
+        env:
+          HARDLESS_SERVER: http://127.0.0.1:8080
+        run: pnpm --filter @hardless/example-react-pwa exec playwright test --project=m3-server
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-docker
+          path: examples/react-pwa/test-results
       - name: Server output
         if: always()
         run: docker logs hardless || true

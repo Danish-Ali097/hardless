@@ -15,3 +15,4 @@ playwright-report/
 # The cargo-about template; whitespace is part of the generated notices.
 about.hbs
 dist-extension-test/
+dist-m3/

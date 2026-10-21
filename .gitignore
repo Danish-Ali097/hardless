@@ -20,3 +20,4 @@ crates/*/fuzz/artifacts/
 docker/bin/
 *.stackdump
 dist-extension-test/
+dist-m3/

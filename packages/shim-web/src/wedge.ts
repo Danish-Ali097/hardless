@@ -109,6 +109,7 @@ function isTextField(el: Element): el is HTMLInputElement | HTMLTextAreaElement 
 export class WedgeInjector {
   private queue: Promise<void> = Promise.resolve();
   private stopped = false;
+  private done = 0;
 
   constructor(private readonly doc: Document = document) {}
 
@@ -117,6 +118,11 @@ export class WedgeInjector {
     const run = this.queue.then(() => this.run(scan));
     this.queue = run.catch(() => undefined);
     return run;
+  }
+
+  /** How many scans have been typed completely, e.g. for tests waiting on a server scan. */
+  get typed(): number {
+    return this.done;
   }
 
   /** Resolves when every scan received so far has been typed. */
@@ -136,6 +142,7 @@ export class WedgeInjector {
       if (i > 0 && scan.delayMs > 0) await sleep(scan.delayMs);
       this.press(key);
     }
+    this.done++;
   }
 
   /** Where keys go: the focused element, or the body when nothing has focus. */

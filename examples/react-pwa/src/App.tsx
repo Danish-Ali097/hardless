@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { DRAWER_KICK, money, receipt, total, type Line, type Sale } from "./escpos.js";
 import { defaultAddress, eposDrawerKick, eposReceipt, printOverNetwork } from "./epos.js";
+import { listen, nfcAvailable, stamp, visits, type Card } from "./loyalty.js";
 import { ReceiptPrinter } from "./printer.js";
 
 const ORDER: Line[] = [
@@ -50,6 +51,16 @@ export function App() {
   const [notice, setNotice] = useState<Notice>(null);
   const [order, setOrder] = useState<Line[]>(ORDER);
   const [barcode, setBarcode] = useState("");
+  const [card, setCard] = useState<Card | null>(null);
+  const [listening, setListening] = useState(false);
+  const stopListening = useRef<(() => void) | null>(null);
+
+  useEffect(
+    () => () => {
+      stopListening.current?.();
+    },
+    [],
+  );
 
   useEffect(() => {
     printer.onDisconnect = () => {
@@ -120,6 +131,33 @@ export function App() {
     }
   };
 
+  // Loyalty cards over Web NFC: read a card, then stamp a visit on it.
+  const scanCard = () =>
+    run(async () => {
+      stopListening.current = await listen(
+        (read) => {
+          setCard(read);
+          setNotice({
+            tone: "ok",
+            text: `Loyalty card ${read.serialNumber}: ${read.text ?? "no visits yet"}.`,
+          });
+        },
+        () => {
+          setNotice({ tone: "error", text: "The card could not be read. Tap it again." });
+        },
+      );
+      setListening(true);
+      setNotice({ tone: "ok", text: "Tap the loyalty card on the reader." });
+    });
+
+  const stampCard = () =>
+    run(async () => {
+      const next = visits(card?.text ?? null) + 1;
+      await stamp(next);
+      setCard((current) => current && { ...current, text: `Visits: ${String(next)}` });
+      setNotice({ tone: "ok", text: `Card stamped: Visits: ${String(next)}.` });
+    });
+
   const ready = route === "network" || connected;
   return (
     <main className="pos">
@@ -161,6 +199,33 @@ export function App() {
           <span>Total</span>
           <span>{money(total(order))}</span>
         </p>
+      </section>
+
+      <section className="loyalty" aria-label="Loyalty card">
+        <h2>Loyalty card</h2>
+        {!nfcAvailable() ? (
+          <p>NFC is not available in this browser.</p>
+        ) : (
+          <>
+            <p>
+              {card
+                ? `Card ${card.serialNumber}: ${card.text ?? "no visits yet"}`
+                : listening
+                  ? "Waiting for a card."
+                  : "No card read yet."}
+            </p>
+            <div className="actions">
+              {!listening && (
+                <button type="button" onClick={() => void scanCard()} disabled={busy}>
+                  Scan loyalty card
+                </button>
+              )}
+              <button type="button" onClick={() => void stampCard()} disabled={busy || !card}>
+                Stamp card
+              </button>
+            </div>
+          </>
+        )}
       </section>
 
       <fieldset className="route">

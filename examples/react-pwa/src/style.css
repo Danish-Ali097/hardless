@@ -241,3 +241,19 @@ button:focus-visible {
   font-family: ui-monospace, monospace;
   font-size: 0.8125rem;
 }
+
+.loyalty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loyalty h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.loyalty p {
+  margin: 0;
+  color: var(--muted);
+}

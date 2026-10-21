@@ -206,6 +206,9 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@hardless/playwright':
+        specifier: workspace:*
+        version: link:../../packages/playwright
       '@hardless/shim-web':
         specifier: workspace:*
         version: link:../../packages/shim-web
@@ -273,7 +276,18 @@ importers:
 
   packages/npm-wrapper: {}
 
-  packages/playwright: {}
+  packages/playwright:
+    dependencies:
+      '@hardless/shim-web':
+        specifier: workspace:*
+        version: link:../shim-web
+      '@hardless/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.64.1
+        version: 1.64.1
 
   packages/shim-web:
     dependencies:

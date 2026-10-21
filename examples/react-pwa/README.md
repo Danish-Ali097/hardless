@@ -1,7 +1,7 @@
 # Corner Café: example POS PWA
 
-A small point-of-sale PWA that scans barcodes, prints receipts and opens a cash drawer, the way
-a real one does. In development it uses Hardless instead of hardware. The app's hardware code
+A small point-of-sale PWA that scans barcodes, prints receipts, opens a cash drawer and reads
+loyalty cards over NFC, the way a real one does. In development it uses Hardless instead of hardware. The app's hardware code
 knows nothing about Hardless:
 
 - [src/printer.ts](src/printer.ts): a receipt printer on Web Serial (Chrome and Edge).
@@ -9,6 +9,8 @@ knows nothing about Hardless:
   only way to print from Safari on iPhone and iPad.
 - The barcode field: a USB scanner is a keyboard, so a scan is typed into it and Enter adds
   the item.
+- [src/loyalty.ts](src/loyalty.ts): loyalty cards with Web NFC (`NDEFReader`): read the
+  visit count from a card, and stamp a visit by writing to it.
 
 Only [src/main.tsx](src/main.tsx) installs the Hardless shim, in development builds.
 
@@ -33,6 +35,9 @@ In the app:
    `4006381333931` (flat white), `8964000123456` (croissant), `5012345678900` (orange juice).
 4. In the dashboard, turn on **Paper out** for the printer you use, then **Pay card**: the app
    reports that the receipt did not print.
+5. **Scan loyalty card**, then in the dashboard open `nfc-1`, make a card with a text record
+   `Visits: 2` and tap it: the app shows the visits. **Stamp card** within two seconds (while
+   the card is on the reader) writes `Visits: 3` to it; the dashboard shows the write.
 
 ## On an iPhone or iPad (HTTPS)
 
@@ -50,7 +55,13 @@ Safari has no Web Serial, so it prints over the network, and a PWA is normally o
 
 ## Tests
 
-- `pnpm --filter @hardless/example-react-pwa test`: unit tests for the receipt builders.
-- `pnpm --filter @hardless/example-react-pwa test:acceptance`: the PRD M1 and M2 acceptance
-  tests, in Chromium and WebKit (needs `cargo build -p hardless-cli` with the dashboard
-  built). The iPhone and iPad check above is manual.
+- `pnpm --filter @hardless/example-react-pwa test`: unit tests for the receipt builders and
+  loyalty cards.
+- `pnpm --filter @hardless/example-react-pwa test:acceptance`: the PRD M1, M2 and M3
+  acceptance tests, in Chromium and WebKit (needs `cargo build -p hardless-cli` with the
+  dashboard built, `pnpm --filter @hardless/shim-web build` and `cargo xtask build-wasm`).
+  M3 ([e2e/m3.spec.ts](e2e/m3.spec.ts)) tests a production build, which contains no shim,
+  with [`@hardless/playwright`](../../packages/playwright): once with the devices in the page
+  (project `m3-standalone`) and once against a server (`m3-server`; set `HARDLESS_SERVER` to
+  use one already running, as CI does with the Docker image). The iPhone and iPad check above
+  is manual.
