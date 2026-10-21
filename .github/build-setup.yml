@@ -1,0 +1,14 @@
+# Steps cargo-dist runs before each release build (dist-workspace.toml, github-build-setup):
+# the dashboard is embedded in the binary at build time (FR-21), so build it first.
+# dist needs a name on every step.
+- name: Install pnpm
+  uses: pnpm/action-setup@v4
+- name: Install Node.js
+  uses: actions/setup-node@v5
+  with:
+    node-version: 22
+    cache: pnpm
+- name: Install packages
+  run: pnpm install --frozen-lockfile
+- name: Build the dashboard
+  run: pnpm --filter @hardless/dashboard build

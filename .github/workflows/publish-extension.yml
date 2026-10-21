@@ -1,0 +1,38 @@
+name: Publish Chrome extension zip
+
+# Called by release.yml (cargo-dist post-announce job) once the GitHub Release exists:
+# builds the Chrome MV3 extension and attaches hardless-extension-<version>.zip to the
+# release, to load unpacked (PRD section 13; the Chrome Web Store is a separate decision).
+on:
+  workflow_call:
+    inputs:
+      plan:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  extension:
+    name: Extension zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and zip
+        env:
+          PLAN: ${{ inputs.plan }}
+        run: |
+          tag=$(echo "$PLAN" | jq -r .announcement_tag)
+          node scripts/zip-extension.mjs --version "${tag#v}"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$TAG" packages/extension/hardless-extension-*.zip

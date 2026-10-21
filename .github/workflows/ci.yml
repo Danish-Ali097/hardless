@@ -96,8 +96,46 @@ jobs:
       - run: pnpm --filter @hardless/dashboard build
       # cargo-about runs offline (--frozen); fetch every platform's crates first.
       - run: cargo fetch --locked
-      - name: crates/hardless-cli/THIRD_PARTY_LICENSES.txt is up to date (NFR-14)
+      - name: The binary's and the shim's THIRD_PARTY_LICENSES.txt are up to date (NFR-14)
         run: cargo xtask licenses --check
+
+  # Everything the v0.1.0 release publishes, packed and checked without publishing:
+  # crates.io (cargo publish --dry-run), npm (pack-npm.mjs, npm publish --dry-run) and the
+  # extension zip. The binaries are built by release.yml on pull requests (cargo-dist).
+  release-dry-run:
+    name: Release dry run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Every crate and package carries the LICENSE
+        run: for f in crates/hardless-*/LICENSE packages/{types,shim-web,playwright,npm-wrapper}/LICENSE; do cmp LICENSE "$f"; done
+      - name: cargo publish --dry-run (with the dashboard in the server crate)
+        run: |
+          pnpm --filter @hardless/dashboard build
+          cp -r packages/dashboard/dist crates/hardless-server/dashboard
+          cargo publish --workspace --dry-run --locked
+      - name: Pack the npm packages
+        run: |
+          cargo xtask build-wasm
+          pnpm -r build
+          node scripts/pack-npm.mjs --out npm-packs
+      - name: npm publish --dry-run
+        run: |
+          npm install -g npm@11.21.0
+          for pack in $(cat npm-packs/order.txt); do npm publish "npm-packs/$pack" --dry-run --access public; done
+      - name: Extension zip
+        run: node scripts/zip-extension.mjs --no-build
 
   browser:
     name: Browser packages (${{ matrix.os }})
