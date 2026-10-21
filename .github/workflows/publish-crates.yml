@@ -57,4 +57,5 @@ jobs:
       - name: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || steps.auth.outputs.token }}
-        run: cargo publish --workspace --locked
+        # The dashboard copy is untracked on purpose (crates/hardless-server/build.rs).
+        run: cargo publish --workspace --locked --allow-dirty

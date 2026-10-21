@@ -124,7 +124,7 @@ jobs:
         run: |
           pnpm --filter @hardless/dashboard build
           cp -r packages/dashboard/dist crates/hardless-server/dashboard
-          cargo publish --workspace --dry-run --locked
+          cargo publish --workspace --dry-run --locked --allow-dirty
       - name: Pack the npm packages
         run: |
           cargo xtask build-wasm
