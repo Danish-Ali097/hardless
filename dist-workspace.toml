@@ -33,6 +33,9 @@ formula = "hardless"
 # Chrome extension zip after (.github/workflows/publish-*.yml).
 publish-jobs = ["homebrew", "./publish-crates", "./publish-npm", "./publish-docker"]
 post-announce-jobs = ["./publish-extension"]
+# The publish workflows check out the repository, so they need to read it as well as get an
+# OIDC token for trusted publishing (dist's default grants only id-token and packages).
+github-custom-job-permissions = { "publish-crates" = { contents = "read", id-token = "write" }, "publish-npm" = { contents = "read", id-token = "write" }, "publish-docker" = { contents = "read" } }
 # The dashboard is embedded in the binary at build time, so every build job builds it first.
 github-build-setup = "../build-setup.yml"
 # Every pull request builds all release artifacts without publishing anything (a dry run).

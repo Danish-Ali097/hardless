@@ -350,8 +350,8 @@ jobs:
     secrets: inherit
     # publish jobs get escalated permissions
     permissions:
+      "contents": "read"
       "id-token": "write"
-      "packages": "write"
 
   custom-publish-npm:
     needs:
@@ -364,8 +364,8 @@ jobs:
     secrets: inherit
     # publish jobs get escalated permissions
     permissions:
+      "contents": "read"
       "id-token": "write"
-      "packages": "write"
 
   custom-publish-docker:
     needs:
@@ -378,8 +378,7 @@ jobs:
     secrets: inherit
     # publish jobs get escalated permissions
     permissions:
-      "id-token": "write"
-      "packages": "write"
+      "contents": "read"
 
   announce:
     needs:
