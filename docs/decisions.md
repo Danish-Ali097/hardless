@@ -110,8 +110,10 @@ decision from the maintainer.
   a build tool that never ships with Hardless) with a sidebar, local search and an "Edit
   this page" link back to this repository. Its build clones this public repository and copies
   `docs/` (without the spec, the decision log and local notes); links that leave `docs/`
-  become GitHub links. `vercel.json` and `netlify.toml` let either host build it with no
-  secrets. Connecting a host account is the maintainer's step.
+  become GitHub links. It is published at <https://hardless-docs.netlify.app> by upload
+  (`npm run deploy` with the Netlify CLI), because the free plans of Netlify and Vercel refuse
+  to build private repositories owned by a GitHub organisation (maintainer decision: keep the
+  repository private and upload). Re-run the deploy after the docs here change.
 - **`AGENTS.md`** gains the M3 commands (extension and MCP tests, `cargo xtask docs`, `hardless
 mcp`) and the current repo layout; `llms.txt` lists it.
 

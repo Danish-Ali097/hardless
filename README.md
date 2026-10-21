@@ -185,6 +185,8 @@ Add `--embedded` to start a Hardless server along with it. Without a global inst
 
 ## Documentation
 
+The docs are published at <https://hardless-docs.netlify.app>. In this repository:
+
 - [Quickstart](docs/quickstart.md), [testing with Playwright](docs/testing.md),
   [using Hardless from an AI agent](docs/agents.md), the [REST API](docs/rest-api.md) and
   [writing a device plugin](docs/plugins.md).
