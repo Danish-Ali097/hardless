@@ -10,8 +10,8 @@ in [docs/decisions.md](docs/decisions.md).
 
 Milestones **M0 (foundation)**, **M1 (printer and drawer over Web Serial)** and **M2
 (cross-browser paths: HTTP printers, HTTPS, scanner, scenarios, CLI, Docker)** are done. **M3**
-(WebUSB, Web NFC, event log, Chrome extension, Playwright fixture, MCP server, docs) is in
-progress; the release (v0.1.0) follows. Work one milestone at a time, in order (PRD section
+(WebUSB, Web NFC, event log, Chrome extension, Playwright fixture, MCP server, docs) is done;
+the release (v0.1.0) is next, when the maintainer says so. Work one milestone at a time, in order (PRD section
 13), and build bottom-up (PRD section 15).
 
 User and reference docs live in [docs/](docs/quickstart.md); [llms.txt](llms.txt) indexes them

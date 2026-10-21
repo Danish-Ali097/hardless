@@ -106,6 +106,12 @@ decision from the maintainer.
   fails when a generated page or `llms.txt` is stale, or when a page in `docs/` is not listed
   (`PAGES` in `xtask/src/docs.rs`). Prettier skips the generated files so it cannot make them
   stale.
+- **The site** is the private repository `hardlessdev/hardless-docs`: VitePress 1.6.4 (MIT,
+  a build tool that never ships with Hardless) with a sidebar, local search and an "Edit
+  this page" link back to this repository. Its build clones this public repository and copies
+  `docs/` (without the spec, the decision log and local notes); links that leave `docs/`
+  become GitHub links. `vercel.json` and `netlify.toml` let either host build it with no
+  secrets. Connecting a host account is the maintainer's step.
 - **`AGENTS.md`** gains the M3 commands (extension and MCP tests, `cargo xtask docs`, `hardless
 mcp`) and the current repo layout; `llms.txt` lists it.
 

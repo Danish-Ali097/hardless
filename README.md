@@ -36,8 +36,9 @@ coding agents can print, look at the rendered receipt and toggle faults.
 ## Roadmap
 
 - **Phase 1, browser and PWA** (in progress): M0 foundation, M1 printer and drawer over Web
-  Serial, and M2 HTTP printers, HTTPS, scanner, scenarios, CLI and Docker are done. Next: M3
-  WebUSB, Web NFC, extension, Playwright and MCP; then v0.1.0.
+  Serial, M2 HTTP printers, HTTPS, scanner, scenarios, CLI and Docker, and M3 WebUSB, Web NFC,
+  event log, Chrome extension, Playwright fixture, MCP server and docs are done. Next: the
+  v0.1.0 release.
 - **Later phases**: desktop and Electron (TCP 9100, virtual COM ports, IPP), smart cards and
   WebHID, mobile and Bluetooth, real USB emulation and record/replay.
 
