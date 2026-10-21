@@ -151,11 +151,14 @@ jobs:
           cargo build -p hardless-cli
           cargo xtask build-wasm
           pnpm --filter @hardless/shim-web build
+          pnpm --filter @hardless/extension build
       - run: pnpm --filter @hardless/shim-web exec playwright install --with-deps chromium webkit
       - name: Web Serial shim conformance (PRD section 8.1)
         run: pnpm --filter @hardless/shim-web test:browser
       - name: M1 and M2 acceptance (example app, server and dashboard; Chromium and WebKit)
         run: pnpm --filter @hardless/example-react-pwa test:acceptance
+      - name: Chrome extension (FR-17, NFR-03)
+        run: pnpm --filter @hardless/extension test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -163,3 +166,4 @@ jobs:
           path: |
             packages/shim-web/test-results
             examples/react-pwa/test-results
+            packages/extension/test-results

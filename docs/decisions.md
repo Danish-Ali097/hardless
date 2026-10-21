@@ -89,6 +89,29 @@ decision from the maintainer.
 - **Grants** are kept apart from serial ones (`sessionStorage` key `hardless:usb-grants`). The
   picker is shared with Web Serial and titled like Chrome's ("… wants to connect").
 
+### Chrome extension (FR-17, NFR-03)
+
+- **A popup turns Hardless on per site.** Nothing is requested at install; turning a site on
+  asks Chrome for access to it (`optional_host_permissions`) and registers `inject.js` with
+  `chrome.scripting.registerContentScripts` at `document_start` in the MAIN world, persisted
+  across browser restarts. Turning it off unregisters it and gives the access back.
+- **Settings go through the page's `localStorage`** (`hardless:extension`): a MAIN-world
+  script runs before the page and cannot wait for `chrome.storage`, which is asynchronous.
+  The popup writes the settings into the site's open tabs and reloads them. Alternatives
+  rejected: `chrome.userScripts` (users must switch on a developer toggle) and injecting from
+  a service worker on navigation (too late for `document_start`).
+- **Server mode only**: the extension is for using an app by hand with the dashboard; tests
+  that need no server use the Playwright fixture's standalone mode.
+- **No background script and no type dependency**: the popup does everything, and the few
+  `chrome.*` APIs it uses are typed by hand (`src/chrome.d.ts`) instead of adding
+  `@types/chrome`.
+- **Built with Vite** into `packages/extension/dist` (the unpacked extension): the popup as a
+  page, and `inject.js` as one classic script, since content scripts cannot be ES modules.
+  Publishing on the Chrome Web Store stays an open question for the release (PRD section 16).
+- **Test:** Playwright loads the extension into Chromium, turns it on for a production build
+  of the example app (which has no shim), and prints. The test's copy of the extension grants
+  access to `127.0.0.1` up front, because Playwright cannot click Chrome's permission prompt.
+
 ### `NDEFReader` shim (PRD section 8.3)
 
 - **The shim replaces four globals**: `NDEFReader`, `NDEFReadingEvent`, `NDEFMessage` and

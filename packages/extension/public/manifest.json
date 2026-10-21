@@ -3,7 +3,9 @@
   "name": "Hardless",
   "version": "0.0.0",
   "description": "Injects the Hardless shim so web apps can use emulated POS hardware.",
+  "minimum_chrome_version": "111",
   "permissions": ["storage", "scripting"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],
-  "content_scripts": []
+  "content_scripts": [],
+  "action": { "default_title": "Hardless", "default_popup": "popup.html" }
 }

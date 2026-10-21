@@ -18,3 +18,5 @@ crates/*/fuzz/corpus/
 crates/*/fuzz/artifacts/
 # Prebuilt binaries for the Docker image (see Dockerfile).
 docker/bin/
+*.stackdump
+dist-extension-test/
