@@ -21,3 +21,8 @@ docker/bin/
 *.stackdump
 dist-extension-test/
 dist-m3/
+# The built dashboard, copied into the server crate only when publishing it (release.yml).
+crates/hardless-server/dashboard/
+# Release dry-run output (scripts/pack-npm.mjs, scripts/zip-extension.mjs).
+npm-packs/
+packages/extension/hardless-extension-*.zip

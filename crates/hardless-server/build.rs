@@ -1,12 +1,22 @@
 //! Embeds the built dashboard (`packages/dashboard/dist`) into the server binary. If it has
 //! not been built, a placeholder page explains how to build it.
+//!
+//! The crate published to crates.io has no `packages/` folder next to it, so the release
+//! copies the built dashboard into `crates/hardless-server/dashboard/` first; that copy wins
+//! when present.
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 fn main() {
     let manifest = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default());
-    let dist = manifest.join("../../packages/dashboard/dist");
+    let packaged = manifest.join("dashboard");
+    println!("cargo:rerun-if-changed={}", packaged.display());
+    let dist = if packaged.join("index.html").is_file() {
+        packaged
+    } else {
+        manifest.join("../../packages/dashboard/dist")
+    };
     println!("cargo:rerun-if-changed={}", dist.display());
 
     let mut files = Vec::new();
