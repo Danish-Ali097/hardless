@@ -9,6 +9,8 @@ repository.workspace = true
 homepage.workspace = true
 authors.workspace = true
 readme = "README.md"
+# dashboard/ is the built dashboard, copied in only when publishing (see build.rs).
+include = ["Cargo.toml", "LICENSE", "README.md", "build.rs", "src/**", "dashboard/**"]
 
 [dependencies]
 axum = { version = "0.8.9", features = ["ws"] }
