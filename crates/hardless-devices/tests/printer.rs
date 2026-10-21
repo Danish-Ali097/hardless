@@ -4,7 +4,7 @@
 mod common;
 
 use common::{id, Rig, PRINTER};
-use hardless_core::{DeviceEvent, DevicePlugin, LogLevel};
+use hardless_core::{DeviceEvent, DevicePlugin, FaultId, LogLevel};
 use hardless_devices::printer::PrinterPlugin;
 use serde_json::json;
 
@@ -213,5 +213,90 @@ fn fr_34_state_carries_the_dle_eot_status_bytes() {
     assert_eq!(
         rig.state(PRINTER)["statusBytes"],
         json!([0x1A, 0x32, 0x12, 0x7E])
+    );
+}
+
+#[test]
+fn spec_8_2_usb_printers_report_descriptors_device_id_and_port_status() {
+    let mut rig = Rig::with(
+        json!({ "transport": "usb", "productName": "TM-Test" }),
+        json!({ "attachedTo": PRINTER }),
+    );
+    let state = rig.state(PRINTER);
+    assert_eq!(state["transport"], "usb");
+    assert_eq!(state["usbVendorId"], 0x1209);
+    assert_eq!(state["usbProductId"], 1);
+    assert_eq!(state["usb"]["manufacturerName"], "Hardless");
+    assert_eq!(state["usb"]["productName"], "TM-Test");
+    assert_eq!(state["usb"]["serialNumber"], PRINTER);
+    assert_eq!(
+        state["usb"]["ieee1284Id"],
+        "MFG:Hardless;MDL:TM-Test;CMD:ESC/POS;CLS:PRINTER;"
+    );
+    // Not error and selected.
+    assert_eq!(state["usb"]["portStatus"], 0x18);
+    rig.registry
+        .set_fault(&id(PRINTER), FaultId::PAPER_OUT, true, Default::default())
+        .unwrap();
+    // Paper empty, offline, error.
+    assert_eq!(rig.state(PRINTER)["usb"]["portStatus"], 0x20);
+
+    // Printing works the same as over serial.
+    rig.registry
+        .set_fault(&id(PRINTER), FaultId::PAPER_OUT, false, Default::default())
+        .unwrap();
+    rig.print(b"USB\n\x1dV\x00");
+    assert_eq!(rig.jobs(), ["USB\n"]);
+}
+
+#[test]
+fn spec_8_2_usb_printers_have_usb_faults() {
+    let rig = Rig::with(
+        json!({ "transport": "usb" }),
+        json!({ "attachedTo": PRINTER }),
+    );
+    let summary = rig.registry.summary(&id(PRINTER)).unwrap();
+    let faults: Vec<&str> = summary
+        .supported_faults
+        .iter()
+        .map(|f| f.as_str())
+        .collect();
+    for fault in [
+        "stall",
+        "interface-busy",
+        "slow-write",
+        "disconnect-mid-write",
+        "picker-cancel",
+    ] {
+        assert!(faults.contains(&fault), "{fault}");
+    }
+    assert!(!faults.contains(&"baud-mismatch") && !faults.contains(&"timeout"));
+    let serial = Rig::new();
+    let serial_faults = serial
+        .registry
+        .summary(&id(PRINTER))
+        .unwrap()
+        .supported_faults;
+    assert!(!serial_faults.contains(&FaultId::STALL));
+    assert!(PrinterPlugin
+        .create(id("p"), json!({ "transport": "usb", "usbProductId": 5 }))
+        .is_err());
+}
+
+#[test]
+fn faults_stall_and_interface_busy_show_in_state_for_the_shim() {
+    let mut rig = Rig::with(
+        json!({ "transport": "usb" }),
+        json!({ "attachedTo": PRINTER }),
+    );
+    for fault in [FaultId::STALL, FaultId::INTERFACE_BUSY] {
+        rig.registry
+            .set_fault(&id(PRINTER), fault, true, Default::default())
+            .unwrap();
+    }
+    let state = rig.state(PRINTER);
+    assert_eq!(
+        (state["stall"].as_bool(), state["interfaceBusy"].as_bool()),
+        (Some(true), Some(true))
     );
 }

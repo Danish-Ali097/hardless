@@ -57,6 +57,38 @@ decision from the maintainer.
   app's writes are `control` records (`nfc-write`, `nfc-make-read-only`) with direction
   host → device, followed by an `nfc` record with the outcome.
 
+### WebUSB (PRD section 8.2)
+
+- **A USB printer is `printer-escpos` with `transport: "usb"`**, the same device as serial and
+  HTTP printers, so receipts, faults and the drawer work the same. The server creates
+  `usb-printer-1` by default. Its faults are the serial ones without `baud-mismatch`, plus
+  `stall` and `interface-busy`.
+- **IDs:** without `usbVendorId`, a USB printer reports `0x1209:0x0001`, a pid.codes test ID
+  (pid.codes is the open-source vendor ID), so no real manufacturer's ID is borrowed (NFR-15).
+  Apps that filter on a real vendor's ID can set `usbVendorId` / `usbProductId`. Descriptor
+  strings default to `Hardless` / `Virtual Receipt Printer` / the device ID.
+- **Descriptors follow the USB printer class 1.1:** one configuration, one interface (class 7,
+  subclass 1, protocol 2, bidirectional), bulk OUT endpoint 1 and bulk IN endpoint 2, 64-byte
+  packets. `GET_DEVICE_ID` returns the IEEE 1284 ID with its two-byte length, `GET_PORT_STATUS`
+  the status byte, `SOFT_RESET` is accepted; other control requests stall, as on devices that
+  do not support them.
+- **"Enforce order" (PRD) as in Chrome:** every call needs `open()` (`InvalidStateError`);
+  transfers need the interface claimed (`NotFoundError`, Chrome's message). The device starts
+  with configuration 1 active, as an OS configures a plugged-in printer, so apps that call
+  `selectConfiguration(1)` and apps that skip it both work.
+- **The bridge needs no new messages:** `claimInterface` is the bridge `open` (one claim at a
+  time across tabs; `interface-busy` makes the server refuse it with `network`, the shim's
+  `NetworkError`), `transferOut` is `write`, `transferIn` reads the device's `data` replies,
+  and the descriptors, device ID and port status come from the device's state. `stall` is
+  applied by the shim from the device's active faults, so stalled bytes never reach the
+  printer.
+- **A disconnect** makes calls reject with `NotFoundError` (the PRD's choice for
+  `transferOut`), including a write cut off by `disconnect-mid-write`; a reconnect gives a new
+  `USBDevice` object, as Chrome does. `transferIn` with a length shorter than the waiting
+  bytes returns `length` bytes and keeps the rest.
+- **Grants** are kept apart from serial ones (`sessionStorage` key `hardless:usb-grants`). The
+  picker is shared with Web Serial and titled like Chrome's ("… wants to connect").
+
 ### `NDEFReader` shim (PRD section 8.3)
 
 - **The shim replaces four globals**: `NDEFReader`, `NDEFReadingEvent`, `NDEFMessage` and

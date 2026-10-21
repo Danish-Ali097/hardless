@@ -112,6 +112,12 @@ describe("dashboard", () => {
     expect(log).toContain("0.010 s");
   });
 
+  it("8.2: a USB printer says so and points to the WebUSB picker", () => {
+    const page = html(stateWith([printer({}, { transport: "usb" })]));
+    expect(page).toContain("Receipt printer on WebUSB");
+    expect(page).toContain("from the WebUSB device picker");
+  });
+
   it("FR-33: an HTTP printer shows its addresses, the mixed-content help and the certificate", () => {
     const http = printer({ id: "local_printer" }, { transport: "http" });
     const info = {

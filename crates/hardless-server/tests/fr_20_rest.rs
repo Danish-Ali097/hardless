@@ -16,7 +16,7 @@ async fn fr_20_health() {
 }
 
 #[tokio::test]
-async fn fr_20_default_devices_are_two_printers_a_drawer_a_scanner_and_an_nfc_reader() {
+async fn fr_20_default_devices_are_three_printers_a_drawer_a_scanner_and_an_nfc_reader() {
     let server = server().await;
     let (status, body) = get_json(&server, "/api/v1/devices").await;
     assert_eq!(status, 200);
@@ -33,7 +33,8 @@ async fn fr_20_default_devices_are_two_printers_a_drawer_a_scanner_and_an_nfc_re
             "local_printer",
             "nfc-1",
             "printer-1",
-            "scanner-1"
+            "scanner-1",
+            "usb-printer-1"
         ]
     );
     assert_eq!(body[0]["attachedTo"], "printer-1");

@@ -191,6 +191,10 @@ export class StandaloneTransport implements Transport {
       throw new TransportError("network", `device \`${deviceId}\` is disconnected`);
     if (this.opened.has(deviceId))
       throw new TransportError("invalid_state", `port \`${deviceId}\` is already open`);
+    if (device.faults.some((f) => f.id === "interface-busy")) {
+      // A USB printer whose interface another program has claimed (PRD section 10).
+      throw new TransportError("network", `the interface of \`${deviceId}\` is claimed elsewhere`);
+    }
     this.opened.add(deviceId);
   }
 

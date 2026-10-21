@@ -42,14 +42,14 @@ assert_eq!(registry.summary(&drawer).unwrap().state["state"], "open");
 
 Config (all optional):
 
-| Field                         | Default    | Meaning                                                                  |
-| ----------------------------- | ---------- | ------------------------------------------------------------------------ |
-| `transport`                   | `"serial"` | How the app reaches it. Only `serial` in M1; `usb` and `http` follow.    |
-| `paperWidth`                  | `80`       | `58` or `80` mm; used for job text and rendering.                        |
-| `idleMs`                      | `300`      | A job closes after this much silence, or on a cut.                       |
-| `usbVendorId`, `usbProductId` | none       | Reported by `SerialPort.getInfo()` and matched by `requestPort` filters. |
-| `autoSelect`                  | `false`    | The shim's port picker picks this device without asking (tests).         |
-| `drawerOpenLevel`             | `"high"`   | Drawer sensor level that means open: `"high"` or `"low"` (bit 2 below).  |
+| Field                         | Default    | Meaning                                                                 |
+| ----------------------------- | ---------- | ----------------------------------------------------------------------- |
+| `transport`                   | `"serial"` | How the app reaches it: `serial`, `usb` (WebUSB) or `http`.             |
+| `paperWidth`                  | `80`       | `58` or `80` mm; used for job text and rendering.                       |
+| `idleMs`                      | `300`      | A job closes after this much silence, or on a cut.                      |
+| `usbVendorId`, `usbProductId` | none       | Reported by `getInfo()` / `USBDevice`, matched by picker filters.       |
+| `autoSelect`                  | `false`    | The shim's port picker picks this device without asking (tests).        |
+| `drawerOpenLevel`             | `"high"`   | Drawer sensor level that means open: `"high"` or `"low"` (bit 2 below). |
 
 Jobs close on a cut or after `idleMs` of silence. A job's `ast` is the list of commands it
 contained and its `text` is the plain-text receipt (`hardless_render::to_text`). Commands that
@@ -67,14 +67,21 @@ Real-time status (`DLE EOT n`) is answered immediately with the documented statu
 
 Bits 1 and 4 are always set, as on real printers.
 
+A USB printer (`transport: "usb"`) is a USB printer-class device: it reports `usbVendorId`
+`0x1209` and `usbProductId` `0x0001` (pid.codes, the open-source vendor ID) unless the config
+sets others, and its state carries `usb: { manufacturerName, productName, serialNumber,
+ieee1284Id, portStatus }` for the shim. `manufacturerName`, `productName`, `serialNumber` and
+`ieee1284Id` can be set in the config; `portStatus` is the printer-class `GET_PORT_STATUS` byte
+(bit 3 no error, bit 4 selected, bit 5 paper empty).
+
 Faults (PRD section 10): `paper-out` and `cover-open` reject prints and stop buffered drawer
 kicks (real-time `DLE DC4` kicks still work); `offline` disconnects the printer;
 `disconnect-mid-write` disconnects after `afterBytes` (default 64) bytes; `paper-near-end`
 reports near end in `DLE EOT 4` while prints still work; `baud-mismatch` scrambles every
 received byte (a fixed, repeatable scramble, so status requests go unanswered); `garbled` flips
 one bit in a byte with probability `rate` (default 0.05), from a generator seeded when the fault
-is turned on, so runs under a fake clock repeat exactly. `slow-write` and `picker-cancel` are
-applied by the transport and the browser shim. The event log always shows the bytes the app
+is turned on, so runs under a fake clock repeat exactly. `slow-write`, `picker-cancel`,
+`stall` and `interface-busy` are applied by the transport and the browser shim. The event log always shows the bytes the app
 sent; a job's `bytesHex` shows what the printer received.
 
 ## Cash drawer (`cash-drawer`)

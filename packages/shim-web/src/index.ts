@@ -2,9 +2,9 @@
  * `@hardless/shim-web` replaces browser hardware APIs with shims backed by Hardless emulated
  * devices, so an app's production code runs unchanged (FR-14 to FR-17).
  *
- * It shims `navigator.serial` (Web Serial, PRD section 8.1) and `NDEFReader` (Web NFC,
- * section 8.3), and runs the keyboard-wedge injector (section 8.4). `navigator.usb` arrives
- * later in M3.
+ * It shims `navigator.serial` (Web Serial, PRD section 8.1), `navigator.usb` (WebUSB,
+ * section 8.2) and `NDEFReader` (Web NFC, section 8.3), and runs the keyboard-wedge
+ * injector (section 8.4).
  *
  * @example
  * ```ts
@@ -24,6 +24,7 @@ import {
   NfcHub,
 } from "./nfc.js";
 import { HardlessSerial } from "./serial.js";
+import { HardlessUSB } from "./usb.js";
 import { ServerTransport } from "./server-transport.js";
 import { StandaloneTransport, type StandaloneDevice } from "./standalone-transport.js";
 import type { ScanOptions, Transport, TransportListener } from "./transport.js";
@@ -38,6 +39,13 @@ export {
   NfcHub,
 } from "./nfc.js";
 export { HardlessSerial, HardlessSerialPort } from "./serial.js";
+export {
+  HardlessUSB,
+  HardlessUSBConnectionEvent,
+  HardlessUSBDevice,
+  HardlessUSBInTransferResult,
+  HardlessUSBOutTransferResult,
+} from "./usb.js";
 export type { ScanOptions } from "./transport.js";
 export { WedgeInjector } from "./wedge.js";
 
@@ -48,7 +56,7 @@ export type ShimApi = "serial" | "usb" | "nfc" | "wedge";
 export const SHIM_APIS: readonly ShimApi[] = ["serial", "usb", "nfc", "wedge"];
 
 /** The APIs this version implements; the others arrive in M3. */
-const IMPLEMENTED: ReadonlySet<ShimApi> = new Set(["serial", "nfc", "wedge"]);
+const IMPLEMENTED: ReadonlySet<ShimApi> = new Set(["serial", "usb", "nfc", "wedge"]);
 
 /** The version of this package, sent as `shimVersion` in the bridge `hello` message. */
 export const SHIM_VERSION = "0.0.0";
@@ -93,6 +101,8 @@ export interface Installation {
   readonly transport: Transport;
   /** The `navigator.serial` replacement, if installed. */
   readonly serial: HardlessSerial | null;
+  /** The `navigator.usb` replacement, if installed. */
+  readonly usb: HardlessUSB | null;
   /** The keyboard-wedge injector, if installed. */
   readonly wedge: WedgeInjector | null;
   /** What the `NDEFReader` replacement shares, if installed. */
@@ -155,13 +165,24 @@ export function install(options: InstallOptions): Installation {
   }
 
   let serial: HardlessSerial | null = null;
+  let usb: HardlessUSB | null = null;
   let nfc: NfcHub | null = null;
   const wedge = options.wedge === false ? null : new WedgeInjector(document);
   const listener: TransportListener = {
     devices: () => undefined,
-    data: (id, bytes) => serial?.handleData(id, bytes),
-    connect: (id) => serial?.handleConnect(id),
-    disconnect: (id) => serial?.handleDisconnect(id),
+    // Each API ignores devices it does not own (serial ports, USB printers).
+    data: (id, bytes) => {
+      serial?.handleData(id, bytes);
+      usb?.handleData(id, bytes);
+    },
+    connect: (id) => {
+      serial?.handleConnect(id);
+      usb?.handleConnect(id);
+    },
+    disconnect: (id) => {
+      serial?.handleDisconnect(id);
+      usb?.handleDisconnect(id);
+    },
     wedge: (_id, scan) => void wedge?.type(scan),
     nfc: (id, reading, error) => {
       nfc?.handleReading(id, reading, error);
@@ -197,6 +218,16 @@ export function install(options: InstallOptions): Installation {
     });
   }
 
+  if (options.usb !== false) {
+    usb = new HardlessUSB(transport);
+    const shim = usb;
+    Object.defineProperty(navigator, "usb", {
+      configurable: true,
+      enumerable: true,
+      get: () => shim,
+    });
+  }
+
   if (options.nfc !== false) {
     const hub = new NfcHub(transport);
     nfc = hub;
@@ -226,6 +257,7 @@ export function install(options: InstallOptions): Installation {
     options,
     transport,
     serial,
+    usb,
     wedge,
     nfc,
     async scan(deviceId, code, scanOptions) {
@@ -251,6 +283,9 @@ export function uninstall(): void {
   if (installation.serial) {
     // Removing the own property brings back the browser's getter on Navigator.prototype.
     delete (navigator as unknown as Record<string, unknown>).serial;
+  }
+  if (installation.usb) {
+    delete (navigator as unknown as Record<string, unknown>).usb;
   }
   if (installation.nfc) {
     for (const name of NFC_GLOBALS) {

@@ -237,6 +237,18 @@ impl Session {
                 reply_to,
             )];
         }
+        if summary
+            .faults
+            .iter()
+            .any(|f| f.id == FaultId::INTERFACE_BUSY)
+        {
+            // A USB printer whose interface another program has claimed (PRD section 10).
+            return vec![error(
+                BridgeErrorCode::Network,
+                format!("the interface of `{device_id}` is claimed by another program"),
+                reply_to,
+            )];
+        }
         if !self.engine.claim_port(&device_id, self.id) {
             return vec![error(
                 BridgeErrorCode::Network,

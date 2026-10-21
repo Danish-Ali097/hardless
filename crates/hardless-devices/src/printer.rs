@@ -1,6 +1,8 @@
 //! ESC/POS receipt printer (`printer-escpos`).
 //!
-//! Status bytes follow the `DLE EOT` section of the public ESC/POS command reference.
+//! Status bytes follow the `DLE EOT` section of the public ESC/POS command reference. A USB
+//! printer's descriptors, device ID string and port status follow the public USB Device Class
+//! Definition for Printing Devices 1.1 (interface class 7, subclass 1, protocol 2).
 
 use hardless_core::{
     Bytes, ConfigError, ControlCommand, Device, DeviceEvent, DeviceId, DevicePlugin, FaultId,
@@ -28,7 +30,15 @@ pub enum Transport {
     /// The HTTP printer endpoints: ePOS-Print-compatible and WebPRNT-compatible (FR-31 to
     /// FR-35).
     Http,
+    /// WebUSB, as a USB printer-class device (PRD section 8.2).
+    Usb,
 }
+
+/// USB vendor ID used when a USB printer's config gives none: pid.codes, the open-source
+/// vendor ID, so no real manufacturer's ID is borrowed.
+pub const DEFAULT_USB_VENDOR_ID: u16 = 0x1209;
+/// USB product ID used when a USB printer's config gives none (a pid.codes test ID).
+pub const DEFAULT_USB_PRODUCT_ID: u16 = 0x0001;
 
 /// The control command that ends the job being received, as a printer does at the end of an
 /// HTTP print request: `ControlCommand::Custom { name: "close-job", .. }`.
@@ -51,7 +61,7 @@ pub enum PinLevel {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PrinterConfig {
-    /// How the app reaches the printer. Only `serial` in milestone M1.
+    /// How the app reaches the printer: `serial` (default), `usb` or `http`.
     #[serde(default)]
     pub transport: Transport,
     /// Paper width in millimetres: 58 or 80.
@@ -61,10 +71,12 @@ pub struct PrinterConfig {
     /// Silence in milliseconds after which an open job closes.
     #[serde(default = "default_idle_ms")]
     pub idle_ms: u64,
-    /// USB vendor ID reported by `SerialPort.getInfo()`.
+    /// USB vendor ID reported by `SerialPort.getInfo()` and `USBDevice.vendorId` (a USB
+    /// printer without one reports pid.codes `0x1209`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub usb_vendor_id: Option<u16>,
-    /// USB product ID reported by `SerialPort.getInfo()`.
+    /// USB product ID reported by `SerialPort.getInfo()` and `USBDevice.productId` (needs
+    /// `usbVendorId`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub usb_product_id: Option<u16>,
     /// Let the shim's port picker choose this device without asking.
@@ -73,6 +85,19 @@ pub struct PrinterConfig {
     /// The drawer sensor level that means "open" in `DLE EOT 1` bit 2.
     #[serde(default)]
     pub drawer_open_level: PinLevel,
+    /// USB: the manufacturer string descriptor (default `Hardless`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub manufacturer_name: Option<String>,
+    /// USB: the product string descriptor (default `Virtual Receipt Printer`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub product_name: Option<String>,
+    /// USB: the serial number string descriptor (default: the device ID).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial_number: Option<String>,
+    /// USB: the IEEE 1284 device ID returned by the printer-class `GET_DEVICE_ID` request
+    /// (default `MFG:Hardless;MDL:<product name>;CMD:ESC/POS;CLS:PRINTER;`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ieee1284_id: Option<String>,
 }
 
 fn default_idle_ms() -> u64 {
@@ -89,6 +114,10 @@ impl Default for PrinterConfig {
             usb_product_id: None,
             auto_select: false,
             drawer_open_level: PinLevel::High,
+            manufacturer_name: None,
+            product_name: None,
+            serial_number: None,
+            ieee1284_id: None,
         }
     }
 }
@@ -118,6 +147,21 @@ const HTTP_FAULTS: [FaultId; 7] = [
     FaultId::GARBLED,
     FaultId::TIMEOUT,
     FaultId::CORS_BLOCKED,
+];
+
+/// Faults a USB printer supports (PRD section 10). `stall` and `interface-busy` are applied
+/// by the transport and the shim.
+const USB_FAULTS: [FaultId; 10] = [
+    FaultId::PAPER_OUT,
+    FaultId::PAPER_NEAR_END,
+    FaultId::COVER_OPEN,
+    FaultId::OFFLINE,
+    FaultId::DISCONNECT_MID_WRITE,
+    FaultId::SLOW_WRITE,
+    FaultId::GARBLED,
+    FaultId::STALL,
+    FaultId::INTERFACE_BUSY,
+    FaultId::PICKER_CANCEL,
 ];
 
 /// `garbled`: flips one random bit in a byte with probability `rate`. The generator is
@@ -181,7 +225,12 @@ impl DevicePlugin for PrinterPlugin {
 
     fn faults(&self) -> Vec<FaultId> {
         let mut all = SERIAL_FAULTS.to_vec();
-        all.extend([FaultId::TIMEOUT, FaultId::CORS_BLOCKED]);
+        all.extend([
+            FaultId::TIMEOUT,
+            FaultId::CORS_BLOCKED,
+            FaultId::STALL,
+            FaultId::INTERFACE_BUSY,
+        ]);
         all
     }
 
@@ -194,6 +243,9 @@ impl DevicePlugin for PrinterPlugin {
         };
         if config.idle_ms == 0 {
             return Err(ConfigError::new("idleMs must be at least 1").at("/idleMs"));
+        }
+        if config.usb_product_id.is_some() && config.usb_vendor_id.is_none() {
+            return Err(ConfigError::new("usbProductId needs usbVendorId").at("/usbProductId"));
         }
         Ok(Box::new(Printer::new(id, config)))
     }
@@ -235,6 +287,10 @@ pub struct Printer {
     http_timeout: bool,
     /// HTTP: `cors-blocked` (applied by the endpoint).
     cors_blocked: bool,
+    /// USB: `stall` (applied by the shim).
+    stall: bool,
+    /// USB: `interface-busy` (applied by the transport).
+    interface_busy: bool,
 }
 
 impl Printer {
@@ -265,7 +321,46 @@ impl Printer {
             picker_cancel: false,
             http_timeout: false,
             cors_blocked: false,
+            stall: false,
+            interface_busy: false,
         }
+    }
+
+    /// The USB printer-class port status (`GET_PORT_STATUS`): bit 3 "not error", bit 4
+    /// "selected" and bit 5 "paper empty", as in the USB printer class definition 1.1.
+    pub fn usb_port_status(&self) -> u8 {
+        let mut status = 0;
+        if !(self.paper_out || self.cover_open) && self.connected {
+            status |= 0x08;
+        }
+        if self.connected && !self.stopped() {
+            status |= 0x10;
+        }
+        if self.paper_out {
+            status |= 0x20;
+        }
+        status
+    }
+
+    /// The USB descriptors the shim reports, with defaults filled in.
+    fn usb_state(&self) -> Value {
+        let product = self
+            .config
+            .product_name
+            .clone()
+            .unwrap_or_else(|| "Virtual Receipt Printer".to_owned());
+        let id_1284 = self
+            .config
+            .ieee1284_id
+            .clone()
+            .unwrap_or_else(|| format!("MFG:Hardless;MDL:{product};CMD:ESC/POS;CLS:PRINTER;"));
+        json!({
+            "manufacturerName": self.config.manufacturer_name.as_deref().unwrap_or("Hardless"),
+            "productName": product,
+            "serialNumber": self.config.serial_number.clone().unwrap_or_else(|| self.id.to_string()),
+            "ieee1284Id": id_1284,
+            "portStatus": self.usb_port_status(),
+        })
     }
 
     /// Paper out or cover open: the printer stops printing.
@@ -428,11 +523,20 @@ impl Device for Printer {
     }
 
     fn state(&self) -> Value {
+        let usb = self.config.transport == Transport::Usb;
+        let (vendor, product) = match (self.config.usb_vendor_id, usb) {
+            (Some(vendor), _) => (Some(vendor), self.config.usb_product_id),
+            (None, true) => (Some(DEFAULT_USB_VENDOR_ID), Some(DEFAULT_USB_PRODUCT_ID)),
+            (None, false) => (None, None),
+        };
         json!({
             "transport": self.config.transport,
             "paperWidth": self.config.paper_width,
-            "usbVendorId": self.config.usb_vendor_id,
-            "usbProductId": self.config.usb_product_id,
+            "usbVendorId": vendor,
+            "usbProductId": product,
+            "usb": if usb { self.usb_state() } else { Value::Null },
+            "stall": self.stall,
+            "interfaceBusy": self.interface_busy,
             "autoSelect": self.config.auto_select,
             "connected": self.connected,
             "online": self.connected && !self.stopped(),
@@ -576,6 +680,7 @@ impl Device for Printer {
         match self.config.transport {
             Transport::Serial => SERIAL_FAULTS.to_vec(),
             Transport::Http => HTTP_FAULTS.to_vec(),
+            Transport::Usb => USB_FAULTS.to_vec(),
         }
     }
 
@@ -636,6 +741,8 @@ impl Device for Printer {
             "picker-cancel" => self.picker_cancel = active,
             "timeout" => self.http_timeout = active,
             "cors-blocked" => self.cors_blocked = active,
+            "stall" => self.stall = active,
+            "interface-busy" => self.interface_busy = active,
             _ => {}
         }
         events.push(DeviceEvent::StateChanged);

@@ -1,11 +1,12 @@
 # @hardless/shim-web
 
 Browser API shims backed by [Hardless](https://github.com/hardlessdev/hardless) emulated
-devices. Your app's own hardware code runs unchanged: it calls `navigator.serial` or
-`NDEFReader` as usual and talks to an emulated receipt printer, cash drawer or NFC reader.
+devices. Your app's own hardware code runs unchanged: it calls `navigator.serial`,
+`navigator.usb` or `NDEFReader` as usual and talks to an emulated receipt printer, cash drawer
+or NFC reader.
 
-> Status: milestone M3. `navigator.serial` (Web Serial), `NDEFReader` (Web NFC) and the
-> keyboard-wedge scanner work. WebUSB arrives later in M3.
+> Status: milestone M3. `navigator.serial` (Web Serial), `navigator.usb` (WebUSB),
+> `NDEFReader` (Web NFC) and the keyboard-wedge scanner work.
 
 ## Usage
 
@@ -98,6 +99,36 @@ await shim.scan("scanner-1", "4006381333931"); // standalone: resolves once type
 **Limitation:** the events are synthetic, so `event.isTrusted` is `false`. Apps that ignore
 untrusted key events cannot be tested with the wedge in phase 1; OS-level key injection comes
 in phase 2.
+
+## WebUSB (PRD section 8.2)
+
+Printers with `transport: "usb"` appear to `navigator.usb` as USB printer-class devices: one
+configuration, one interface (class 7, subclass 1, protocol 2), bulk OUT endpoint 1 and bulk
+IN endpoint 2.
+
+```ts
+const device = await navigator.usb.requestDevice({ filters: [{ classCode: 7 }] });
+await device.open();
+if (device.configuration === null) await device.selectConfiguration(1);
+await device.claimInterface(0);
+await device.transferOut(1, new TextEncoder().encode("Total: 1,250\n\x1dV\x00"));
+```
+
+- `requestDevice()` needs a user gesture (`SecurityError`), requires `filters` (`TypeError`;
+  an empty list matches every USB printer), checks filters and `exclusionFilters` like the
+  spec, and shows the Hardless picker; Cancel rejects with `NotFoundError`. Grants persist for
+  the tab (`sessionStorage` key `hardless:usb-grants`) for `getDevices()`.
+- The device is configured when plugged in (`configuration` is set), as a printer is on a real
+  computer; `selectConfiguration(1)` also works. Order is enforced: everything needs `open()`
+  (`InvalidStateError`) and transfers need a claimed interface (`NotFoundError`).
+- `transferOut(1, data)` prints and resolves `{ bytesWritten, status: "ok" }`; `transferIn(2,
+length)` waits for the printer's replies (`DLE EOT` status). `controlTransferIn` answers the
+  printer-class `GET_DEVICE_ID` and `GET_PORT_STATUS` requests and stalls others.
+- `connect` and `disconnect` fire on `navigator.usb` with a `USBConnectionEvent`; after a
+  disconnect, calls reject with `NotFoundError`, and a reconnect brings a new `USBDevice`.
+- Faults: `stall` makes `transferOut` return `status: "stall"`, `interface-busy` makes
+  `claimInterface` reject with `NetworkError`, and `picker-cancel`, `slow-write`, `offline`
+  and `disconnect-mid-write` work as for serial printers.
 
 ## Web NFC (PRD section 8.3)
 

@@ -17,8 +17,9 @@ Every route is served on HTTP (port 8080) and HTTPS (port 8443).
 
 Configuration (FR-21) comes from `hardless.config.json`, then `HARDLESS_*` environment
 variables, then CLI flags. Without a config, it creates `printer-1` (ESC/POS on Web Serial)
-with `drawer-1` attached, `scanner-1` (keyboard wedge), `local_printer` (an HTTP printer;
-`local_printer` is the ePOS-Print default device ID) and `nfc-1` (an NFC reader). It listens on `127.0.0.1` unless told
+with `drawer-1` attached, `usb-printer-1` (ESC/POS on WebUSB), `scanner-1` (keyboard wedge),
+`local_printer` (an HTTP printer; `local_printer` is the ePOS-Print default device ID) and
+`nfc-1` (an NFC reader). It listens on `127.0.0.1` unless told
 otherwise (NFR-01); with a token (NFR-02), the API needs `Authorization: Bearer <token>` and
 WebSockets need `?token=<token>`. The HTTP printer endpoints need no token and accept any
 origin, like a printer on the network.

@@ -22,11 +22,11 @@ as paper out, cover open or a disconnect mid-print.
 | Cash drawer (kicked through the printer)                         | Web Serial                             | Available (M1) |
 | HTTP receipt printer (ePOS-Print-compatible, WebPRNT-compatible) | `fetch`, all browsers incl. iOS Safari | Available (M2) |
 | Barcode scanner                                                  | keyboard wedge                         | Available (M2) |
-| USB receipt printer                                              | WebUSB                                 | Planned (M3)   |
-| NFC reader                                                       | Web NFC (`NDEFReader`)                 | Planned (M3)   |
+| USB receipt printer                                              | WebUSB                                 | Available (M3) |
+| NFC reader                                                       | Web NFC (`NDEFReader`)                 | Available (M3) |
 
 Available now: a dashboard with rendered receipts (download as PNG), scanner presets and
-sequences and fault switches; a REST API and scripted scenarios; a CLI for scans, faults and
+sequences, an NFC card editor, a live event log and fault switches; a REST API and scripted scenarios; a CLI for scans, faults and
 receipts; HTTPS with a local certificate to trust once per device; faults such as paper out,
 cover open, offline, disconnect mid-print, garbled bytes, timeouts and blocked CORS; a Docker
 image; and a standalone mode that runs the devices inside the page for tests. Planned: a
@@ -73,8 +73,8 @@ cargo run -p hardless-cli -- start
 
 The dashboard opens at <http://localhost:8080> (and <https://localhost:8443>). Without a
 config file you get `printer-1`, an ESC/POS receipt printer on Web Serial; `drawer-1`, a cash
-drawer plugged into it; `local_printer`, an HTTP printer; `scanner-1`, a barcode scanner; and
-`nfc-1`, an NFC reader.
+drawer plugged into it; `usb-printer-1`, a receipt printer on WebUSB; `local_printer`, an HTTP
+printer; `scanner-1`, a barcode scanner; and `nfc-1`, an NFC reader.
 
 ### 4. Print something
 

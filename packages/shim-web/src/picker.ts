@@ -1,11 +1,29 @@
 import type { DeviceSummary } from "@hardless/types";
 
+/** What the chooser says: its title and each device's line. */
+export interface PickerText {
+  title: string;
+  label: (device: DeviceSummary) => string;
+}
+
+/** The Web Serial port chooser's text. */
+export function serialPickerText(origin: string): PickerText {
+  return {
+    title: `${origin} wants to connect to a serial port`,
+    label: (device) => `${device.id} (emulated receipt printer)`,
+  };
+}
+
 /**
- * The emulated port chooser (PRD section 8.1): a shadow-DOM dialog like the browser's own,
- * listing the emulated devices that match the request's filters. Resolves with the chosen
- * device ID, or `null` if the user cancels.
+ * The emulated device chooser (PRD sections 8.1 and 8.2): a shadow-DOM dialog like the
+ * browser's own, listing the emulated devices that match the request's filters. Resolves with
+ * the chosen device ID, or `null` if the user cancels.
  */
-export function showPicker(devices: DeviceSummary[], origin: string): Promise<string | null> {
+export function showPicker(
+  devices: DeviceSummary[],
+  origin: string,
+  text: PickerText = serialPickerText(origin),
+): Promise<string | null> {
   return new Promise((resolve) => {
     const host = document.createElement("hardless-port-picker");
     host.setAttribute("data-hardless-picker", "");
@@ -45,7 +63,7 @@ export function showPicker(devices: DeviceSummary[], origin: string): Promise<st
       <div class="backdrop">
         <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="t">
           <h2 id="t"></h2>
-          <p>Emulated by Hardless. Choose a port to connect to.</p>
+          <p>Emulated by Hardless. Choose a device to connect to.</p>
           <ul role="listbox" aria-labelledby="t"></ul>
           <div class="actions">
             <button type="button" data-action="cancel">Cancel</button>
@@ -55,7 +73,7 @@ export function showPicker(devices: DeviceSummary[], origin: string): Promise<st
       </div>`;
 
     const title = root.querySelector("h2");
-    if (title) title.textContent = `${origin} wants to connect to a serial port`;
+    if (title) title.textContent = text.title;
     const list = root.querySelector("ul");
     const connect = root.querySelector<HTMLButtonElement>('[data-action="connect"]');
     const cancel = root.querySelector<HTMLButtonElement>('[data-action="cancel"]');
@@ -88,7 +106,7 @@ export function showPicker(devices: DeviceSummary[], origin: string): Promise<st
         button.setAttribute("role", "option");
         button.setAttribute("data-device-id", device.id);
         button.setAttribute("aria-selected", String(device.id === selected));
-        button.textContent = `${device.id} (emulated receipt printer)`;
+        button.textContent = text.label(device);
         button.addEventListener("click", () => {
           selected = device.id;
           render();

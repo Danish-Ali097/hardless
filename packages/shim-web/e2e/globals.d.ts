@@ -8,6 +8,7 @@ import type {
   HardlessNDEFRecord,
 } from "../src/nfc.js";
 import type { HardlessSerial, HardlessSerialPort } from "../src/serial.js";
+import type { HardlessUSB, HardlessUSBDevice } from "../src/usb.js";
 import type { StandaloneTransport } from "../src/standalone-transport.js";
 
 /** A promise outcome that can cross from the page to the test. */
@@ -27,6 +28,7 @@ declare global {
 
   interface Navigator {
     readonly serial: HardlessSerial;
+    readonly usb: HardlessUSB;
   }
 
   interface Window {
@@ -54,6 +56,9 @@ declare global {
     result: Promise<Settled> | null;
     port: HardlessSerialPort;
     reader: ReadableStreamDefaultReader<Uint8Array>;
+    /** The USBDevice of the WebUSB tests and the events seen. */
+    usbDevice: HardlessUSBDevice;
+    usbEvents: { type: string; device: string }[];
     /** The NDEFReader of the NFC tests and what it saw. */
     ndef: HardlessNDEFReader;
     readings: { serialNumber: string; records: Record<string, unknown>[] }[];

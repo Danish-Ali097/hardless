@@ -16,7 +16,7 @@ async fn fr_18_hello_returns_the_device_list() {
     let devices = recv(&mut ws).await;
     assert_eq!(devices["v"], 1);
     assert_eq!(devices["type"], "devices");
-    assert_eq!(devices["devices"].as_array().unwrap().len(), 5);
+    assert_eq!(devices["devices"].as_array().unwrap().len(), 6);
     assert_eq!(
         recv(&mut ws).await,
         json!({ "v": 1, "type": "ack", "replyTo": "1" })
@@ -516,4 +516,41 @@ async fn fault_read_error_sends_nfc_error_once() {
     )
     .await;
     recv_type(&mut ws, "nfc-reading").await;
+}
+
+#[tokio::test]
+async fn fault_interface_busy_refuses_the_claim_with_network() {
+    let server = server().await;
+    let mut ws = bridge(&server).await;
+    let (status, _) = send_json(
+        &server,
+        "PUT",
+        "/api/v1/devices/usb-printer-1/faults/interface-busy",
+        json!({ "active": true }),
+    )
+    .await;
+    assert_eq!(status, 200);
+    send(
+        &mut ws,
+        json!({ "v": 1, "type": "open", "id": "o1", "deviceId": "usb-printer-1" }),
+    )
+    .await;
+    let err = recv_type(&mut ws, "error").await;
+    assert_eq!(
+        (err["code"].as_str(), err["replyTo"].as_str()),
+        (Some("network"), Some("o1"))
+    );
+    send_json(
+        &server,
+        "PUT",
+        "/api/v1/devices/usb-printer-1/faults/interface-busy",
+        json!({ "active": false }),
+    )
+    .await;
+    send(
+        &mut ws,
+        json!({ "v": 1, "type": "open", "id": "o2", "deviceId": "usb-printer-1" }),
+    )
+    .await;
+    assert_eq!(recv_type(&mut ws, "ack").await["replyTo"], "o2");
 }
