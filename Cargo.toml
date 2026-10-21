@@ -36,3 +36,7 @@ codegen-units = 1
 strip = true
 [profile.release.package.hardless-wasm]
 opt-level = "s"
+
+# cargo-dist builds release binaries with this profile (dist-workspace.toml).
+[profile.dist]
+inherits = "release"

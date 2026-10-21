@@ -53,5 +53,5 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for pack in $(cat npm-packs/order.txt); do
-            npm publish "npm-packs/$pack" --access public --provenance
+            npm publish "./npm-packs/$pack" --access public --provenance
           done
