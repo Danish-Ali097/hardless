@@ -21,6 +21,7 @@ hardless receipts printer-1 --last                      # the latest receipt as 
 hardless receipts printer-1 --limit 5                   # the five newest
 hardless receipts printer-1 --format json
 hardless receipts printer-1 --format png --out receipt.png [--width 58]
+hardless mcp --url http://127.0.0.1:8080 [--read-only] [--embedded]   # MCP server on stdio
 hardless licenses                                       # third-party notices for this binary
 ```
 
@@ -33,4 +34,5 @@ They print one line on success, and on failure print the server's error and exit
 `NDEFReader` shim get a `reading` event. Without `--records` the reader uses what it
 remembers of the card, including anything the app wrote to it. Records use Web NFC's field
 names, e.g. `'[{"recordType":"text","data":"Member 1234","lang":"en"}]'`. `hardless mcp`
-arrives later in M3.
+is the MCP server for AI coding agents (see crates/hardless-mcp): it speaks MCP on stdin and
+stdout, so only the agent should start it.

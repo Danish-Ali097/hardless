@@ -17,6 +17,7 @@ hardless-core.workspace = true
 hardless-devices.workspace = true
 hardless-escpos.workspace = true
 hardless-http-dialects.workspace = true
+hardless-mcp.workspace = true
 hardless-render = { workspace = true, features = ["png"] }
 hyper-util = { version = "0.1.21", features = ["server", "server-auto", "http1", "service", "tokio"] }
 rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
@@ -26,6 +27,7 @@ serde_json = "1.0.154"
 time = "0.3.55"
 tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
 tokio-rustls = { version = "0.26.6", default-features = false, features = ["ring", "tls12"] }
+tower = { version = "0.5.3", features = ["util"] }
 
 [lints]
 workspace = true

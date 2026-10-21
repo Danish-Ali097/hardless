@@ -1,11 +1,12 @@
 //! The `hardless` binary (FR-30).
 //!
 //! `hardless start` runs the server. `scan`, `tap`, `fault` and `receipts` control a running
-//! server through its REST API. `licenses` prints the third-party notices. `mcp` arrives in
-//! milestone M3.
+//! server through its REST API. `mcp` serves the MCP server for coding agents over stdio
+//! (FR-43). `licenses` prints the third-party notices.
 #![forbid(unsafe_code)]
 
 mod client;
+mod mcp;
 
 use std::net::IpAddr;
 use std::path::PathBuf;
@@ -39,8 +40,27 @@ enum Command {
     Fault(FaultArgs),
     /// Show a printer's receipts, or save one as HTML, SVG or PNG.
     Receipts(ReceiptsArgs),
+    /// Serve the MCP server for AI coding agents over stdin/stdout, against a running server
+    /// (or, with --embedded, one started here).
+    Mcp(McpArgs),
     /// Print the licences of the third-party software in this binary.
     Licenses,
+}
+
+#[derive(Debug, clap::Args)]
+struct McpArgs {
+    /// The Hardless server's address.
+    #[arg(long, env = "HARDLESS_SERVER", default_value = "http://127.0.0.1:8080")]
+    url: String,
+    /// The server's bearer token, if it has one.
+    #[arg(long, env = "HARDLESS_TOKEN", hide_env_values = true)]
+    token: Option<String>,
+    /// Offer only the tools that read (no device changes, scans, taps or faults).
+    #[arg(long)]
+    read_only: bool,
+    /// Start a Hardless server in this process when none answers at --url.
+    #[arg(long)]
+    embedded: bool,
 }
 
 #[derive(Debug, clap::Args)]
@@ -171,6 +191,7 @@ fn main() -> ExitCode {
     match cli.command {
         Command::Start(args) => start(args),
         Command::Licenses => licenses(),
+        Command::Mcp(args) => mcp::run(&args.url, args.token, args.read_only, args.embedded),
         Command::Scan(args) => {
             let args = &args;
             remote(&args.remote, |c| async move { scan(&c, args).await })

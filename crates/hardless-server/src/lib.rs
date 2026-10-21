@@ -10,6 +10,7 @@ mod api;
 mod assets;
 mod bridge;
 mod http_printers;
+mod mcp;
 mod security;
 mod stream;
 pub mod tls;
@@ -92,6 +93,7 @@ pub fn router(state: AppState, ca_pem: Option<Arc<str>>) -> Router {
     Router::new()
         .nest("/api/v1", api)
         .merge(http_printers::routes())
+        .merge(mcp::routes(state.clone()))
         .route(
             tls::CA_DOWNLOAD_PATH,
             get(move || {

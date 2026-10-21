@@ -89,6 +89,48 @@ decision from the maintainer.
 - **Grants** are kept apart from serial ones (`sessionStorage` key `hardless:usb-grants`). The
   picker is shared with Web Serial and titled like Chrome's ("… wants to connect").
 
+### MCP server (FR-43 to FR-50)
+
+- **`rmcp` 3.6** (Apache-2.0, the official Rust MCP SDK; PRD section 6 names it) with the
+  `server`, `macros`, `schemars`, `transport-io` and `transport-streamable-http-server`
+  features. It brings 24 crates into the binary, all MIT or Apache-2.0 (among them `futures`,
+  `uuid`, `chrono`, `rand`, `tokio-stream`, `sse-stream` and the `darling` macro helpers);
+  cargo-deny passes and the licence notices list them. The tests also use its `client` and
+  `transport-child-process` features (dev only).
+- **One seam to the server, the REST API** (`Rest` trait): `hardless mcp --url` sends HTTP
+  with the CLI's client, and `/mcp` calls the server's REST routes in-process (no network
+  hop, same validation). `decode_escpos` and `list_faults` read the engine crates directly,
+  since there is no REST endpoint for "decode without a device" or the catalogue, and neither
+  is device logic.
+- **Output schemas**: every tool declares one; list results are wrapped in objects
+  (`{ devices: [...] }`), as MCP structured content must be an object. Receipt tools return a
+  text block, structured content (`ReceiptOut`: job ID, time, text, lines, bytes, whether it
+  was cut, and an AST summary by node type) and a PNG image block unless `format: "text"`
+  (`image` swaps the full text for a one-line summary). The PNG comes from the server's
+  `/render` endpoint, so it is the same image as the dashboard's download.
+- **Errors (FR-49)** are tool results with `isError`, the REST error code and a fixed next
+  step per code, e.g. `not_found` → "Call `list_devices`". `get_last_receipt` on a printer
+  with no receipts says `no_jobs`. A failed scenario returns its report with `isError`.
+- **`--read-only` (FR-48)** removes the seven mutating tools from the router, so they are not
+  listed and cannot be called. Read tools carry `readOnlyHint`; `remove_device` and
+  `reset_device` carry `destructiveHint`.
+- **`--embedded` (FR-44)** starts a server on the URL's port (8080 by default) only when
+  nothing answers there, with the normal defaults (HTTPS included), and says so on stderr;
+  stdout carries only MCP messages.
+- **`/mcp` security**: behind the same token check as the REST API (NFR-02). On a server bound
+  to localhost (the default), it accepts only loopback `Host` names, which blocks DNS
+  rebinding from web pages. Bound to the network (`--host 0.0.0.0`, Docker) it accepts any
+  `Host`, since agents in other containers call it as e.g. `hardless:8080`; the server is
+  reachable anyway, and the token protects it.
+- **Resources (FR-46)**: the docs resources are built from the fault catalogue and from the
+  `## Commands` section of `hardless-escpos`'s README and the dialect sections of
+  `hardless-http-dialects`'s README (both now exported as `REFERENCE`), the same sources the
+  docs site will use.
+- **Test (M3 acceptance)**: `crates/hardless-cli/tests/fr_43_mcp.rs` starts a server, runs
+  `hardless mcp` as a child process with the SDK's client, calls all 15 tools, checks each
+  result against the tool's output schema, gets a PNG from `get_last_receipt`, reads the
+  resources, and checks that `--read-only` lists only the eight read tools.
+
 ### Playwright fixture (FR-40 to FR-42) and M3 acceptance
 
 - **`test.use({ hardless: options })` as the PRD writes it.** A Playwright fixture cannot be

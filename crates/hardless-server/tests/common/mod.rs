@@ -49,15 +49,20 @@ pub async fn raw_response(
 ) -> Vec<u8> {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let mut stream = TcpStream::connect(server.addr).await.unwrap();
+    // A `Host` in `headers` replaces the default one.
+    let is_host = |name: &str| name.eq_ignore_ascii_case("host");
+    let host = headers
+        .iter()
+        .find(|(name, _)| is_host(name))
+        .map_or_else(|| server.addr.to_string(), |(_, value)| (*value).to_owned());
     let mut request = format!(
-        "{method} {path} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: {}\r\n",
-        server.addr,
+        "{method} {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nContent-Length: {}\r\n",
         body.len()
     );
     if let Some(content_type) = content_type {
         request.push_str(&format!("Content-Type: {content_type}\r\n"));
     }
-    for (name, value) in headers {
+    for (name, value) in headers.iter().filter(|(name, _)| !is_host(name)) {
         request.push_str(&format!("{name}: {value}\r\n"));
     }
     request.push_str("\r\n");

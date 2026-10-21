@@ -580,7 +580,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 - [x] `hardless-devices::nfc` + `NDEFReader` shim (section 8.3) + NFC dashboard panel (FR-27)
 - [x] Chrome MV3 extension with per-origin enable (FR-17, NFR-03)
 - [x] `@hardless/playwright` fixture and matchers (FR-40–FR-42)
-- [ ] `hardless-mcp` with stdio and `/mcp` transports, all tools and resources in section 11.4 (FR-43–FR-50)
+- [x] `hardless-mcp` with stdio and `/mcp` transports, all tools and resources in section 11.4 (FR-43–FR-50)
 - [ ] `AGENTS.md` and `llms.txt` at repo root with a CI sync check (FR-51)
 - [x] Event log view (FR-29)
 - [ ] Docs site in `docs/`: quickstart, device reference, fault reference, writing a device plugin, using Hardless from an AI agent

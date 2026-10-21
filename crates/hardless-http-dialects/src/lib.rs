@@ -2,6 +2,11 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+/// This crate's README, which holds the request and response reference for both dialects.
+/// The MCP server's `hardless://docs/http-dialects` resource and the docs site read it, so
+/// the reference has one source.
+pub const REFERENCE: &str = include_str!("../README.md");
+
 pub mod epos;
 mod escpos;
 pub mod webprnt;

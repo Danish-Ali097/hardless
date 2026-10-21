@@ -29,8 +29,8 @@ Available now: a dashboard with rendered receipts (download as PNG), scanner pre
 sequences, an NFC card editor, a live event log and fault switches; a REST API and scripted scenarios; a CLI for scans, faults and
 receipts; HTTPS with a local certificate to trust once per device; faults such as paper out,
 cover open, offline, disconnect mid-print, garbled bytes, timeouts and blocked CORS; a Docker
-image; and a standalone mode that runs the devices inside the page for tests. Planned: a
-Playwright fixture with matchers like `toHavePrinted(/Total: 1,250/)`, and an MCP server so
+image; a standalone mode that runs the devices inside the page for tests; a Playwright fixture
+with matchers like `toHavePrinted(/Total: 1,250/)`; a Chrome extension; and an MCP server so
 coding agents can print, look at the rendered receipt and toggle faults.
 
 ## Roadmap
@@ -144,31 +144,43 @@ are typed into the focused field, like a USB scanner.
 **Docker (built in CI, published at v0.1.0).** See `Dockerfile` and [AGENTS.md](AGENTS.md):
 `docker run -p 8080:8080 -p 8443:8443 -v hardless-data:/data hardless/hardless`.
 
-**Planned** (names may change before v0.1.0):
+**Test with Playwright (available now).** [`@hardless/playwright`](packages/playwright)
+injects the shim before your app runs (a production build needs no Hardless code) and adds
+matchers that wait like Playwright's own:
 
-- **Playwright (M3):**
+```ts
+import { test, expect } from "@hardless/playwright";
 
-  ```ts
-  import { test, expect } from "@hardless/playwright";
+test("cash sale prints and opens drawer", async ({ page, hardless }) => {
+  await page.goto("/pos");
+  await page.getByRole("button", { name: "Pay cash" }).click();
+  await expect(hardless.printer("printer-1")).toHavePrinted(/Total:s+1,250/);
+  await expect(hardless.drawer("drawer-1")).toHaveOpened({ times: 1 });
+});
+```
 
-  test("cash sale prints and opens drawer", async ({ page, hardless }) => {
-    await page.goto("/pos");
-    await page.getByRole("button", { name: "Pay cash" }).click();
-    await expect(hardless.printer("printer-1")).toHavePrinted(/Total:s+1,250/);
-    await expect(hardless.drawer("drawer-1")).toHaveOpened({ times: 1 });
-  });
-  ```
+**Use an unmodified app by hand (available now).** The Chrome extension in
+[packages/extension](packages/extension) injects the shim into the sites you turn it on for.
 
-- **AI coding agents (M3):** add Hardless as an MCP server in your agent's config, so it can
-  print, look at the rendered receipt and toggle faults itself:
+**AI coding agents (available now).** Add Hardless as an MCP server in your agent's config, so
+it can print, look at the rendered receipt and toggle faults itself
+([crates/hardless-mcp](crates/hardless-mcp)):
 
-  ```json
-  {
-    "mcpServers": {
-      "hardless": { "command": "hardless", "args": ["mcp", "--url", "http://localhost:8080"] }
+```json
+{
+  "mcpServers": {
+    "hardless": {
+      "command": "hardless",
+      "args": ["mcp", "--url", "http://localhost:8080"],
+      "env": { "HARDLESS_TOKEN": "" }
     }
   }
-  ```
+}
+```
+
+Add `--embedded` to start a Hardless server along with it. Without a global install, use
+`"command": "npx"` with `"args": ["-y", "hardless", "mcp", "--url", "http://localhost:8080"]`
+(from v0.1.0). Agents in containers can use `http://<server>:8080/mcp` instead.
 
 ## Repository layout
 

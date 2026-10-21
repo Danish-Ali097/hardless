@@ -3,6 +3,12 @@
 #![deny(missing_docs)]
 
 mod ast;
+
+/// This crate's README, which holds the supported command table (`## Commands`). The MCP
+/// server's `hardless://docs/escpos-commands` resource and the docs site read it, so the
+/// reference has one source.
+pub const REFERENCE: &str = include_str!("../README.md");
+
 mod codepage;
 mod hex;
 mod parser;
