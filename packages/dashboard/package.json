@@ -1,6 +1,6 @@
 {
   "name": "@hardless/dashboard",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Hardless dashboard: devices, rendered receipts, drawer state and fault toggles. Built into hardless-server.",
   "license": "Apache-2.0",

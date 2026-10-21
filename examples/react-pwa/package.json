@@ -1,6 +1,6 @@
 {
   "name": "@hardless/example-react-pwa",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Example POS PWA that prints receipts, opens a cash drawer, scans barcodes and reads loyalty cards, tested against Hardless.",
   "license": "Apache-2.0",

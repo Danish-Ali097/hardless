@@ -35,10 +35,9 @@ coding agents can print, look at the rendered receipt and toggle faults.
 
 ## Roadmap
 
-- **Phase 1, browser and PWA** (in progress): M0 foundation, M1 printer and drawer over Web
-  Serial, M2 HTTP printers, HTTPS, scanner, scenarios, CLI and Docker, and M3 WebUSB, Web NFC,
-  event log, Chrome extension, Playwright fixture, MCP server and docs are done. Next: the
-  v0.1.0 release.
+- **Phase 1, browser and PWA** (released as v0.1.0): Web Serial, WebUSB, Web NFC and HTTP
+  printers, HTTPS, scanner, scenarios, CLI, Docker, event log, Chrome extension, Playwright
+  fixture, MCP server and docs.
 - **Later phases**: desktop and Electron (TCP 9100, virtual COM ports, IPP), smart cards and
   WebHID, mobile and Bluetooth, real USB emulation and record/replay.
 
@@ -46,7 +45,27 @@ The full spec is [docs/PRD.md](docs/PRD.md).
 
 ## Getting started
 
-### 1. Install the prerequisites
+### 1. Install
+
+With Node.js 22 or later, `npx hardless start` runs Hardless without installing anything.
+To install the `hardless` binary (Windows, macOS and Linux, x86_64 and arm64):
+
+```sh
+# macOS and Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/hardlessdev/hardless/releases/latest/download/hardless-cli-installer.sh | sh
+# Windows (PowerShell)
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/hardlessdev/hardless/releases/latest/download/hardless-cli-installer.ps1 | iex"
+# Homebrew
+brew install hardlessdev/tap/hardless
+# From source, with Rust
+cargo install hardless-cli
+```
+
+Or use Docker: `docker run -p 8080:8080 -p 8443:8443 -v hardless-data:/data hardless/hardless`.
+
+### 2. Or build from the repository
+
+To work on Hardless or run the example app, you need:
 
 | Tool    | Version                       | How to install                                                                      |
 | ------- | ----------------------------- | ----------------------------------------------------------------------------------- |
@@ -55,8 +74,6 @@ The full spec is [docs/PRD.md](docs/PRD.md).
 | pnpm    | 12                            | `npm install -g pnpm@12.14.0`                                                       |
 | Git     | any recent version            | [git-scm.com](https://git-scm.com)                                                  |
 | Chrome  | recent                        | Web Serial works in Chrome and Edge on desktop                                      |
-
-### 2. Get the code and build
 
 ```sh
 git clone https://github.com/hardlessdev/hardless.git
@@ -69,7 +86,8 @@ cargo build -p hardless-cli               # the `hardless` binary (first build t
 ### 3. Start Hardless
 
 ```sh
-cargo run -p hardless-cli -- start
+hardless start                     # or: npx hardless start
+cargo run -p hardless-cli -- start # in the repository
 ```
 
 The dashboard opens at <http://localhost:8080> (and <https://localhost:8443>). Without a
@@ -142,7 +160,7 @@ are typed into the focused field, like a USB scanner.
 (scan, wait, setFault, clearFault, expect). The CLI drives a running server:
 `hardless fault printer-1 paper-out on`, `hardless receipts printer-1 --last`.
 
-**Docker (built in CI, published at v0.1.0).** See `Dockerfile` and [AGENTS.md](AGENTS.md):
+**Docker.** The `hardless/hardless` image on Docker Hub (linux/amd64 and linux/arm64):
 `docker run -p 8080:8080 -p 8443:8443 -v hardless-data:/data hardless/hardless`.
 
 **Test with Playwright (available now).** [`@hardless/playwright`](packages/playwright)
@@ -180,8 +198,7 @@ it can print, look at the rendered receipt and toggle faults itself
 ```
 
 Add `--embedded` to start a Hardless server along with it. Without a global install, use
-`"command": "npx"` with `"args": ["-y", "hardless", "mcp", "--url", "http://localhost:8080"]`
-(from v0.1.0). Agents in containers can use `http://<server>:8080/mcp` instead.
+`"command": "npx"` with `"args": ["-y", "hardless", "mcp", "--url", "http://localhost:8080"]`. Agents in containers can use `http://<server>:8080/mcp` instead.
 
 ## Documentation
 

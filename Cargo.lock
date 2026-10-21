@@ -859,7 +859,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-cli"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "bytes",
  "clap",
@@ -876,7 +876,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-core"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "bytes",
  "insta",
@@ -889,7 +889,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-devices"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hardless-core",
  "hardless-escpos",
@@ -902,7 +902,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-escpos"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "insta",
  "proptest",
@@ -913,7 +913,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-http-dialects"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hardless-core",
  "hardless-escpos",
@@ -924,7 +924,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-mcp"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hardless-core",
  "hardless-devices",
@@ -940,7 +940,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-render"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "barcoders",
  "hardless-escpos",
@@ -953,7 +953,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-server"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "axum",
  "futures-util",
@@ -978,7 +978,7 @@ dependencies = [
 
 [[package]]
 name = "hardless-wasm"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hardless-core",
  "hardless-devices",

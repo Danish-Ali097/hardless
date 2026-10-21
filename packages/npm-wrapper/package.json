@@ -1,6 +1,6 @@
 {
   "name": "hardless",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Run the Hardless POS hardware emulator with npx: downloads the platform binary.",
   "license": "Apache-2.0",
   "repository": {

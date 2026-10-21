@@ -218,7 +218,7 @@ Used by: qrcode 0.14.1
 
 ==============================================================================
 Apache License 2.0 (Apache-2.0)
-Used by: hardless-core 0.0.0, hardless-devices 0.0.0, hardless-escpos 0.0.0, hardless-render 0.0.0
+Used by: hardless-core 0.1.0, hardless-devices 0.1.0, hardless-escpos 0.1.0, hardless-render 0.1.0
 ==============================================================================
 
                                  Apache License
@@ -844,7 +844,7 @@ limitations under the License.
 
 ==============================================================================
 Apache License 2.0 (Apache-2.0)
-Used by: hardless-wasm 0.0.0, dyn-clone 1.0.20, itoa 1.0.18, proc-macro2 1.0.107, quote 1.0.47, ref-cast-impl 1.0.27, ref-cast 1.0.27, serde 1.0.229, serde_core 1.0.229, serde_derive 1.0.229, serde_derive_internals 0.30.0, serde_json 1.0.154, syn 3.0.9, unicode-ident 1.0.27
+Used by: hardless-wasm 0.1.0, dyn-clone 1.0.20, itoa 1.0.18, proc-macro2 1.0.107, quote 1.0.47, ref-cast-impl 1.0.27, ref-cast 1.0.27, serde 1.0.229, serde_core 1.0.229, serde_derive 1.0.229, serde_derive_internals 0.30.0, serde_json 1.0.154, syn 3.0.9, unicode-ident 1.0.27
 ==============================================================================
 
 Apache License
