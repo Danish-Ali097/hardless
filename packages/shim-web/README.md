@@ -5,8 +5,12 @@ devices. Your app's own hardware code runs unchanged: it calls `navigator.serial
 `navigator.usb` or `NDEFReader` as usual and talks to an emulated receipt printer, cash drawer
 or NFC reader.
 
-> Status: milestone M3. `navigator.serial` (Web Serial), `navigator.usb` (WebUSB),
-> `NDEFReader` (Web NFC) and the keyboard-wedge scanner work.
+```sh
+npm install --save-dev @hardless/shim-web
+```
+
+`navigator.serial` (Web Serial), `navigator.usb` (WebUSB), `NDEFReader` (Web NFC) and the
+keyboard-wedge scanner work.
 
 ## Usage
 

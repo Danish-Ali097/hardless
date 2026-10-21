@@ -1,6 +1,6 @@
 {
   "name": "@hardless/types",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "TypeScript wire types for Hardless, generated from the Rust definitions.",
   "license": "Apache-2.0",
   "repository": {

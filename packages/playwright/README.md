@@ -6,6 +6,10 @@ installs the Hardless shim in every page before your app's code runs (FR-40), gi
 handles for the devices (FR-42), and adds matchers that poll like Playwright's own (FR-41).
 Your app needs no Hardless code: test a production build.
 
+```sh
+npm install --save-dev @hardless/playwright @playwright/test
+```
+
 ```ts
 import { test, expect } from "@hardless/playwright";
 

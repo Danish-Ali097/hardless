@@ -1,6 +1,6 @@
 {
   "name": "@hardless/playwright",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Playwright fixture and matchers for testing POS hardware flows against Hardless.",
   "license": "Apache-2.0",
   "repository": {

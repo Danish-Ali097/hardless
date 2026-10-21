@@ -7,17 +7,26 @@ keyboard) or answers its HTTP printer calls.
 
 ## 1. Start Hardless
 
-Until v0.1.0 is published, build it from the repository (Rust 1.99, Node.js 22, pnpm):
+With Node.js 22 or later, no install is needed:
 
 ```sh
-git clone https://github.com/hardlessdev/hardless
-cd hardless
-pnpm install
-pnpm --filter @hardless/dashboard build
-cargo run -p hardless-cli -- start
+npx hardless start
 ```
 
-Or with Docker, once you have built the image (`Dockerfile`):
+Or install the `hardless` binary (Windows, macOS and Linux, x86_64 and arm64):
+
+```sh
+# macOS and Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/hardlessdev/hardless/releases/latest/download/hardless-cli-installer.sh | sh
+# Windows (PowerShell)
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/hardlessdev/hardless/releases/latest/download/hardless-cli-installer.ps1 | iex"
+# Homebrew
+brew install hardlessdev/tap/hardless
+# From source, with Rust
+cargo install hardless-cli
+```
+
+then run `hardless start`. Or with Docker:
 
 ```sh
 docker run -p 8080:8080 -p 8443:8443 -v hardless-data:/data hardless/hardless

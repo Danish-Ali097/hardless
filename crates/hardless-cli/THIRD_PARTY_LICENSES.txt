@@ -1332,7 +1332,7 @@ Used by: zerocopy 0.8.63
 
 ==============================================================================
 Apache License 2.0 (Apache-2.0)
-Used by: hardless-cli 0.0.0, hardless-core 0.0.0, hardless-devices 0.0.0, hardless-escpos 0.0.0, hardless-http-dialects 0.0.0, hardless-mcp 0.0.0, hardless-render 0.0.0, hardless-server 0.0.0
+Used by: hardless-cli 0.1.0, hardless-core 0.1.0, hardless-devices 0.1.0, hardless-escpos 0.1.0, hardless-http-dialects 0.1.0, hardless-mcp 0.1.0, hardless-render 0.1.0, hardless-server 0.1.0
 ==============================================================================
 
                                  Apache License

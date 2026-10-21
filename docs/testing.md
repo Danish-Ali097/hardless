@@ -5,6 +5,10 @@ Hardless shim in every page before your app's code runs, gives the test handles 
 devices, and adds matchers that wait like Playwright's own. Test a production build of your
 app: it needs no Hardless code.
 
+```sh
+npm install --save-dev @hardless/playwright @playwright/test
+```
+
 ```ts
 import { test, expect } from "@hardless/playwright";
 

@@ -6,9 +6,11 @@ Hardless server. It only runs on sites you turn it on for (NFR-03).
 
 ## Use it
 
-1. Build it: `pnpm --filter @hardless/extension build` (writes `dist/`).
+1. Download `hardless-extension-<version>.zip` from the
+   [latest release](https://github.com/hardlessdev/hardless/releases/latest) and unzip it. Or
+   build it from the repository: `pnpm --filter @hardless/extension build` (writes `dist/`).
 2. In Chrome, open `chrome://extensions`, turn on Developer mode, choose **Load unpacked** and
-   pick `packages/extension/dist`.
+   pick the unzipped folder (or `packages/extension/dist`).
 3. Start Hardless (`hardless start`), open your app, click the Hardless icon and choose
    **Use Hardless on this site**. Chrome asks for access to the site; the page reloads with
    the shim installed before any of its own code.
