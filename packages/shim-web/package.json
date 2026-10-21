@@ -17,7 +17,8 @@
   },
   "files": [
     "dist",
-    "wasm"
+    "wasm",
+    "THIRD_PARTY_LICENSES.txt"
   ],
   "publishConfig": {
     "exports": {
