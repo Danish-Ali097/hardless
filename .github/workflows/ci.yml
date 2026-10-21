@@ -133,7 +133,7 @@ jobs:
       - name: npm publish --dry-run
         run: |
           npm install -g npm@11.21.0
-          for pack in $(cat npm-packs/order.txt); do npm publish "npm-packs/$pack" --dry-run --access public; done
+          for pack in $(cat npm-packs/order.txt); do npm publish "./npm-packs/$pack" --dry-run --access public; done
       - name: Extension zip
         run: node scripts/zip-extension.mjs --no-build
 
