@@ -77,6 +77,12 @@ publish workflows fall back to trusted publishing when the secrets are absent.
    extension zip loads unpacked in Chrome.
 6. Re-deploy the docs site (`npm run deploy` in `hardless-docs`).
 
-If a publish job fails after others succeeded, fix the cause and re-run only the failed jobs
-from the workflow run page. crates.io and npm never accept the same version twice, so do not
-re-tag.
+If a publish job fails after others succeeded, fix the cause, then re-run only the failed
+jobs from the workflow run page. crates.io and npm never accept the same version twice, so do
+not re-tag. Re-runs use the workflow files of the tag, so a fix to a workflow cannot reach
+them; for that case, Publish crates and Publish Chrome extension zip can be run by hand
+(Actions → the workflow → Run workflow, with the tag) from `main`, provided the crates or the
+extension are unchanged since the tag (they check). The crates job skips crates already on
+crates.io and waits out crates.io's limit on new crates (a first release of many crates hits
+it). Running Publish crates by hand needs the `release` environment to allow `main` for that
+run: add `main` under its deployment branches, and remove it afterwards.

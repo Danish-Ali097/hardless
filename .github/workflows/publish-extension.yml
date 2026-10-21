@@ -3,10 +3,18 @@ name: Publish Chrome extension zip
 # Called by release.yml (cargo-dist post-announce job) once the GitHub Release exists:
 # builds the Chrome MV3 extension and attaches hardless-extension-<version>.zip to the
 # release, to load unpacked (PRD section 13; the Chrome Web Store is a separate decision).
+# Can also be run by hand (Actions → Publish Chrome extension zip → Run workflow, with the
+# release tag) from a commit whose extension and shim match that tag.
 on:
   workflow_call:
     inputs:
       plan:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag to attach the zip to, e.g. v0.1.0
         required: true
         type: string
 
@@ -19,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
@@ -28,8 +38,11 @@ jobs:
       - name: Build and zip
         env:
           PLAN: ${{ inputs.plan }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          tag=$(echo "$PLAN" | jq -r .announcement_tag)
+          tag=${INPUT_TAG:-$(echo "$PLAN" | jq -r .announcement_tag)}
+          # Run by hand from a later commit: the extension must be exactly the tagged one.
+          git diff --exit-code "$tag" HEAD -- packages/extension packages/shim-web packages/types
           node scripts/zip-extension.mjs --version "${tag#v}"
           echo "TAG=$tag" >> "$GITHUB_ENV"
       - name: Attach to the release

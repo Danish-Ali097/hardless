@@ -1,7 +1,10 @@
 name: Publish crates
 
 # Called by release.yml (cargo-dist publish job) when a version tag is pushed: publishes every
-# crate in the workspace to crates.io, in dependency order.
+# crate in the workspace to crates.io, in dependency order (scripts/publish-crates.mjs).
+# Crates already on crates.io are skipped and crates.io's rate limit for new crates is waited
+# out, so a failed publish can be finished by running this workflow by hand (Actions → Publish
+# crates → Run workflow, with the release tag) from a commit whose crates match that tag.
 #
 # Authentication: the CARGO_REGISTRY_TOKEN secret if it is set (needed for the very first
 # publish, because crates.io trusted publishing can only be set up for crates that exist);
@@ -10,6 +13,12 @@ on:
   workflow_call:
     inputs:
       plan:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag whose crates to finish publishing, e.g. v0.1.0
         required: true
         type: string
 
@@ -29,14 +38,19 @@ jobs:
       HAS_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: The tag matches the crate versions
         env:
           PLAN: ${{ inputs.plan }}
+          TAG: ${{ inputs.tag }}
         run: |
-          tag=$(echo "$PLAN" | jq -r .announcement_tag)
+          tag=${TAG:-$(echo "$PLAN" | jq -r .announcement_tag)}
           version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "hardless-cli") | .version')
           echo "tag $tag, crates $version"
           test "$tag" = "v$version"
+          # Run by hand from a later commit: the crates must be exactly the tagged ones.
+          git diff --exit-code "$tag" HEAD -- crates Cargo.toml Cargo.lock packages/dashboard
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
@@ -58,4 +72,4 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || steps.auth.outputs.token }}
         # The dashboard copy is untracked on purpose (crates/hardless-server/build.rs).
-        run: cargo publish --workspace --locked --allow-dirty
+        run: node scripts/publish-crates.mjs --allow-dirty
