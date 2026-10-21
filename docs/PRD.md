@@ -590,7 +590,7 @@ Build in order. A milestone is done only when every acceptance criterion passes 
 ### Release v0.1.0
 
 - [ ] `hardless` binaries on GitHub Releases with `cargo-dist` installers and Homebrew, `npx hardless` wrapper on npm, crates on crates.io, browser packages on npm under `@hardless/*`, Docker image pushed, extension zip attached to the release
-- [ ] At least 10 issues labelled `good first issue` opened for new ESC/POS commands and code pages
+- [x] At least 10 issues labelled `good first issue` opened for new ESC/POS commands and code pages (#2 to #11, 22 Oct 2026)
 
 ## 14. Roadmap: phases 2–5
 
