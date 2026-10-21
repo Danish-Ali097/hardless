@@ -13,7 +13,7 @@ use rmcp::transport::streamable_http_server::{StreamableHttpServerConfig, Stream
 use rmcp::ServiceExt;
 
 pub use rest::{BoxFuture, Method, Rest, RestResponse};
-pub use server::{HardlessMcp, MUTATING_TOOLS};
+pub use server::{tool_list, HardlessMcp, MUTATING_TOOLS};
 
 /// Serves MCP over stdin and stdout until the client disconnects (FR-43, `hardless mcp`).
 /// Nothing else may write to stdout meanwhile.

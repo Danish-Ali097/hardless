@@ -89,6 +89,26 @@ decision from the maintainer.
 - **Grants** are kept apart from serial ones (`sessionStorage` key `hardless:usb-grants`). The
   picker is shared with Web Serial and titled like Chrome's ("… wants to connect").
 
+### Docs, `AGENTS.md` and `llms.txt` (FR-46, FR-51)
+
+- **The docs are Markdown in `docs/`**, readable on GitHub: hand-written pages (quickstart,
+  testing with Playwright, using Hardless from an AI agent, REST API, writing a device plugin)
+  and generated reference pages in `docs/reference/` (devices with their config tables and
+  faults, the fault catalogue, ESC/POS commands, HTTP printer dialects, MCP tools). The
+  published site (a private repository, maintainer decision) builds from these files, so the
+  content has one home.
+- **`cargo xtask docs` generates the reference pages and `llms.txt`** from the code: device
+  configs from each plugin's JSON Schema (so the field descriptions are the Rust doc
+  comments), faults from the catalogue, ESC/POS and dialects from the crates' README
+  sections, MCP tools from the tool router. The MCP resources use the same functions.
+- **`llms.txt` follows llmstxt.org**: a summary, then each page's title and first sentence,
+  linking to the raw Markdown on GitHub. **The CI sync check** (`cargo xtask docs --check`)
+  fails when a generated page or `llms.txt` is stale, or when a page in `docs/` is not listed
+  (`PAGES` in `xtask/src/docs.rs`). Prettier skips the generated files so it cannot make them
+  stale.
+- **`AGENTS.md`** gains the M3 commands (extension and MCP tests, `cargo xtask docs`, `hardless
+mcp`) and the current repo layout; `llms.txt` lists it.
+
 ### MCP server (FR-43 to FR-50)
 
 - **`rmcp` 3.6** (Apache-2.0, the official Rust MCP SDK; PRD section 6 names it) with the

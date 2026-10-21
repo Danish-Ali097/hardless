@@ -1244,3 +1244,13 @@ impl ServerHandler for HardlessMcp {
         ))
     }
 }
+
+/// Every tool's definition as JSON (name, description, annotations, input and output
+/// schemas), for the generated tool reference.
+pub fn tool_list() -> Vec<Value> {
+    HardlessMcp::tool_router()
+        .list_all()
+        .iter()
+        .filter_map(|tool| serde_json::to_value(tool).ok())
+        .collect()
+}

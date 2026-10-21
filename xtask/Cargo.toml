@@ -9,7 +9,10 @@ publish = false
 
 [dependencies]
 hardless-core = { workspace = true, features = ["ts"] }
+hardless-devices.workspace = true
 hardless-escpos = { workspace = true, features = ["ts"] }
+hardless-mcp.workspace = true
+serde_json = "1.0.154"
 ts-rs = { version = "12", default-features = false }
 
 [lints]

@@ -1,0 +1,27 @@
+# Hardless
+
+> Hardless emulates POS hardware (receipt printers, cash drawers, barcode scanners and NFC readers) so web apps and PWAs can be built and tested without the devices. It replaces the browser APIs an app uses (Web Serial, WebUSB, Web NFC, keyboard input) or answers its HTTP printer calls, renders receipts, and lets tests and AI agents inject faults.
+
+The `hardless` binary runs the server: dashboard at http://localhost:8080, REST API at /api/v1, browser bridge at /bridge, MCP at /mcp. Apps connect through `@hardless/shim-web` (or the Chrome extension); tests use `@hardless/playwright`; agents use `hardless mcp`.
+
+## Docs
+
+- [Quickstart](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/quickstart.md): Hardless emulates POS hardware, so a web app or PWA can print receipts, open a cash drawer, read barcodes and NFC cards without the devices on your desk.
+- [Testing with Playwright](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/testing.md): `@hardless/playwright` is a Playwright fixture: it puts the Hardless shim in every page before your app's code runs, gives the test handles for the devices, and adds matchers that wait like Playwright's own.
+- [Using Hardless from an AI agent](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/agents.md): Hardless ships an MCP server, so a coding agent can work on your app's hardware code the way you would: trigger a print, look at the rendered receipt, fix the layout, then turn on a fault and check that the app handles it.
+- [REST API](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/rest-api.md): Base URL `http://localhost:8080/api/v1` (and `https://localhost:8443/api/v1`).
+- [Writing a device plugin](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/plugins.md): Every Hardless device, from the receipt printer to the NFC reader, is a plugin: a Rust type that implements two traits from `hardless-core`.
+- [AGENTS.md](https://raw.githubusercontent.com/hardlessdev/hardless/main/AGENTS.md): How coding agents (and humans) build, test and work on Hardless in this repo.
+
+## Reference
+
+- [Device reference](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/reference/devices.md): Every device kind Hardless emulates, its settings (the `config` of `POST /api/v1/devices`, the config file or the Playwright fixture) and the faults it supports.
+- [Supported ESC/POS commands](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/reference/escpos-commands.md): Unknown commands become `unknown` nodes with their raw bytes and a warning; the parser never fails on input.
+- [Fault catalogue](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/reference/faults.md): Turn a fault on with `set_fault` (or `PUT /api/v1/devices/<id>/faults/<faultId>`); options are a JSON object.
+- [HTTP printer dialects](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/reference/http-dialects.md): Endpoints: `POST /cgi-bin/epos/service.cgi?devid=<id>&timeout=<ms>` (ePOS-Print-compatible) and `POST /StarWebPRNT/SendMessage` or `/p/<deviceId>/StarWebPRNT/SendMessage` (WebPRNT-compatible), on ports 8080 and 8443.
+- [MCP tool reference](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/reference/mcp-tools.md): The tools of the Hardless MCP server (`hardless mcp`, or `/mcp` on the server); see Using Hardless from an AI agent.
+
+## Optional
+
+- [Product requirements](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/PRD.md): the full specification.
+- [Decisions](https://raw.githubusercontent.com/hardlessdev/hardless/main/docs/decisions.md): every choice and deviation from the specification.

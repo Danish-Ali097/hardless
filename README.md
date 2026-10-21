@@ -182,6 +182,18 @@ Add `--embedded` to start a Hardless server along with it. Without a global inst
 `"command": "npx"` with `"args": ["-y", "hardless", "mcp", "--url", "http://localhost:8080"]`
 (from v0.1.0). Agents in containers can use `http://<server>:8080/mcp` instead.
 
+## Documentation
+
+- [Quickstart](docs/quickstart.md), [testing with Playwright](docs/testing.md),
+  [using Hardless from an AI agent](docs/agents.md), the [REST API](docs/rest-api.md) and
+  [writing a device plugin](docs/plugins.md).
+- Reference, generated from the code: [devices](docs/reference/devices.md),
+  [faults](docs/reference/faults.md), [ESC/POS commands](docs/reference/escpos-commands.md),
+  [HTTP printer dialects](docs/reference/http-dialects.md) and
+  [MCP tools](docs/reference/mcp-tools.md).
+- [llms.txt](llms.txt) indexes them for LLMs; [AGENTS.md](AGENTS.md) is for coding agents
+  working on this repository.
+
 ## Repository layout
 
 - `crates/`: the Rust engine (sans-IO, also compiled to WebAssembly), server, MCP server and

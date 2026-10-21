@@ -2946,7 +2946,10 @@ name = "xtask"
 version = "0.0.0"
 dependencies = [
  "hardless-core",
+ "hardless-devices",
  "hardless-escpos",
+ "hardless-mcp",
+ "serde_json",
  "ts-rs",
 ]
 

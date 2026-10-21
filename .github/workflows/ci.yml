@@ -51,6 +51,8 @@ jobs:
         run: cargo test -p hardless-wasm --target wasm32-unknown-unknown
       - name: packages/types is up to date
         run: cargo xtask gen-types --check
+      - name: docs/reference and llms.txt are up to date (FR-46, FR-51)
+        run: cargo xtask docs --check
       - name: rustdoc
         env:
           RUSTDOCFLAGS: -D warnings

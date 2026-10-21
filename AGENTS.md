@@ -9,9 +9,13 @@ in [docs/decisions.md](docs/decisions.md).
 ## Status
 
 Milestones **M0 (foundation)**, **M1 (printer and drawer over Web Serial)** and **M2
-(cross-browser paths: HTTP printers, HTTPS, scanner, scenarios, CLI, Docker)** are done. M3
-(WebUSB, Web NFC, extension, Playwright, MCP) is next, when the maintainer says so.
-Work one milestone at a time, in order (PRD section 13), and build bottom-up (PRD section 15).
+(cross-browser paths: HTTP printers, HTTPS, scanner, scenarios, CLI, Docker)** are done. **M3**
+(WebUSB, Web NFC, event log, Chrome extension, Playwright fixture, MCP server, docs) is in
+progress; the release (v0.1.0) follows. Work one milestone at a time, in order (PRD section
+13), and build bottom-up (PRD section 15).
+
+User and reference docs live in [docs/](docs/quickstart.md); [llms.txt](llms.txt) indexes them
+for LLMs.
 
 ## Prerequisites
 
@@ -35,6 +39,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features                             # unit, integration, doc tests
 cargo build --target wasm32-unknown-unknown -p hardless-core -p hardless-escpos -p hardless-render -p hardless-devices -p hardless-http-dialects -p hardless-wasm
 cargo xtask gen-types --check                                     # packages/types is up to date
+cargo xtask docs --check                                          # docs/reference and llms.txt are up to date
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
 cargo +1.97 check --workspace --all-targets --all-features        # MSRV
 cargo deny check                                                  # licences (NFR-14), advisories, sources
@@ -65,6 +70,7 @@ One package: `pnpm --filter @hardless/dashboard test`.
 ```sh
 cargo xtask gen-types     # Rust wire types -> packages/types/src (ts-rs). Never edit those files.
 cargo xtask licenses      # Rust crates + Go Mono font + dashboard -> crates/hardless-cli/THIRD_PARTY_LICENSES.txt
+cargo xtask docs          # device, fault, ESC/POS, HTTP dialect and MCP tool references -> docs/reference, and llms.txt
 ```
 
 Run it after changing any type that derives `ts_rs::TS` in `crates/hardless-core`, and commit
@@ -73,6 +79,10 @@ the result. CI fails if `packages/types` is stale.
 Run `cargo xtask licenses` after changing Rust dependencies or the dashboard's bundled
 packages (build the dashboard first), and commit the result; CI fails if it is stale. It needs
 `cargo install cargo-about --version 0.9.2 --locked --features cli`.
+
+Run `cargo xtask docs` after changing device configs, faults, the ESC/POS or HTTP dialect
+READMEs, MCP tools, or any page in `docs/`; CI fails if `docs/reference/` or `llms.txt` is
+stale. A new page in `docs/` must be added to `PAGES` in `xtask/src/docs.rs`.
 
 ### WebAssembly engine and browser tests
 
@@ -83,8 +93,10 @@ cargo xtask build-wasm                                       # -> packages/shim-
 pnpm --filter @hardless/shim-web build
 pnpm --filter @hardless/shim-web exec playwright install chromium   # once
 pnpm --filter @hardless/dashboard build && cargo build -p hardless-cli   # server for the tests
-pnpm --filter @hardless/shim-web test:browser              # Web Serial conformance (section 8.1)
-pnpm --filter @hardless/example-react-pwa test:acceptance  # M1 acceptance, example app
+pnpm --filter @hardless/shim-web test:browser              # shim conformance: Web Serial, WebUSB, Web NFC, wedge
+pnpm --filter @hardless/example-react-pwa test:acceptance  # M1, M2 and M3 acceptance (M3 uses @hardless/playwright)
+pnpm --filter @hardless/extension build && pnpm --filter @hardless/extension test:e2e   # Chrome extension
+cargo test -p hardless-cli --test fr_43_mcp                # MCP server, with the SDK's client
 ```
 
 ### Running it
@@ -94,6 +106,7 @@ pnpm --filter @hardless/dashboard build   # embed the dashboard (rebuild the ser
 cargo run -p hardless-cli -- start        # http://localhost:8080 and https://localhost:8443
 cargo run -p hardless-cli -- scan scanner-1 4006381333931     # drive devices from the CLI
 cargo run -p hardless-cli -- receipts printer-1 --last
+cargo run -p hardless-cli -- mcp --url http://127.0.0.1:8080 --embedded   # MCP server on stdio
 node scripts/print-sample.mjs             # print fixtures/escpos/33-full-receipt.bin to printer-1
 pnpm --filter @hardless/example-react-pwa dev   # example POS app on http://localhost:5173
 ```
@@ -129,26 +142,28 @@ INSTA_UPDATE=always cargo test -p hardless-escpos -p hardless-render   # then re
 ## Repo layout
 
 ```
-crates/hardless-core           Device trait, registry, event log, faults, clock, bridge types  [M0, M1]
-crates/hardless-escpos         ESC/POS bytes -> AST (sans-IO); fuzz/ has the cargo-fuzz target  [M1]
-crates/hardless-render         AST -> HTML and to_text (SVG/PNG in M2)                          [M1]
-crates/hardless-devices        printer-escpos, cash-drawer (scanner, NFC later)                 [M1]
-crates/hardless-http-dialects  ePOS-Print / WebPRNT-compatible XML -> AST                       [M2]
-crates/hardless-server         axum: /bridge, /api/v1, /api/v1/stream, dashboard                [M1]
-crates/hardless-mcp            MCP server for agents                                            [M3]
-crates/hardless-wasm           the engine for shim-web standalone mode (wasm-bindgen)           [M1]
-crates/hardless-cli            the `hardless` binary: `start` (more subcommands in M2)          [M1]
-xtask/                         `cargo xtask gen-types`, `cargo xtask build-wasm`
+crates/hardless-core           Device trait, registry, event log, faults, clock, scenarios, bridge and NFC types
+crates/hardless-escpos         ESC/POS bytes -> AST (sans-IO); fuzz/ has the cargo-fuzz target
+crates/hardless-render         AST -> HTML, SVG, PNG (feature png) and to_text
+crates/hardless-devices        printer-escpos (serial, usb, http), cash-drawer, scanner-wedge, nfc-reader
+crates/hardless-http-dialects  ePOS-Print / WebPRNT-compatible XML -> ESC/POS
+crates/hardless-server         axum: /bridge, /api/v1, /api/v1/stream, HTTP printers, /mcp, dashboard
+crates/hardless-mcp            MCP server for agents (rmcp): tools, resources, stdio and HTTP
+crates/hardless-wasm           the engine for shim-web standalone mode (wasm-bindgen)
+crates/hardless-cli            the `hardless` binary: start, scan, tap, fault, receipts, mcp, licenses
+xtask/                         cargo xtask gen-types | build-wasm | licenses | docs
 fixtures/escpos/               golden ESC/POS inputs and AST/HTML/text snapshots
 packages/types                 generated TS wire types (never edit by hand)
-packages/shim-web              navigator.serial shim (usb, NDEFReader, wedge later)             [M1]
-packages/dashboard             React + Vite + Tailwind UI served by hardless-server             [M1]
-packages/extension             Chrome MV3 extension                                             [M3]
-packages/playwright            Playwright fixture + matchers                                    [M3]
+packages/shim-web              navigator.serial, navigator.usb, NDEFReader and keyboard-wedge shims
+packages/dashboard             React + Vite + Tailwind UI served by hardless-server
+packages/extension             Chrome MV3 extension (per-site enable)
+packages/playwright            Playwright fixture + matchers
 packages/npm-wrapper           `npx hardless`                                                   [release]
-examples/react-pwa             example POS PWA, with the M1 acceptance test                     [M1]
+examples/react-pwa             example POS PWA, with the M1, M2 and M3 acceptance tests
 scripts/                       licence check, fixture generator, print-sample
+docs/                          user docs (quickstart, testing, agents, REST API, plugins), docs/reference (generated)
 docs/PRD.md                    the spec; docs/decisions.md records decisions and deviations
+llms.txt                       index of the docs for LLMs (generated)
 ```
 
 ## Rules that CI or review enforces
