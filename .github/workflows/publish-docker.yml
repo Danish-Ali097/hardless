@@ -3,7 +3,8 @@ name: Publish Docker image
 # Called by release.yml (cargo-dist publish job) when a version tag is pushed: packs the
 # release's own static musl binaries into hardless/hardless for linux/amd64 and linux/arm64
 # (NFR-12), checks the image starts, and pushes it to Docker Hub as <version>,
-# <major>.<minor> and latest. Needs the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets.
+# <major>.<minor> and latest. Needs the DOCKERHUB_TOKEN secret and the DOCKERHUB_USERNAME
+# variable (a secret of that name works too).
 on:
   workflow_call:
     inputs:
@@ -58,7 +59,7 @@ jobs:
           docker run --rm hardless/hardless:test licenses | grep -q "Part 3: The dashboard"
       - uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME || secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push both platforms
         uses: docker/build-push-action@v6
