@@ -1,6 +1,6 @@
 // Sets one version everywhere a release needs it (RELEASING.md): the Rust workspace
 // (`[workspace.package]` and the internal `[workspace.dependencies]`), every package.json
-// under packages/ and examples/, and the extension's manifest.json. Run `pnpm changeset
+// under packages/ and examples/, the extension's manifest.json and the shim's `SHIM_VERSION`. Run `pnpm changeset
 // version` first so the npm changelogs are written, then this, then `cargo update -w`.
 //
 //   node scripts/set-version.mjs 0.1.0
@@ -43,4 +43,9 @@ for (const parent of ["packages", "examples"]) {
 // Chrome takes only dot-separated integers here, so a pre-release keeps its base version.
 update("packages/extension/public/manifest.json", (text) =>
   text.replace(/("version": )"[^"]*"/, `$1"${version.split("-")[0] ?? version}"`),
+);
+
+// Sent to the server in the bridge `hello` message.
+update("packages/shim-web/src/index.ts", (text) =>
+  text.replace(/(export const SHIM_VERSION = )"[^"]*"/, `$1"${version}"`),
 );

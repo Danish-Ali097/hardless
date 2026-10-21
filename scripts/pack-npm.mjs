@@ -4,7 +4,8 @@
 // - its version matches the release tag (with --tag vX.Y.Z);
 // - it has LICENSE, its built files, and, for @hardless/shim-web, the WebAssembly engine and
 //   its third-party notices (NFR-14);
-// - its package.json has no `workspace:` ranges left and its exports point at dist/.
+// - its package.json has no `workspace:` ranges left and its exports point at dist/;
+// - @hardless/shim-web's SHIM_VERSION matches its version.
 //
 // Writes the tarballs and order.txt (publish order: dependencies first) to --out.
 //
@@ -89,6 +90,12 @@ for (const { dir, files } of PACKAGES) {
   for (const [name, range] of Object.entries(ranges)) {
     if (String(range).startsWith("workspace:"))
       problems.push(`${label}: ${name} is still ${range}`);
+  }
+  if (dir === "packages/shim-web") {
+    const index = readFileSync(join(root, dir, "dist/index.js"), "utf8");
+    if (!index.includes(`SHIM_VERSION = "${manifest.version}"`)) {
+      problems.push(`${label}: SHIM_VERSION is not ${manifest.version} (scripts/set-version.mjs)`);
+    }
   }
   if (JSON.stringify(packed.exports ?? {}).includes("./src/")) {
     problems.push(`${label}: exports still point at src/ (publishConfig not applied)`);
