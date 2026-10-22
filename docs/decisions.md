@@ -4,6 +4,29 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## Release v0.1.0 — what happened
+
+Released on 21–22 Oct 2026: GitHub Release with 8 platform builds and installers, 8 crates on
+crates.io, 4 npm packages (with provenance), `hardless/hardless` on Docker Hub (amd64 and
+arm64; tags `0.1.0`, `0.1` and `latest`), the Homebrew formula in `hardlessdev/homebrew-tap`
+and the extension zip. Checked afterwards: `npx hardless@0.1.0`, `cargo install hardless-cli`
+(serves the real dashboard), `docker run hardless/hardless:0.1.0`, the installer links and the
+formula.
+
+- **crates.io limits new crates**: after five, it answered 429 for the rest. A re-run of
+  `cargo publish --workspace` would have stopped at the first crate already there, and re-runs
+  use the tag's workflow files, so `scripts/publish-crates.mjs` (skips published versions,
+  waits out 429s) and a hand-run mode for the crates and extension workflows were added on
+  `main`; the last three crates were published from there. The `release` environment allowed
+  `main` for that run only.
+- **The Homebrew token** first had the Actions permission instead of Contents; fixed by the
+  maintainer, then only that job was re-run.
+- **Still to do after the release**: switch crates.io and npm to trusted publishing and delete
+  `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN` (RELEASING.md), and remove `main` from the `release`
+  environment.
+- **npm pages**: the published READMEs were thin; fuller READMEs and package metadata are on
+  `main` and reach npm with the next release (npm shows the README of the published version).
+
 ## Release v0.1.0 — preparation
 
 The maintainer asked for everything up to publishing, with no publishing and a question before
