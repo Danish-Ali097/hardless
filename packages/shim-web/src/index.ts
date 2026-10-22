@@ -59,7 +59,7 @@ export const SHIM_APIS: readonly ShimApi[] = ["serial", "usb", "nfc", "wedge"];
 const IMPLEMENTED: ReadonlySet<ShimApi> = new Set(["serial", "usb", "nfc", "wedge"]);
 
 /** The version of this package, sent as `shimVersion` in the bridge `hello` message. */
-export const SHIM_VERSION = "0.1.0";
+export const SHIM_VERSION = "0.1.1";
 
 /** Which APIs to replace (FR-14); each defaults to on. */
 export interface ApiToggles {

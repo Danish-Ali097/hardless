@@ -1,6 +1,6 @@
 {
   "name": "@hardless/types",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript types for the Hardless POS hardware emulator's REST API, events and wire messages.",
   "keywords": [
     "pos",

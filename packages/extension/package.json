@@ -1,6 +1,6 @@
 {
   "name": "@hardless/extension",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Chrome MV3 extension that injects the Hardless shim into pages you enable.",
   "license": "Apache-2.0",
