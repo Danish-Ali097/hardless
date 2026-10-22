@@ -1,6 +1,6 @@
 {
   "name": "@hardless/shim-web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Drop-in navigator.serial, navigator.usb and NDEFReader backed by emulated POS devices (receipt printer, cash drawer, NFC reader, barcode scanner), for developing and testing web apps without hardware.",
   "keywords": [
     "pos",

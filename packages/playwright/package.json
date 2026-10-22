@@ -1,6 +1,6 @@
 {
   "name": "@hardless/playwright",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Playwright fixture and matchers (toHavePrinted, toHaveOpened, ...) for testing POS web apps against emulated receipt printers, cash drawers, scanners and NFC readers.",
   "keywords": [
     "pos",

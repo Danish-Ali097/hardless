@@ -1,6 +1,6 @@
 {
   "name": "hardless",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Emulated POS hardware for web app development and testing: receipt printers, cash drawers, barcode scanners and NFC readers. Run it with npx hardless start.",
   "keywords": [
     "pos",

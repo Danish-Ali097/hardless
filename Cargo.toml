@@ -5,7 +5,7 @@ default-members = ["crates/*"]
 exclude = ["crates/hardless-escpos/fuzz", "crates/hardless-http-dialects/fuzz"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.97"
 license = "Apache-2.0"
@@ -14,13 +14,13 @@ homepage = "https://github.com/hardlessdev/hardless"
 authors = ["Hardless contributors"]
 
 [workspace.dependencies]
-hardless-core = { path = "crates/hardless-core", version = "0.1.0" }
-hardless-escpos = { path = "crates/hardless-escpos", version = "0.1.0" }
-hardless-render = { path = "crates/hardless-render", version = "0.1.0" }
-hardless-devices = { path = "crates/hardless-devices", version = "0.1.0" }
-hardless-http-dialects = { path = "crates/hardless-http-dialects", version = "0.1.0" }
-hardless-server = { path = "crates/hardless-server", version = "0.1.0" }
-hardless-mcp = { path = "crates/hardless-mcp", version = "0.1.0" }
+hardless-core = { path = "crates/hardless-core", version = "0.1.1" }
+hardless-escpos = { path = "crates/hardless-escpos", version = "0.1.1" }
+hardless-render = { path = "crates/hardless-render", version = "0.1.1" }
+hardless-devices = { path = "crates/hardless-devices", version = "0.1.1" }
+hardless-http-dialects = { path = "crates/hardless-http-dialects", version = "0.1.1" }
+hardless-server = { path = "crates/hardless-server", version = "0.1.1" }
+hardless-mcp = { path = "crates/hardless-mcp", version = "0.1.1" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

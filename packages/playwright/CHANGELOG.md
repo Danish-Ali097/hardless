@@ -1,5 +1,14 @@
 # @hardless/playwright
 
+## 0.1.1
+
+### Patch Changes
+
+- 24cdfc7: Fuller npm pages: the `hardless` README explains what Hardless is, the quick start, every command, testing and MCP setup; every package gets keywords, a homepage and an issues link, and the READMEs drop internal requirement IDs.
+- Updated dependencies [24cdfc7]
+  - @hardless/shim-web@0.1.1
+  - @hardless/types@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -3,6 +3,18 @@
 All notable changes to Hardless. The GitHub Release notes come from this file; each npm
 package also has its own `CHANGELOG.md`.
 
+## 0.1.1 - 2026-10-22
+
+Documentation and package pages only; no behaviour changes.
+
+- Fuller npm pages: the `hardless` package explains what Hardless is, the quick start, the
+  default devices, every command, testing and AI agent (MCP) setup. Every package has a fuller
+  description, keywords and links to the docs and issues.
+- `hardless fault --help` points to the fault reference in the docs.
+- Publishing fixes found during 0.1.0: crates are published resumably (crates.io limits how
+  many new crates can be published at once), and the crates and extension steps can be run by
+  hand for a release tag.
+
 ## 0.1.0 - 2026-10-22
 
 The first release: emulated POS hardware for web apps and PWAs (phase 1 of the roadmap).
