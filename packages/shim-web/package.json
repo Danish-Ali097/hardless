@@ -1,7 +1,27 @@
 {
   "name": "@hardless/shim-web",
   "version": "0.1.0",
-  "description": "Browser API shims (Web Serial, WebUSB, Web NFC, keyboard wedge) backed by Hardless emulated devices.",
+  "description": "Drop-in navigator.serial, navigator.usb and NDEFReader backed by emulated POS devices (receipt printer, cash drawer, NFC reader, barcode scanner), for developing and testing web apps without hardware.",
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "emulator",
+    "receipt-printer",
+    "escpos",
+    "testing",
+    "web-serial",
+    "webusb",
+    "web-nfc",
+    "ndef",
+    "shim",
+    "polyfill",
+    "barcode-scanner",
+    "cash-drawer"
+  ],
+  "homepage": "https://hardless-docs.netlify.app/quickstart",
+  "bugs": {
+    "url": "https://github.com/hardlessdev/hardless/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

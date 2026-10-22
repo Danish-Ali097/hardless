@@ -1,7 +1,26 @@
 {
   "name": "@hardless/playwright",
   "version": "0.1.0",
-  "description": "Playwright fixture and matchers for testing POS hardware flows against Hardless.",
+  "description": "Playwright fixture and matchers (toHavePrinted, toHaveOpened, ...) for testing POS web apps against emulated receipt printers, cash drawers, scanners and NFC readers.",
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "emulator",
+    "receipt-printer",
+    "escpos",
+    "testing",
+    "playwright",
+    "e2e",
+    "fixture",
+    "matchers",
+    "web-serial",
+    "webusb",
+    "web-nfc"
+  ],
+  "homepage": "https://hardless-docs.netlify.app/testing",
+  "bugs": {
+    "url": "https://github.com/hardlessdev/hardless/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

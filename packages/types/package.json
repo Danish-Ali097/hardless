@@ -1,7 +1,21 @@
 {
   "name": "@hardless/types",
   "version": "0.1.0",
-  "description": "TypeScript wire types for Hardless, generated from the Rust definitions.",
+  "description": "TypeScript types for the Hardless POS hardware emulator's REST API, events and wire messages.",
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "emulator",
+    "receipt-printer",
+    "escpos",
+    "testing",
+    "types",
+    "typescript"
+  ],
+  "homepage": "https://hardless-docs.netlify.app/rest-api",
+  "bugs": {
+    "url": "https://github.com/hardlessdev/hardless/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

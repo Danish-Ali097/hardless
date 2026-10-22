@@ -52,17 +52,17 @@ await writer.write(new TextEncoder().encode("Total: 1,250\n\x1dV\x00"));
 
 | Option                          | Mode       | Meaning                                                                                                |
 | ------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------ |
-| `mode`                          | both       | `"server"` or `"standalone"` (FR-15)                                                                   |
+| `mode`                          | both       | `"server"` or `"standalone"`                                                                           |
 | `url`                           | server     | Bridge URL, default `ws://localhost:8080/bridge`; from an https:// page use `wss://<host>:8443/bridge` |
-| `token`                         | server     | Token if the server was started with `--token` (NFR-02)                                                |
+| `token`                         | server     | Token if the server was started with `--token`                                                         |
 | `devices`                       | standalone | Devices to emulate, as `{ kind, id, ...config }` or `{ kind, id, config }`                             |
 | `wasmUrl`                       | standalone | Where to load the engine from, default `../wasm/hardless_wasm.js`                                      |
-| `serial`, `usb`, `nfc`, `wedge` | both       | Turn individual shims off (FR-14); all default to on                                                   |
-| `allowAnyOrigin`                | both       | Silence the warning on non-localhost origins (NFR-03)                                                  |
+| `serial`, `usb`, `nfc`, `wedge` | both       | Turn individual shims off; all default to on                                                           |
+| `allowAnyOrigin`                | both       | Silence the warning on non-localhost origins                                                           |
 
-`install()` is idempotent (FR-17); `uninstall()` restores the browser's own APIs.
+`install()` is idempotent; `uninstall()` restores the browser's own APIs.
 
-## Behaviour (PRD section 8.1)
+## Behaviour
 
 The shim follows the WICG Web Serial specification and Chrome's behaviour:
 
@@ -80,7 +80,7 @@ The shim follows the WICG Web Serial specification and Chrome's behaviour:
 - Faults: `slow-write` delays write acknowledgements, `disconnect-mid-write` fails the
   in-flight write, and `picker-cancel` makes the next `requestPort()` behave like Cancel.
 
-## Keyboard wedge (PRD section 8.4)
+## Keyboard wedge
 
 With the wedge on (the default), scans from an emulated `scanner-wedge` are typed into the
 focused element, like a USB barcode scanner, one scan after another:
@@ -104,7 +104,7 @@ await shim.scan("scanner-1", "4006381333931"); // standalone: resolves once type
 untrusted key events cannot be tested with the wedge in phase 1; OS-level key injection comes
 in phase 2.
 
-## WebUSB (PRD section 8.2)
+## WebUSB
 
 Printers with `transport: "usb"` appear to `navigator.usb` as USB printer-class devices: one
 configuration, one interface (class 7, subclass 1, protocol 2), bulk OUT endpoint 1 and bulk
@@ -134,7 +134,7 @@ length)` waits for the printer's replies (`DLE EOT` status). `controlTransferIn`
   `claimInterface` reject with `NetworkError`, and `picker-cancel`, `slow-write`, `offline`
   and `disconnect-mid-write` work as for serial printers.
 
-## Web NFC (PRD section 8.3)
+## Web NFC
 
 With the NFC shim on (the default), `NDEFReader`, `NDEFReadingEvent`, `NDEFMessage` and
 `NDEFRecord` exist in every browser, backed by emulated `nfc-reader` devices:
@@ -178,3 +178,11 @@ cargo xtask build-wasm                   # wasm/ (the standalone engine)
 pnpm --filter @hardless/shim-web test            # unit tests
 pnpm --filter @hardless/shim-web test:browser    # conformance tests in Chromium
 ```
+
+## Links
+
+- Documentation: <https://hardless-docs.netlify.app>
+- The `hardless` server and dashboard: `npx hardless start` ([hardless](https://www.npmjs.com/package/hardless))
+- Source and issues: <https://github.com/hardlessdev/hardless>
+
+Apache-2.0.

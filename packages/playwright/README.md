@@ -2,8 +2,8 @@
 
 A [Playwright](https://playwright.dev) fixture and matchers for testing POS hardware flows
 against [Hardless](https://github.com/hardlessdev/hardless) emulated devices: the fixture
-installs the Hardless shim in every page before your app's code runs (FR-40), gives the test
-handles for the devices (FR-42), and adds matchers that poll like Playwright's own (FR-41).
+installs the Hardless shim in every page before your app's code runs, gives the test
+handles for the devices, and adds matchers that poll like Playwright's own.
 Your app needs no Hardless code: test a production build.
 
 ```sh
@@ -50,7 +50,7 @@ Without options the fixture runs standalone with `printer-1` (Web Serial), `draw
 individual shims off. In `playwright.config`, set options per project with
 `defineConfig<HardlessTestOptions>({ use: { hardlessOptions: { ... } } })`.
 
-## Devices (FR-42)
+## Devices
 
 | Handle                 | Methods                                                                   |
 | ---------------------- | ------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ individual shims off. In `playwright.config`, set options per project with
 | `hardless.nfc(id)`     | `tap(uid, records?)`, `lastWritten()`                                     |
 | every handle           | `state()`, `fault(id, options?)`, `clearFault(id)`, `reset()`, `events()` |
 
-## Matchers (FR-41)
+## Matchers
 
 `toHavePrinted(textOrRegex)`, `toHavePrintedJobs(n)`, `toHaveCut()` on printers;
 `toHaveOpened({ times? })`, `toBeClosed()` on drawers; `toHaveWrittenNdef(records)` on NFC
@@ -72,6 +72,10 @@ poll until they pass or the `expect` timeout ends, and work with `.not`.
 `@playwright/test` 1.50 or later, and Chromium for Web Serial and WebUSB flows (Web NFC and
 the keyboard wedge work in every browser through the shim).
 
-## License
+## Links
 
-Apache-2.0
+- Documentation: <https://hardless-docs.netlify.app>
+- The `hardless` server and dashboard: `npx hardless start` ([hardless](https://www.npmjs.com/package/hardless))
+- Source and issues: <https://github.com/hardlessdev/hardless>
+
+Apache-2.0.

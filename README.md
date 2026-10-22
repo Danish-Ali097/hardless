@@ -9,37 +9,36 @@ the same `navigator.serial`, `navigator.usb`, `NDEFReader` and HTTP printer endp
 in production; Hardless plays the device, renders the receipt and lets you inject faults such
 as paper out, cover open or a disconnect mid-print.
 
-> **Status: early development.** Milestones M1 and M2 are done: receipt printers over Web
-> Serial and HTTP (with HTTPS for iPad), a cash drawer, a keyboard-wedge barcode scanner, the
-> dashboard, a CLI and a Docker image. Nothing is released yet, so you build from source. See
-> the [roadmap](#roadmap).
+Install it with `npx hardless start`, or see [Getting started](#getting-started). The docs are
+at <https://hardless-docs.netlify.app>.
 
 ## Features
 
-| Device                                                           | Route into the browser                 | Status         |
-| ---------------------------------------------------------------- | -------------------------------------- | -------------- |
-| ESC/POS receipt printer                                          | Web Serial                             | Available (M1) |
-| Cash drawer (kicked through the printer)                         | Web Serial                             | Available (M1) |
-| HTTP receipt printer (ePOS-Print-compatible, WebPRNT-compatible) | `fetch`, all browsers incl. iOS Safari | Available (M2) |
-| Barcode scanner                                                  | keyboard wedge                         | Available (M2) |
-| USB receipt printer                                              | WebUSB                                 | Available (M3) |
-| NFC reader                                                       | Web NFC (`NDEFReader`)                 | Available (M3) |
+| Device                                                           | How your app reaches it                |
+| ---------------------------------------------------------------- | -------------------------------------- |
+| ESC/POS receipt printer                                          | Web Serial                             |
+| ESC/POS receipt printer                                          | WebUSB                                 |
+| HTTP receipt printer (ePOS-Print-compatible, WebPRNT-compatible) | `fetch`, all browsers incl. iOS Safari |
+| Cash drawer                                                      | kicked through the printer             |
+| Barcode scanner                                                  | keyboard wedge                         |
+| NFC reader                                                       | Web NFC (`NDEFReader`)                 |
 
-Available now: a dashboard with rendered receipts (download as PNG), scanner presets and
-sequences, an NFC card editor, a live event log and fault switches; a REST API and scripted scenarios; a CLI for scans, faults and
-receipts; HTTPS with a local certificate to trust once per device; faults such as paper out,
-cover open, offline, disconnect mid-print, garbled bytes, timeouts and blocked CORS; a Docker
-image; a standalone mode that runs the devices inside the page for tests; a Playwright fixture
-with matchers like `toHavePrinted(/Total: 1,250/)`; a Chrome extension; and an MCP server so
-coding agents can print, look at the rendered receipt and toggle faults.
+Also: a dashboard with rendered receipts (download as PNG), scanner presets and sequences, an
+NFC card editor, a live event log and fault switches; a REST API and scripted scenarios; a CLI
+for scans, faults and receipts; HTTPS with a local certificate to trust once per device;
+faults such as paper out, cover open, offline, disconnect mid-print, garbled bytes, timeouts
+and blocked CORS; a Docker image; a standalone mode that runs the devices inside the page for
+tests; a Playwright fixture with matchers like `toHavePrinted(/Total: 1,250/)`; a Chrome
+extension; and an MCP server so coding agents can print, look at the rendered receipt and
+toggle faults.
 
 ## Roadmap
 
-- **Phase 1, browser and PWA** (released as v0.1.0): Web Serial, WebUSB, Web NFC and HTTP
-  printers, HTTPS, scanner, scenarios, CLI, Docker, event log, Chrome extension, Playwright
-  fixture, MCP server and docs.
-- **Later phases**: desktop and Electron (TCP 9100, virtual COM ports, IPP), smart cards and
-  WebHID, mobile and Bluetooth, real USB emulation and record/replay.
+- **Now (v0.1):** web apps and PWAs in the browser: everything above.
+- **Next:** desktop and Electron apps (network printers on TCP 9100, virtual COM ports, IPP,
+  label printers, customer displays, scales).
+- **Later:** smart cards and WebHID, mobile and Bluetooth, real USB emulation and record and
+  replay of real devices.
 
 The full spec is [docs/PRD.md](docs/PRD.md).
 

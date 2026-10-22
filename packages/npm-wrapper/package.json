@@ -1,7 +1,27 @@
 {
   "name": "hardless",
   "version": "0.1.0",
-  "description": "Run the Hardless POS hardware emulator with npx: downloads the platform binary.",
+  "description": "Emulated POS hardware for web app development and testing: receipt printers, cash drawers, barcode scanners and NFC readers. Run it with npx hardless start.",
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "emulator",
+    "receipt-printer",
+    "escpos",
+    "testing",
+    "cash-drawer",
+    "barcode-scanner",
+    "nfc",
+    "web-serial",
+    "webusb",
+    "web-nfc",
+    "mcp",
+    "cli"
+  ],
+  "homepage": "https://hardless-docs.netlify.app",
+  "bugs": {
+    "url": "https://github.com/hardlessdev/hardless/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
