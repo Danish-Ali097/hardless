@@ -130,10 +130,19 @@ jobs:
           cargo xtask build-wasm
           pnpm -r build
           node scripts/pack-npm.mjs --out npm-packs
+      # npm refuses even a dry run for a version it already has, which is every package on
+      # main between a release and the next version bump; those are only packed and checked.
       - name: npm publish --dry-run
         run: |
           npm install -g npm@11.21.0
-          for pack in $(cat npm-packs/order.txt); do npm publish "./npm-packs/$pack" --dry-run --access public; done
+          for pack in $(cat npm-packs/order.txt); do
+            spec=$(tar -xzOf "npm-packs/$pack" package/package.json | jq -r '"\(.name)@\(.version)"')
+            if npm view "$spec" version >/dev/null 2>&1; then
+              echo "$spec is already on npm; packed and checked only"
+            else
+              npm publish "./npm-packs/$pack" --dry-run --access public
+            fi
+          done
       - name: Extension zip
         run: node scripts/zip-extension.mjs --no-build
 

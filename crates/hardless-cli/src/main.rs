@@ -143,7 +143,7 @@ enum OnOff {
 struct FaultArgs {
     /// The device.
     device: String,
-    /// The fault, e.g. paper-out (listed in the dashboard's fault panel and at https://hardless-docs.netlify.app/reference/faults).
+    /// The fault, e.g. paper-out (listed in the dashboard's fault panel and at <https://hardless-docs.netlify.app/reference/faults>).
     fault: String,
     /// Turn it on or off.
     state: OnOff,
