@@ -43,13 +43,26 @@ Tokens go straight from each site into GitHub's secret settings. Never paste the
    Homebrew job does not use the `release` environment).
 
 After the first release, switch crates.io and npm to trusted publishing, so no long-lived
-token is stored: on each crate's and each npm package's settings page, add a GitHub Actions
-trusted publisher for `hardlessdev/hardless`, workflow `release.yml`, environment `release`.
-Then delete `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN`, and revoke the tokens on both sites. The
-publish workflows fall back to trusted publishing when the secrets are absent.
+token is stored. The publish workflows use trusted publishing whenever the token secret is
+absent. Both sites match the top-level workflow, `release.yml`, not the reusable one it calls.
+
+- **crates.io** (done on 23 Oct 2026): each crate's settings page has two GitHub trusted
+  publishers for `hardlessdev/hardless`, environment `release`: one for `release.yml` and
+  one for `publish-crates.yml` (for finishing a publish by hand). `CARGO_REGISTRY_TOKEN` is
+  deleted and revoked.
+- **npm** (not yet): a new npm trusted publisher expires if it is not used to publish within
+  2 days, so set it up **just before** a release. On each package's settings page (Trusted
+  Publisher → GitHub Actions): organization `hardlessdev`, repository `hardless`, workflow
+  `release.yml`, environment `release`, and under **Allowed actions** tick `npm publish` (by
+  default only staging is allowed). Delete `NPM_TOKEN` from the `release` environment in the
+  same sitting, so the release uses the new publishers. After that release succeeds, revoke
+  the npm token and select "Require two-factor authentication and disallow tokens" on each
+  package.
 
 ## Making a release
 
+0. Until npm uses trusted publishing (above), set it up right before releasing, or make
+   sure `NPM_TOKEN` has not expired (it was created with a 30-day expiry on 21 Oct 2026).
 1. On a branch, set the version and write the changelogs:
 
    ```sh
