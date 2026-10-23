@@ -673,7 +673,7 @@ Each later phase reuses phase 1's core, plugin API, renderer, dashboard, REST AP
 ## 16. Open questions
 
 - [x] Secure the hardless npm scope and GitHub org: `@hardless` on npm, `hardless` on Docker Hub, `hardlessdev` on GitHub (19 Oct 2026).
-- [ ] Run a trademark search for the name.
+- [x] Run a trademark search for the name (preliminary, 24 Oct 2026: no conflicting software mark; see decisions.md).
 - [ ] Should the WebSerial shim emulate USB-serial adapters only, or also Bluetooth-serial ports (`bluetoothServiceClassId` in `getInfo()`)?
 - [ ] Which additional code pages are needed first (e.g. CP864 for Arabic, Windows-1256 for Urdu receipts)?
 - [ ] Should Web Bluetooth printers move from phase 4 into phase 2? BLE printers are common with tablet POS setups.

@@ -6,6 +6,33 @@ decision from the maintainer.
 
 ## After v0.1.1
 
+### Trademark search for "Hardless" (PRD section 16)
+
+A preliminary ("knockout") search on 24 Oct 2026, not a legal clearance opinion; a trademark
+attorney should confirm before money is spent on the brand.
+
+- **No live or pending "Hardless" mark covers software.** Searched: the USPTO register, and
+  WIPO's Global Brand Database (77 million records from 89 offices, including the EUIPO and the
+  UK IPO): exact, contains, phonetic and similar spellings.
+- **Closest, both dead:** HARDLESS SOFTWARE (US 74606351, class 9, "software for emulating
+  tasks of a hard disk"), registered 1995, cancelled 2006 for non-renewal; and HARDLESS (Korea
+  4120130013449, class 42, IT services), a 2013 application that ended without registration.
+- **Live marks are in unrelated fields:** HARDLESS NG (US, class 11, water treatment),
+  Hardless (Israel, class 11), HARDLESS LEGAL (Australia, class 45, a law firm's surname).
+  Among the 30 nearest-sounding names (Hardles, Hardley, Hardlex, Hardly …) the only software
+  one, HARDLY FOCUSED (US, class 9), has ended.
+- **No unregistered commercial use found:** web searches find no product or company called
+  Hardless; GitHub has only small personal repositories with the word; the `hardless` GitHub
+  user is a dormant 2013 account (see M0).
+- **Domains:** `hardless.com` is for sale (HugeDomains). `hardless.dev` and `hardless.io`
+  were both registered on 23 Feb 2025 through OVH by someone else and show only OVH's
+  placeholder page; a domain alone gives no trademark rights, but it may mean someone else had
+  plans for the name. `hardless.app`, `.org` and `.net` are free.
+- **Recommendation:** the name is clear enough to keep using. Optional, at the maintainer's
+  choice: register HARDLESS in classes 9 (software) and 42 (software as a service), first where
+  the users are (US or EU); consider buying `hardless.com` or registering `hardless.app`; have
+  an attorney run a full clearance before larger spending on the brand.
+
 ### Safari check on simulators instead of a device (M2 acceptance)
 
 - **The M2 acceptance asks for a manual check on desktop Safari and iOS Safari.** The
@@ -635,7 +662,7 @@ mcp`) and the current repo layout; `llms.txt` lists it.
   npm and Docker Hub alike. Docker Hub uses a free personal account rather than an organization,
   which needs a paid plan; the image name is the same. The PRD's names for the npm packages and
   the Docker image are unchanged. Every repository URL now points at `hardlessdev/hardless`.
-  The trademark search is still **open**.
+  The trademark search was done after v0.1.1 (see "Trademark search" above).
 - **Drawer sensor polarity is a printer setting** (maintainer decision, 19 Oct 2026; extends
   FR-38). `DLE EOT 1` bit 2 reports the level of connector pin 3, and real drawers are wired
   either way, so the meaning of the bit cannot be fixed. New optional printer config field
