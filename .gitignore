@@ -26,3 +26,5 @@ crates/hardless-server/dashboard/
 # Release dry-run output (scripts/pack-npm.mjs, scripts/zip-extension.mjs).
 npm-packs/
 packages/extension/hardless-extension-*.zip
+# Output of the Safari check (.github/workflows/safari.yml).
+.safari/

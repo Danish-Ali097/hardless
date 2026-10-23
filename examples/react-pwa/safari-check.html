@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Safari check: running</title>
+    <style>
+      body {
+        font:
+          18px/1.4 -apple-system,
+          system-ui,
+          sans-serif;
+        margin: 1.5rem;
+      }
+      li {
+        margin: 0.5rem 0;
+      }
+      .pass {
+        color: #14532d;
+      }
+      .fail {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Safari network printing check</h1>
+    <p id="where"></p>
+    <ul id="results"></ul>
+    <script type="module" src="/src/safari-check.ts"></script>
+  </body>
+</html>
