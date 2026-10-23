@@ -4,6 +4,26 @@ Choices made while implementing the PRD that the PRD does not spell out, and the
 the implementation differs from it. Newest milestone first. Items marked **open** need a
 decision from the maintainer.
 
+## After v0.1.1
+
+### Safari check on simulators instead of a device (M2 acceptance)
+
+- **The M2 acceptance asks for a manual check on desktop Safari and iOS Safari.** The
+  maintainer has no iPhone or iPad, so `.github/workflows/safari.yml` does it on a GitHub Mac:
+  Mobile Safari in the iOS Simulator (an iPhone and an iPad, newest iOS on the runner, iOS
+  26.2 on 23 Oct 2026) and desktop Safari open `examples/react-pwa/safari-check.html` over
+  HTTPS at the Mac's LAN address, with the Hardless certificate trusted (`simctl keychain
+  add-root-cert`, and the system keychain for macOS). The page prints with the app's own
+  `src/epos.ts`. Each Safari must print over HTTPS (port 8443) and have plain HTTP (8080)
+  blocked as mixed content, checked from the server's receipts. The LAN address, not
+  `localhost`, because Safari treats `localhost` as secure and would not block it.
+- **Result, 23 Oct 2026:** passed for all three on runs 39972963896 and 39972978177 (and
+  39967525523); screenshots are in each run's `safari-check` artifact. One earlier run's
+  iPad never loaded the page after a slow boot (no request reached the server), so the
+  workflow now opens the page again on a device that has not printed after a minute.
+- **Not covered** (a real device only): reaching the computer over real Wi-Fi and installing
+  the certificate profile by hand. The workflow runs weekly and on demand.
+
 ## Release v0.1.0 — what happened
 
 Released on 21–22 Oct 2026: GitHub Release with 8 platform builds and installers, 8 crates on

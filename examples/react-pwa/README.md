@@ -53,6 +53,14 @@ Safari has no Web Serial, so it prints over the network, and a PWA is normally o
 5. To see mixed content, change the printer address to the `http://...:8080/...` one and pay
    again: Safari blocks the call and the app cannot reach the printer, as with a real one.
 
+CI runs this check without a device: the [Safari workflow](../../.github/workflows/safari.yml)
+opens [safari-check.html](safari-check.html) (which prints with the app's own `src/epos.ts`)
+in Mobile Safari on an iPhone and an iPad simulator and in desktop Safari, on a GitHub Mac,
+over HTTPS at the Mac's LAN address. Each must print over HTTPS and have plain HTTP blocked.
+It runs weekly; start it any time from Actions → Safari → Run workflow. Screenshots are kept
+with the run. A real device is still needed to check real Wi-Fi and installing the
+certificate profile by hand.
+
 ## Tests
 
 - `pnpm --filter @hardless/example-react-pwa test`: unit tests for the receipt builders and
@@ -64,4 +72,4 @@ Safari has no Web Serial, so it prints over the network, and a PWA is normally o
   with [`@hardless/playwright`](../../packages/playwright): once with the devices in the page
   (project `m3-standalone`) and once against a server (`m3-server`; set `HARDLESS_SERVER` to
   use one already running, as CI does with the Docker image). The iPhone and iPad check above
-  is manual.
+  runs in the Safari workflow.
