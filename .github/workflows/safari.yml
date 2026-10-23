@@ -79,13 +79,29 @@ jobs:
         run: |
           sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "$HARDLESS_CERT_DIR/hardless-ca.pem"
           open -a Safari "https://$LAN_IP:5173/safari-check.html?device=macOS"
+      # A freshly booted simulator sometimes fails its first page load ("the server stopped
+      # responding") before any request arrives; a device that has not printed after a
+      # minute gets the page opened again, at most twice.
       - name: Wait for the prints
         run: |
-          for i in $(seq 1 90); do
-            n=$(curl -fsS "http://127.0.0.1:8080/api/v1/devices/local_printer/jobs?limit=50" | jq '[.[] | select(.text | test("SAFARI \\S+ HTTPS"))] | length')
-            echo "HTTPS receipts so far: $n"
-            [ "$n" -ge 3 ] && break
-            sleep 2
+          printed() {
+            curl -fsS "http://127.0.0.1:8080/api/v1/devices/local_printer/jobs?limit=50" \
+              | jq --arg d "$1" '[.[] | select(.text | test("SAFARI " + $d + " HTTPS"))] | length > 0'
+          }
+          for round in 1 2 3; do
+            for i in $(seq 1 30); do
+              missing=""
+              for d in iPhone iPad macOS; do [ "$(printed $d)" = true ] || missing="$missing $d"; done
+              echo "round $round, still waiting for:${missing:- nothing}"
+              [ -z "$missing" ] && break 2
+              sleep 2
+            done
+            [ "$round" = 3 ] && break
+            for d in $missing; do
+              url="https://$LAN_IP:5173/safari-check.html?device=$d"
+              if [ "$d" = macOS ]; then open -a Safari "$url"; else xcrun simctl openurl "$(cat "safari-output/$d.udid")" "$url"; fi
+              echo "opened the page again on $d"
+            done
           done
           # Give the plain-HTTP attempts time to arrive if Safari did not block them.
           sleep 10
