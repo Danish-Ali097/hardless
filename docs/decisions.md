@@ -13,7 +13,7 @@ decision from the maintainer.
   Mobile Safari in the iOS Simulator (an iPhone and an iPad, newest iOS on the runner, iOS
   26.2 on 23 Oct 2026) and desktop Safari open `examples/react-pwa/safari-check.html` over
   HTTPS at the Mac's LAN address, with the Hardless certificate trusted (`simctl keychain
-  add-root-cert`, and the system keychain for macOS). The page prints with the app's own
+add-root-cert`, and the system keychain for macOS). The page prints with the app's own
   `src/epos.ts`. Each Safari must print over HTTPS (port 8443) and have plain HTTP (8080)
   blocked as mixed content, checked from the server's receipts. The LAN address, not
   `localhost`, because Safari treats `localhost` as secure and would not block it.
