@@ -108,8 +108,12 @@ test("M2: a scripted 20-barcode sequence arrives in order with the configured de
   const run = await request.post(`${SERVER}/api/v1/scenarios/run`, { data: { steps } });
   expect(((await run.json()) as { ok: boolean }).ok).toBe(true);
 
+  // The page is still typing the backlog (about 110 ms a scan) after the server has sent the
+  // last one; what is checked is order and spacing, not total speed, so allow slow runners.
   await expect
-    .poll(() => page.evaluate(() => (window as unknown as { scans: unknown[] }).scans.length))
+    .poll(() => page.evaluate(() => (window as unknown as { scans: unknown[] }).scans.length), {
+      timeout: 20_000,
+    })
     .toBe(20);
   const scans = await page.evaluate(
     () => (window as unknown as { scans: { code: string; at: number }[] }).scans,
