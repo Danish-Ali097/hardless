@@ -27,4 +27,4 @@ crates/hardless-server/dashboard/
 npm-packs/
 packages/extension/hardless-extension-*.zip
 # Output of the Safari check (.github/workflows/safari.yml).
-.safari/
+safari-output/

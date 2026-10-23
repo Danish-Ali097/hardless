@@ -26,7 +26,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 60
     env:
-      HARDLESS_CERT_DIR: ${{ github.workspace }}/.safari/certs
+      HARDLESS_CERT_DIR: ${{ runner.temp }}/hardless-certs
     steps:
       - uses: actions/checkout@v5
       - run: rustup show active-toolchain || rustup toolchain install
@@ -44,19 +44,19 @@ jobs:
           test -n "$ip"
           echo "LAN address: $ip"
           echo "LAN_IP=$ip" >> "$GITHUB_ENV"
-          mkdir -p .safari/shots
+          mkdir -p safari-output/shots
       - name: Start Hardless for the LAN (certificate for the LAN address)
         env:
           HARDLESS_CERT_HOSTS: ${{ env.LAN_IP }}
         run: |
-          target/debug/hardless start --host 0.0.0.0 > .safari/hardless.log 2>&1 &
+          target/debug/hardless start --host 0.0.0.0 > safari-output/hardless.log 2>&1 &
           for i in $(seq 1 100); do curl -fsS http://127.0.0.1:8080/api/v1/health && break; sleep 0.3; done
           curl -fsS --cacert "$HARDLESS_CERT_DIR/hardless-ca.pem" "https://$LAN_IP:8443/api/v1/health"
       - name: Serve the example app over HTTPS with the same certificate
         env:
           HTTPS: "1"
         run: |
-          pnpm --filter @hardless/example-react-pwa dev --host > .safari/vite.log 2>&1 &
+          pnpm --filter @hardless/example-react-pwa dev --host > safari-output/vite.log 2>&1 &
           for i in $(seq 1 100); do curl -fsS --cacert "$HARDLESS_CERT_DIR/hardless-ca.pem" "https://$LAN_IP:5173/safari-check.html" > /dev/null && break; sleep 0.5; done
           curl -fsS --cacert "$HARDLESS_CERT_DIR/hardless-ca.pem" "https://$LAN_IP:5173/safari-check.html" > /dev/null
       - name: iPhone and iPad simulators trust the certificate and open the page
@@ -64,11 +64,12 @@ jobs:
           xcrun simctl list runtimes
           for kind in iPhone iPad; do
             udid=$(xcrun simctl list devices available -j | jq -r --arg k "$kind" '
-              [.devices | to_entries[] | select(.key | test("iOS"))] | sort_by(.key) | last
+              [.devices | to_entries[] | select(.key | test("iOS-[0-9]"))]
+              | sort_by(.key | [scan("[0-9]+") | tonumber]) | last
               | [.value[] | select(.name | startswith($k))] | first | .udid')
             echo "$kind: $udid"
             test -n "$udid" -a "$udid" != null
-            echo "$udid" > ".safari/$kind.udid"
+            echo "$udid" > "safari-output/$kind.udid"
             xcrun simctl boot "$udid"
             xcrun simctl bootstatus "$udid" -b
             xcrun simctl keychain "$udid" add-root-cert "$HARDLESS_CERT_DIR/hardless-ca.pem"
@@ -92,14 +93,14 @@ jobs:
         if: always()
         run: |
           for kind in iPhone iPad; do
-            [ -f ".safari/$kind.udid" ] && xcrun simctl io "$(cat ".safari/$kind.udid")" screenshot ".safari/shots/$kind.png" || true
+            [ -f "safari-output/$kind.udid" ] && xcrun simctl io "$(cat "safari-output/$kind.udid")" screenshot "safari-output/shots/$kind.png" || true
           done
-          screencapture -x .safari/shots/macOS.png || true
+          screencapture -x safari-output/shots/macOS.png || true
       - name: Each Safari printed over HTTPS and was blocked from plain HTTP
         run: |
-          curl -fsS "http://127.0.0.1:8080/api/v1/devices/local_printer/jobs?limit=50" > .safari/jobs.json
+          curl -fsS "http://127.0.0.1:8080/api/v1/devices/local_printer/jobs?limit=50" > safari-output/jobs.json
           node -e '
-            const jobs = JSON.parse(require("fs").readFileSync(".safari/jobs.json", "utf8"));
+            const jobs = JSON.parse(require("fs").readFileSync("safari-output/jobs.json", "utf8"));
             const lines = jobs.flatMap((job) => job.text.split("\n")).filter((l) => l.includes("SAFARI"));
             let failed = false;
             for (const device of ["iPhone", "iPad", "macOS"]) {
@@ -114,4 +115,4 @@ jobs:
         if: always()
         with:
           name: safari-check
-          path: .safari
+          path: safari-output
